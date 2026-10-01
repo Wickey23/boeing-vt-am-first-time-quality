@@ -1,7 +1,8 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
-import Link from "next/link";\nimport { Box, CheckCircle2, ChevronRight, FileUp, Gauge, Layers3, Settings2, ShieldCheck, TriangleAlert, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Box, CheckCircle2, ChevronRight, FileUp, Gauge, Layers3, Settings2, ShieldCheck, TriangleAlert, Sparkles } from "lucide-react";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 
 type Check={name:string,status:"pass"|"review",detail:string};
