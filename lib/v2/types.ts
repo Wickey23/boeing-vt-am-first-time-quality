@@ -1,0 +1,8 @@
+export type GeometryMetrics={dimensions:{x:number;y:number;z:number};surfaceAreaMm2:number;volumeMm3:number;triangleCount:number;watertightEstimate:"LIKELY"|"REVIEW";aspectRatio:number};
+export type FuselageInput={length:number;diameter:number;skin:number;frame:number;frameCount:number;stringer:number;stringerCount:number;material:"aluminum"|"titanium";pressureMPa:number;axialForceN:number;bendingMomentNmm:number;torqueNmm:number;safetyFactor:number};
+export type ProjectState={
+name:string;source:"demo"|"upload"|null;fileName?:string;material:"aluminum"|"titanium";process:"LPBF"|"EBM"|"DED";
+geometry?:GeometryMetrics;fuselage:FuselageInput;requirements:{maxDisplacementMm:number;strengthBasis:string;boundary:string;criticalInterfaces:string};
+analysis?:any;candidates?:any[];selectedCandidate?:number;am?:any;validation:{dimensions:boolean;surface:boolean;porosity:boolean;material:boolean;mechanical:boolean};notes:string;
+};
+export const defaultProject:ProjectState={name:"Fuselage_Surrogate_v1",source:"demo",material:"titanium",process:"LPBF",fuselage:{length:150,diameter:100,skin:1.5,frame:2.5,frameCount:5,stringer:2,stringerCount:10,material:"titanium",pressureMPa:.07,axialForceN:3000,bendingMomentNmm:90000,torqueNmm:40000,safetyFactor:1.5},requirements:{maxDisplacementMm:.5,strengthBasis:"Research screening threshold",boundary:"Fixed end-ring interface",criticalInterfaces:"End rings + skin continuity"},validation:{dimensions:false,surface:false,porosity:false,material:false,mechanical:false},notes:""};
