@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {analyzeIntent} from "@/lib/analyze";import {PartIntent} from "@/lib/types";
+export async function POST(req:Request){try{const body=await req.json() as PartIntent;return NextResponse.json(analyzeIntent(body));}catch{return NextResponse.json({error:"Invalid analysis request"},{status:400});}}
