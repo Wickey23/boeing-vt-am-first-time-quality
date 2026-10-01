@@ -1,0 +1,7 @@
+import {MaterialId,ProcessId} from "./types";
+export const MATERIALS:Record<MaterialId,{name:string;density:number;processes:ProcessId[];notes:string[]}>= {
+ti64:{name:"Ti-6Al-4V",density:4.43,processes:["lpbf","ebm","ded"],notes:["High strength-to-weight aerospace alloy","Residual stress and support strategy require validation"]},
+in718:{name:"Inconel 718",density:8.19,processes:["lpbf","ded"],notes:["Nickel superalloy for elevated-temperature applications","Thermal history and post-processing strongly affect properties"]},
+alsi10mg:{name:"AlSi10Mg",density:2.68,processes:["lpbf"],notes:["Lightweight aluminum alloy","Parameter set and heat treatment must be machine-qualified"]},
+ss316l:{name:"316L Stainless Steel",density:7.99,processes:["lpbf","ded"],notes:["Common AM development material","Useful for workflow validation before higher-cost alloys"]}}
+export const PROCESSES:Record<ProcessId,{name:string;description:string}>={lpbf:{name:"Laser Powder Bed Fusion",description:"High-resolution powder-bed process; orientation, support, thermal history and powder controls are critical."},ebm:{name:"Electron Beam Powder Bed Fusion",description:"Vacuum powder-bed process with elevated build temperature."},ded:{name:"Directed Energy Deposition",description:"Material is deposited into a focused energy source; useful for larger features, repair and near-net shapes."}};
