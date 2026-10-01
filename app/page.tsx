@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Box, CheckCircle2, ChevronRight, FileUp, Gauge, Layers3, Settings2, ShieldCheck, TriangleAlert, Sparkles, Play } from "lucide-react";
+import { Box, CheckCircle2, ChevronRight, FileUp, Gauge, Layers3, Settings2, ShieldCheck, TriangleAlert, Sparkles, Play, Activity } from "lucide-react";
 import { DEMO_PART, DEMO_STL_URL } from "@/lib/demo";
 import type { AnalysisResult } from "@/lib/types";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
