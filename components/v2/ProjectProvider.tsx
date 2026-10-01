@@ -1,0 +1,5 @@
+"use client";import {createContext,useContext,useEffect,useMemo,useState} from "react";import {defaultProject,type ProjectState} from "@/lib/v2/types";
+type Ctx={project:ProjectState;setProject:React.Dispatch<React.SetStateAction<ProjectState>>;reset:()=>void};
+const ProjectContext=createContext<Ctx|null>(null);
+export function ProjectProvider({children}:{children:React.ReactNode}){const[project,setProject]=useState<ProjectState>(defaultProject);const[ready,setReady]=useState(false);useEffect(()=>{try{const raw=localStorage.getItem("vt-am-project-v2");if(raw)setProject({...defaultProject,...JSON.parse(raw)})}finally{setReady(true)}},[]);useEffect(()=>{if(ready)localStorage.setItem("vt-am-project-v2",JSON.stringify(project))},[project,ready]);const value=useMemo(()=>({project,setProject,reset:()=>setProject(defaultProject)}),[project]);return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>}
+export function useProject(){const v=useContext(ProjectContext);if(!v)throw new Error("useProject must be used inside ProjectProvider");return v}
