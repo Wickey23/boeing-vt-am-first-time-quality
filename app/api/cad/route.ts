@@ -1,2 +1,2 @@
-import {NextResponse} from "next/server";import {buildParametricCad,cadToAsciiStl} from "@/lib/cad";import {PartIntent} from "@/lib/types";
-export async function POST(req:Request){try{const body=await req.json() as PartIntent;return NextResponse.json({cad:buildParametricCad(body),stl:cadToAsciiStl(body)});}catch{return NextResponse.json({error:"Invalid CAD request"},{status:400});}}
+import {NextResponse} from "next/server";import {buildParametricCad,cadToAsciiStl} from "@/lib/cad";import {validateIntent} from "@/lib/validate";import type {PartIntent} from "@/lib/types";
+export async function POST(req:Request){try{const body=await req.json() as PartIntent;const errors=validateIntent(body);if(errors.length)return NextResponse.json({error:"Invalid CAD request",details:errors},{status:400});return NextResponse.json({cad:buildParametricCad(body),stl:cadToAsciiStl(body)});}catch{return NextResponse.json({error:"Invalid CAD request"},{status:400});}}
