@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
-import { Box, CheckCircle2, ChevronRight, FileUp, Gauge, Layers3, Settings2, ShieldCheck, TriangleAlert } from "lucide-react";
+import Link from "next/link";\nimport { Box, CheckCircle2, ChevronRight, FileUp, Gauge, Layers3, Settings2, ShieldCheck, TriangleAlert, Sparkles } from "lucide-react";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 
 type Check={name:string,status:"pass"|"review",detail:string};
@@ -11,7 +11,7 @@ export default function Home(){
  const [file,setFile]=useState<File>(); const [material,setMaterial]=useState(materials[0]); const [process,setProcess]=useState(processes[0]);
  const url=useMemo(()=>file?URL.createObjectURL(file):undefined,[file]);
  const checks:Check[]=file?[{name:"Mesh integrity",status:"pass",detail:"STL loaded successfully"},{name:"Build orientation",status:"review",detail:"Orientation optimization required"},{name:"Support strategy",status:"review",detail:"Analyze overhang regions before release"},{name:"Process compatibility",status:"pass",detail:`${material} profile available for review`}]:[];
- return <main><header><div className="brand"><div className="mark">VT</div><div><strong>AM First-Time Quality</strong><span>Senior Design · Metallic Additive Manufacturing</span></div></div><div className="status"><span></span>Prototype Workspace</div></header>
+ return <main><header><div className="brand"><div className="mark">VT</div><div><strong>AM First-Time Quality</strong><span>Senior Design · Metallic Additive Manufacturing</span></div></div><div style={{display:"flex",alignItems:"center",gap:16}}><Link className="back" href="/design"><Sparkles/>Generative CAD</Link><div className="status"><span></span>Prototype Workspace</div></div></header>
  <section className="hero"><div><p className="eyebrow">BUILD PREPARATION WORKSPACE</p><h1>From CAD geometry to a more confident metal AM build.</h1><p>Inspect geometry, configure the manufacturing process, identify build risks, and document recommendations before printer release.</p></div><div className="score"><Gauge/><div><small>BUILD READINESS</small><b>{file?"62":"—"}<i>{file?"%":""}</i></b><span>{file?"Engineering review required":"Upload a model to begin"}</span></div></div></section>
  <nav className="steps">{["Model","Process","Analyze","Optimize","Validate","Export"].map((x,i)=><div className={i===0?"active":""} key={x}><span>{i+1}</span>{x}<ChevronRight/></div>)}</nav>
  <div className="workspace"><section className="mainPanel"><div className="panelTitle"><div><Box/><div><h2>Build Model</h2><p>STL geometry inspection and preparation</p></div></div>{file&&<button className="secondary" onClick={()=>setFile(undefined)}>Replace model</button>}</div>
