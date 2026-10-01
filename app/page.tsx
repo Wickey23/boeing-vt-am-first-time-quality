@@ -1,0 +1,21 @@
+"use client";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
+import { Box, CheckCircle2, ChevronRight, FileUp, Gauge, Layers3, Settings2, ShieldCheck, TriangleAlert } from "lucide-react";
+const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
+
+type Check={name:string,status:"pass"|"review",detail:string};
+const materials=["Ti-6Al-4V","Inconel 718","AlSi10Mg","316L Stainless Steel"];
+const processes=["Laser Powder Bed Fusion","Electron Beam Powder Bed Fusion","Directed Energy Deposition"];
+export default function Home(){
+ const [file,setFile]=useState<File>(); const [material,setMaterial]=useState(materials[0]); const [process,setProcess]=useState(processes[0]);
+ const url=useMemo(()=>file?URL.createObjectURL(file):undefined,[file]);
+ const checks:Check[]=file?[{name:"Mesh integrity",status:"pass",detail:"STL loaded successfully"},{name:"Build orientation",status:"review",detail:"Orientation optimization required"},{name:"Support strategy",status:"review",detail:"Analyze overhang regions before release"},{name:"Process compatibility",status:"pass",detail:`${material} profile available for review`}]:[];
+ return <main><header><div className="brand"><div className="mark">VT</div><div><strong>AM First-Time Quality</strong><span>Senior Design · Metallic Additive Manufacturing</span></div></div><div className="status"><span></span>Prototype Workspace</div></header>
+ <section className="hero"><div><p className="eyebrow">BUILD PREPARATION WORKSPACE</p><h1>From CAD geometry to a more confident metal AM build.</h1><p>Inspect geometry, configure the manufacturing process, identify build risks, and document recommendations before printer release.</p></div><div className="score"><Gauge/><div><small>BUILD READINESS</small><b>{file?"62":"—"}<i>{file?"%":""}</i></b><span>{file?"Engineering review required":"Upload a model to begin"}</span></div></div></section>
+ <nav className="steps">{["Model","Process","Analyze","Optimize","Validate","Export"].map((x,i)=><div className={i===0?"active":""} key={x}><span>{i+1}</span>{x}<ChevronRight/></div>)}</nav>
+ <div className="workspace"><section className="mainPanel"><div className="panelTitle"><div><Box/><div><h2>Build Model</h2><p>STL geometry inspection and preparation</p></div></div>{file&&<button className="secondary" onClick={()=>setFile(undefined)}>Replace model</button>}</div>
+ {!file?<label className="drop"><FileUp/><h3>Upload an STL model</h3><p>Choose a non-sensitive test part to start the build analysis.</p><span>SELECT STL</span><input type="file" accept=".stl" onChange={e=>setFile(e.target.files?.[0])}/></label>:<><ModelViewer url={url}/><div className="filebar"><div><Layers3/><span><b>{file.name}</b><small>{(file.size/1048576).toFixed(2)} MB · STL</small></span></div><span className="loaded"><CheckCircle2/>Loaded</span></div></>}
+ </section><aside><section className="card"><div className="cardTitle"><Settings2/><div><h3>Process Configuration</h3><p>Preliminary engineering inputs</p></div></div><label>Material<select value={material} onChange={e=>setMaterial(e.target.value)}>{materials.map(x=><option key={x}>{x}</option>)}</select></label><label>AM Process<select value={process} onChange={e=>setProcess(e.target.value)}>{processes.map(x=><option key={x}>{x}</option>)}</select></label><label>Machine Profile<select><option>Generic research machine</option></select></label><div className="notice"><ShieldCheck/><span><b>Research mode</b>Machine-specific parameters require validated printer profiles.</span></div></section>
+ <section className="card"><div className="cardTitle"><TriangleAlert/><div><h3>Preflight Checks</h3><p>{file?"Initial screening results":"Waiting for geometry"}</p></div></div>{checks.length?checks.map(c=><div className={"check "+c.status} key={c.name}>{c.status==="pass"?<CheckCircle2/>:<TriangleAlert/>}<span><b>{c.name}</b><small>{c.detail}</small></span></div>):<div className="empty">Upload an STL to populate engineering checks.</div>}<button className="primary" disabled={!file}>RUN FULL ANALYSIS</button></section></aside></div>
+ <footer><span>Virginia Tech Senior Design · Engineering prototype</span><span>Recommendations require validation before manufacturing use.</span></footer></main>}
