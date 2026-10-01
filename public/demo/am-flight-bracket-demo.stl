@@ -1,0 +1,170 @@
+solid am_flight_bracket_demo
+facet normal 0 0 -1
+outer loop
+vertex -48 -27 0
+vertex 48 27 0
+vertex 48 -27 0
+endloop
+endfacet
+facet normal 0 0 -1
+outer loop
+vertex -48 -27 0
+vertex -48 27 0
+vertex 48 27 0
+endloop
+endfacet
+facet normal 0 0 1
+outer loop
+vertex -48 -27 6
+vertex 48 -27 6
+vertex 48 27 6
+endloop
+endfacet
+facet normal 0 0 1
+outer loop
+vertex -48 -27 6
+vertex 48 27 6
+vertex -48 27 6
+endloop
+endfacet
+facet normal 0 -1 0
+outer loop
+vertex -48 -27 0
+vertex 48 -27 0
+vertex 48 -27 6
+endloop
+endfacet
+facet normal 0 -1 0
+outer loop
+vertex -48 -27 0
+vertex 48 -27 6
+vertex -48 -27 6
+endloop
+endfacet
+facet normal 0 1 0
+outer loop
+vertex -48 27 0
+vertex 48 27 6
+vertex 48 27 0
+endloop
+endfacet
+facet normal 0 1 0
+outer loop
+vertex -48 27 0
+vertex -48 27 6
+vertex 48 27 6
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+vertex -48 -27 0
+vertex -48 -27 6
+vertex -48 27 6
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+vertex -48 -27 0
+vertex -48 27 6
+vertex -48 27 0
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+vertex 48 -27 0
+vertex 48 27 6
+vertex 48 -27 6
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+vertex 48 -27 0
+vertex 48 27 0
+vertex 48 27 6
+endloop
+endfacet
+facet normal 0 0 1
+outer loop
+vertex -30 -6 6
+vertex 30 -6 6
+vertex 30 6 6
+endloop
+endfacet
+facet normal 0 0 1
+outer loop
+vertex -30 -6 6
+vertex 30 6 6
+vertex -30 6 6
+endloop
+endfacet
+facet normal 0 -1 0
+outer loop
+vertex -30 -6 6
+vertex 30 -6 6
+vertex 30 -6 42
+endloop
+endfacet
+facet normal 0 -1 0
+outer loop
+vertex -30 -6 6
+vertex 30 -6 42
+vertex -30 -6 42
+endloop
+endfacet
+facet normal 0 1 0
+outer loop
+vertex -30 6 6
+vertex 30 6 42
+vertex 30 6 6
+endloop
+endfacet
+facet normal 0 1 0
+outer loop
+vertex -30 6 6
+vertex -30 6 42
+vertex 30 6 42
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+vertex -30 -6 6
+vertex -30 -6 42
+vertex -30 6 42
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+vertex -30 -6 6
+vertex -30 6 42
+vertex -30 6 6
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+vertex 30 -6 6
+vertex 30 6 42
+vertex 30 -6 42
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+vertex 30 -6 6
+vertex 30 6 6
+vertex 30 6 42
+endloop
+endfacet
+facet normal 0 0 1
+outer loop
+vertex -30 -6 42
+vertex 30 -6 42
+vertex 30 6 42
+endloop
+endfacet
+facet normal 0 0 1
+outer loop
+vertex -30 -6 42
+vertex 30 6 42
+vertex -30 6 42
+endloop
+endfacet
+endsolid am_flight_bracket_demo
