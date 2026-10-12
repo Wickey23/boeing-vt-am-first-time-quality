@@ -25,7 +25,7 @@ export function evaluateAxisFits(m:RawMetrics,envelope:{x:number;y:number;z:numb
  ["Alternate (YZX)",[y,z,x]],["Alternate (ZXY)",[z,x,y]]];
  return options.map(([name,dimensionsMm])=>{
   const clearanceMm:[number,number,number]=[envelope.x-dimensionsMm[0],envelope.y-dimensionsMm[1],envelope.z-dimensionsMm[2]];
-  return {name,dimensionsMm,fits:clearanceMm.every(v=>v>=0)};
+  return {name,dimensionsMm,clearanceMm,fits:clearanceMm.every(v=>v>=0)};
  });
 }
 export const researchNotice="Screening only. This is not structural FEA, overhang/support analysis, a qualified printer build, or flight-part approval.";
