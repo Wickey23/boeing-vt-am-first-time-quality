@@ -43,6 +43,7 @@ export default function Workspace(){
  const [showGeometry,setShowGeometry]=useState(false);
  const geometryRef=useRef<HTMLDivElement>(null);
  const requestId=useRef(0);
+ const screenVersion=useRef(0);
  useEffect(()=>{setSettings(parseSaved(window.localStorage.getItem("ftq-team-review-settings-v1")));setHydrated(true)},[]);
  useEffect(()=>{if(hydrated)try{window.localStorage.setItem("ftq-team-review-settings-v1",JSON.stringify(settings))}catch{}},[hydrated,settings]);
  useEffect(()=>{if(!file||!metrics){setViewerUrl(undefined);return}const u=URL.createObjectURL(file);setViewerUrl(u);return()=>URL.revokeObjectURL(u)},[file,metrics]);
@@ -53,22 +54,25 @@ export default function Workspace(){
  const ext=file?.name.split(".").pop()?.toLowerCase();
  const canPreview=ext==="stl"&&!!metrics&&!!viewerUrl;
  const hasSettings=hydrated;
- function patch(changes:Partial<Settings>){setSettings(p=>({...p,...changes}));setAm(undefined);setAmError("")}
- function clearFile(){requestId.current+=1;setFile(null);setMetrics(undefined);setAm(undefined);setFileHash("");setViewerUrl(undefined);setError("");setAmError("");setSource("upload");setShowGeometry(false);setInspecting(false);setScreening(false)}
+ function patch(changes:Partial<Settings>){screenVersion.current+=1;setSettings(p=>({...p,...changes}));setAm(undefined);setAmError("")}
+ function clearFile(){requestId.current+=1;screenVersion.current+=1;setFile(null);setMetrics(undefined);setAm(undefined);setFileHash("");setViewerUrl(undefined);setError("");setAmError("");setSource("upload");setShowGeometry(false);setInspecting(false);setScreening(false)}
  async function doAM(m:RawMetrics,current:Settings,id:number){
+  const currentScreen=++screenVersion.current;
   setScreening(true);setAmError("");
   try{
    const body={metrics:normalizeToMm(m,current.units),material:current.material,process:current.process};
    const res=await fetch("/api/am/screen",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
    const json=await res.json();
    if(!res.ok||!Array.isArray(json.checks))throw new Error(json.error||"Manufacturing screening failed.");
-   if(id===requestId.current)setAm(json as AMResult);
-  }catch(e){if(id===requestId.current)setAmError(e instanceof Error?e.message:"Manufacturing screening failed.")}
-  finally{if(id===requestId.current)setScreening(false)}
+   if(id===requestId.current&&currentScreen===screenVersion.current)setAm(json as AMResult);
+  }catch(e){if(id===requestId.current&&currentScreen===screenVersion.current)setAmError(e instanceof Error?e.message:"Manufacturing screening failed.")}
+  finally{if(id===requestId.current&&currentScreen===screenVersion.current)setScreening(false)}
  }
  async function loadFile(f?:File,kind:"upload"|"sample"="upload",activeSettings:Settings=settings){
   if(!f)return;
   const id=++requestId.current;
+  screenVersion.current+=1;
+  setScreening(false);
   setFile(null);setMetrics(undefined);setAm(undefined);setFileHash("");setError("");setAmError("");setShowGeometry(false);setSource(kind);
   if(f.size===0||f.size>SIZE_LIMIT){setError(f.size===0?"Selected file is empty.":"Maximum file size is 25 MB.");return}
   const e=f.name.split(".").pop()?.toLowerCase();
