@@ -66,7 +66,7 @@ export default function Workspace(){
   }catch(e){if(id===requestId.current)setAmError(e instanceof Error?e.message:"Manufacturing screening failed.")}
   finally{if(id===requestId.current)setScreening(false)}
  }
- async function loadFile(f?:File,kind:"upload"|"sample"="upload"){
+ async function loadFile(f?:File,kind:"upload"|"sample"="upload",activeSettings:Settings=settings){
   if(!f)return;
   const id=++requestId.current;
   setFile(null);setMetrics(undefined);setAm(undefined);setFileHash("");setError("");setAmError("");setShowGeometry(false);setSource(kind);
@@ -87,19 +87,20 @@ export default function Workspace(){
    if(!response.ok||!isUsableMetrics(result.metrics))throw new Error(result.error||"STL mesh is empty or invalid.");
    if(id!==requestId.current)return;
    setMetrics(result.metrics);
-   await doAM(result.metrics,settings,id);
+   await doAM(result.metrics,activeSettings,id);
   }catch(e){if(id===requestId.current){setMetrics(undefined);setError(e instanceof Error?e.message:"Geometry inspection failed.");}}
   finally{if(id===requestId.current)setInspecting(false)}
  }
  async function loadSample(){
   setError("");
   try{
-   const seed={name:"Synthetic Mounting Plate",description:"Sanitized 80 x 50 x 8 mm research coupon with a through-hole",length:80,width:50,height:8,wall:5,holeDiameter:12,material:"ti64",process:"lpbf",requirements:[]};
-   const r=await fetch("/api/cad",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(seed)});
-   const j=await r.json();
-   if(!r.ok||typeof j.stl!=="string")throw new Error(j.error||"Sample generation unavailable.");
+   const r=await fetch("/api/sample");
+   if(!r.ok)throw new Error("Sample generator unavailable.");
+   const stl=await r.text();
+   if(!stl.includes("solid synthetic_mounting_plate"))throw new Error("Invalid generated sample.");
+   const configured={...settings,units:"mm" as const};
    patch({units:"mm"});
-   await loadFile(new File([j.stl],"Synthetic_Mounting_Plate_80x50x8.stl",{type:"model/stl"}),"sample");
+   await loadFile(new File([stl],"Synthetic_Mounting_Plate_80x50x8.stl",{type:"model/stl"}),"sample",configured);
   }catch(e){setError(e instanceof Error?e.message:"Could not create sample.");}
  }
  async function runScreen(){if(!metrics)return;setAm(undefined);await doAM(metrics,settings,requestId.current)}
