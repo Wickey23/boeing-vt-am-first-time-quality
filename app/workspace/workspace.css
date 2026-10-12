@@ -1,0 +1,75 @@
+/* Dedicated styling for the engineer-in-the-loop CAD workspace. */
+.designPage{min-height:100vh;padding:0 0 48px;background:radial-gradient(circle at 70% 0%,#132e45 0,#081624 43%,#050c15 90%);color:#eaf3fb;font:14px/1.5 Arial,Helvetica,sans-serif}
+.designPage *{box-sizing:border-box}
+.designPage .designHeader{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:19px clamp(18px,3vw,42px);background:#081727;border-bottom:1px solid #284358;flex-wrap:wrap}
+.designPage .designHeader>a{color:#92d4ff;text-decoration:none;font-size:13px}
+.designPage .designHeader>div:nth-child(2){display:flex;flex-direction:column;gap:3px}
+.designPage .designHeader b{font-size:14px;letter-spacing:1.5px}
+.designPage .designHeader span{color:#a5bfd0;font-size:12px}
+.designPage .researchBadge{border:1px solid #3f7192;background:#12344a;color:#90dbff;font-size:10px;font-weight:700;letter-spacing:1px;border-radius:999px;padding:8px 12px}
+.designPage .uploadHero{max-width:1450px;margin:0 auto;padding:36px clamp(18px,3vw,42px) 23px}
+.designPage .eyebrow{margin:0 0 10px;letter-spacing:1.7px;color:#5bc6fc;font-size:11px;font-weight:700}
+.designPage .uploadHero h1{font-size:clamp(28px,3.7vw,47px);line-height:1.16;letter-spacing:-.8px;margin:0 0 14px;font-weight:750}
+.designPage .uploadHero>p:not(.eyebrow){max-width:1000px;color:#a7bdcc;font-size:14px;line-height:1.65}
+.designPage .stageRail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:28px}
+.designPage .stageRail>div{border:1px solid #2a4a60;background:#102537;padding:12px 9px;border-radius:8px;color:#9fb9c9;font-size:11px;display:flex;gap:8px;align-items:center;min-height:55px}
+.designPage .stageRail>div>span{display:grid;place-items:center;flex:none;width:23px;height:23px;border-radius:50%;background:#27445b;color:#e9f6ff;font-size:11px;font-weight:700}
+.designPage .stageRail>div.active,.designPage .stageRail>div.working{border-color:#1d91ee;background:#13334d;color:#eff9ff}
+.designPage .stageRail>div.active>span,.designPage .stageRail>div.working>span{background:#1688e6}
+.designPage .uploadWorkspace{max-width:1450px;margin:0 auto;padding:0 clamp(18px,3vw,42px);display:grid;grid-template-columns:minmax(0,1.5fr) minmax(350px,1fr);gap:18px;align-items:start}
+.designPage .mainPanel,.designPage .uploadWorkspace aside>.card{border:1px solid #29475c;background:#0b1e2d;border-radius:12px;box-shadow:0 10px 30px #0002;min-width:0;overflow:hidden}
+.designPage .mainPanel{padding:20px;min-height:565px}
+.designPage .panelTitle{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px}
+.designPage .panelTitle>div{display:flex;align-items:center;gap:12px}
+.designPage .panelTitle svg{width:24px;height:24px;color:#5ebdff;flex:none}
+.designPage .panelTitle h2{margin:0 0 2px;font-size:18px}
+.designPage .panelTitle p{font-size:12px;color:#93adbf;margin:0}
+.designPage .drop{min-height:435px;border:2px dashed #39769f;border-radius:10px;background:linear-gradient(140deg,#0e2b40,#0a1827);padding:45px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;cursor:pointer}
+.designPage .drop>svg{width:54px;height:54px;color:#70c6ff}
+.designPage .drop h3{font-size:21px;margin:0}
+.designPage .drop p{max-width:410px;color:#adc3d4;line-height:1.6;margin:0}
+.designPage .drop>span{letter-spacing:1px;font-size:11px;font-weight:700;color:#8ad4ff;margin-top:8px}
+.designPage .drop input{font-size:12px;max-width:100%;color:#d6e8f4}
+.designPage .demoButton{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#173a56;border:1px solid #337aa8;border-radius:6px;padding:10px 13px;text-decoration:none;color:#e3f6ff;font-size:11px;font-weight:700;margin-top:13px}
+.designPage .demoButton svg{width:14px;height:14px}
+.designPage .uploadWorkspace aside{display:flex;flex-direction:column;gap:16px;background:transparent;border:0;padding:0}
+.designPage .uploadWorkspace aside>.card{padding:20px}
+.designPage .card h3{font-size:17px;margin:0 0 17px}
+.designPage .card>label,.designPage .loadGrid label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#acc6d8;font-weight:600;margin-bottom:14px}
+.designPage input[type=number],.designPage select,.designPage textarea{width:100%;border:1px solid #3c5b71;background:#071521;color:#ebf7ff;padding:11px 12px;border-radius:6px;font-size:13px;font-family:inherit;min-height:40px}
+.designPage textarea{resize:vertical;min-height:94px}
+.designPage input:focus-visible,.designPage select:focus-visible,.designPage textarea:focus-visible,.designPage a:focus-visible,.designPage button:focus-visible{outline:2px solid #69c9ff;outline-offset:3px}
+.designPage .fieldHelp{color:#8faabc;font-size:12px;margin:-7px 0 16px}
+.designPage .loadGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+.designPage .notice{display:flex;gap:11px;padding:13px;border-radius:8px;border:1px solid #6d5a35;background:#30291b;color:#dbc79d;font-size:12px;line-height:1.55;margin:12px 0}
+.designPage .notice svg{height:19px;width:19px;flex:none;color:#f0bf63}
+.designPage .notice span{display:block;min-width:0}
+.designPage .notice b{display:block;color:#ffe0a0;font-size:12px;margin-bottom:4px}
+.designPage .intentList{display:flex;flex-direction:column;gap:9px;color:#bbd1df;font-size:12px;margin-bottom:18px}
+.designPage .intentList span{padding:9px 12px;background:#10283b;border-radius:5px}
+.designPage .primary,.designPage .secondary{border:0;border-radius:6px;padding:12px 16px;display:inline-flex;gap:8px;justify-content:center;align-items:center;font-size:11px;letter-spacing:.4px;font-weight:700;cursor:pointer}
+.designPage .primary{background:#167edf;color:#fff}
+.designPage .secondary{background:#17384e;color:#b9e3ff;border:1px solid #36698c}
+.designPage button:disabled{cursor:not-allowed;opacity:.47}
+.designPage .card>.primary{width:100%;margin-top:8px}
+.designPage .primary svg{width:15px;height:15px}
+.designPage .filebar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px;background:#0e2c40;border:1px solid #284b64;border-radius:7px;margin:10px 0}
+.designPage .filebar>div{display:flex;gap:9px;align-items:center;min-width:0}
+.designPage .filebar svg{color:#6dd0ff;width:20px;height:20px;flex:none}
+.designPage .filebar b,.designPage .filebar small{display:block;overflow-wrap:anywhere}
+.designPage .filebar small{font-size:11px;color:#95b6c9}
+.designPage .loaded{font-size:10px;color:#80dbad;white-space:nowrap}
+.designPage .inspectButton{margin:8px 0}
+.designPage .geometryMetrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}
+.designPage .geometryMetrics>div{background:#0f3045;border:1px solid #24506c;border-radius:7px;padding:12px;min-width:0}
+.designPage .geometryMetrics small{display:block;font-size:10px;color:#92b9cf;letter-spacing:.7px}
+.designPage .geometryMetrics b{font-size:13px;overflow-wrap:anywhere}
+.designPage .cadPlaceholder{min-height:320px;background:#091725;border:1px solid #29485e;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:26px;text-align:center;gap:11px}
+.designPage .cadPlaceholder svg{width:45px;height:45px;color:#5db7ee}
+.designPage .cadPlaceholder p{max-width:360px;color:#9aafbe}
+.designPage .reviewBoundary{max-width:1366px;margin:21px auto 0;padding:16px 20px;border:1px solid #355670;background:#0c2233;border-radius:9px;display:flex;gap:12px;color:#a7c0d1}
+.designPage .reviewBoundary>svg{width:22px;height:22px;flex:none;color:#7ac5ef}
+.designPage .reviewBoundary b{color:#cdeaff}
+.designPage .reviewBoundary p{margin:5px 0 0;font-size:12px;line-height:1.6}
+@media(max-width:1100px){.designPage .uploadWorkspace{grid-template-columns:1fr}.designPage .stageRail{grid-template-columns:repeat(3,minmax(0,1fr))}.designPage .mainPanel{min-height:0}.designPage .drop{min-height:345px}}
+@media(max-width:650px){.designPage .stageRail{grid-template-columns:repeat(2,minmax(0,1fr))}.designPage .loadGrid,.designPage .geometryMetrics{grid-template-columns:1fr}.designPage .designHeader{padding:16px}.designPage .uploadHero{padding:25px 16px}.designPage .uploadWorkspace{padding:0 16px}.designPage .reviewBoundary{margin:20px 16px}.designPage .mainPanel,.designPage .uploadWorkspace aside>.card{padding:15px}}
