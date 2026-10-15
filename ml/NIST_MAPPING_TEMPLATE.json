@@ -1,0 +1,14 @@
+{
+  "source_citation": "NIST AM Bench 2022 MaTTO, DOI:10.18434/mds2-2588; specify exact source file and worksheet here",
+  "reviewed_by": "",
+  "angle_definition": "Measured specimen tensile-axis angle relative to the build direction; verify source convention",
+  "property_definition": "Measured yield strength in MPa; specify method (for example 0.2% offset) according to NIST source",
+  "columns": {
+    "study_id": "REPLACE_SOURCE_STUDY_COLUMN",
+    "specimen_id": "REPLACE_SPECIMEN_ID_COLUMN",
+    "material": "REPLACE_MATERIAL_COLUMN",
+    "process_profile_id": "REPLACE_PROCESS_PROFILE_COLUMN",
+    "build_angle_deg": "REPLACE_REVIEWED_ANGLE_COLUMN",
+    "yield_strength_mpa": "REPLACE_MEASURED_YIELD_COLUMN"
+  }
+}
