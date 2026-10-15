@@ -21,3 +21,15 @@ Support-volume surrogate requires directly matched part STL, orientation, slicer
 
 ## Reliability
 Data retrieval success, a passing automated build, or low regression error does not establish material allowables, aerospace approval, or first-time-quality prediction. Require independent external validation and engineering review.
+
+
+## Explicit specimen mapping (added)
+After inspecting a source workbook, export its relevant worksheet to a UTF-8 CSV preserving original column headers. Copy `ml/NIST_MAPPING_TEMPLATE.json` to a reviewed mapping file, replace each placeholder with an **existing source header**, record the exact yield definition and orientation convention, and sign `reviewed_by`. Then run:
+
+```sh
+python ml/normalize_reviewed_tensile.py --source source_specimens.csv --mapping reviewed_mapping.json --output ml/data/reviewed_tensile.csv
+```
+
+The converter rejects missing rows, missing columns, nonphysical angles/strengths and duplicate specimen IDs. It writes a CSV plus SHA-256 provenance metadata with a pending independent-review state. It does **not** automatically certify the mapping or authorize model training.
+
+If only one independent study has been normalized, do not run the multi-study model release as though separate scan paths were independent studies. Add at least two genuinely independent, compatible measured studies and use study-held-out validation.
