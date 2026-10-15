@@ -17,7 +17,7 @@ export function analyzeOrientations(buffer:ArrayBuffer,input:OrientationRequest)
  const cross=b.clone().sub(a).cross(c.clone().sub(a));const area=cross.length()/2;if(area<1e-12)continue;
  triangles.push({a,b,c,n:cross.normalize(),area,center:a.clone().add(b).add(c).multiplyScalar(1/3)});}
  if(!triangles.length)throw new Error("STL has no nondegenerate triangles");
- const eulers:[[number,number,number],...Array<[number,number,number]>]=[[0,0,0]];
+ const eulers:Array<[number,number,number]>=[[0,0,0]];const globalKeys=new Set<string>(["1,0,0,0,1,0"]);
  // 24 orthogonal orientations are covered by rotations of 90 degrees and deduplicated by transformed axes.
  for(const x of [0,90,180,270])for(const y of [0,90,180,270])for(const z of [0,90,180,270]){
  const rot=new THREE.Euler(x*Math.PI/180,y*Math.PI/180,z*Math.PI/180,"XYZ");const ex=new THREE.Vector3(1,0,0).applyEuler(rot),ey=new THREE.Vector3(0,1,0).applyEuler(rot);
@@ -45,4 +45,3 @@ export function analyzeOrientations(buffer:ArrayBuffer,input:OrientationRequest)
  output.sort((a,b)=>Number(b.feasible)-Number(a.feasible)||b.score-a.score||a.id.localeCompare(b.id));output.forEach((c,i)=>c.rank=i+1);
  return{candidates:output,mesh:{triangleCount:triangles.length},method:"24 orthogonal rotations; exact triangle-face overhang area with centroid-to-plate support-volume proxy",qualification:"RESEARCH_ONLY",limitations:["Only 90-degree rigid rotations are searched; arbitrary angles and nesting are not evaluated.","Support proxy is a geometric upper-bound-style heuristic, not generated support geometry or validated build volume.","Triangle normals and STL units are assumed correct; units interpreted as mm.","Down-facing classifications do not account for self-support, bridging, scan strategy, thermal physics or support accessibility.","Contact area is a face-proximity estimate; the algorithm does not verify bed adhesion.","Strength, anisotropy, dimensional accuracy and residual-stress predictions are NOT calculated.","Outputs cannot establish process qualification or part certification."]};
 }
-const globalKeys=new Set<string>(["1,0,0,0,1,0"]);
