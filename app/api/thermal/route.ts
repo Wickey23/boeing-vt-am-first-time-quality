@@ -1,0 +1,1 @@
+import {NextResponse} from "next/server";import {simulateThermal} from "@/lib/thermal-benchmark";export const runtime="nodejs";export async function POST(req:Request){try{const p=await req.json();return NextResponse.json(simulateThermal(p))}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Thermal benchmark error"},{status:400})}}
