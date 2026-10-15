@@ -1,0 +1,23 @@
+name: Audit public NIST material data
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ml/audit_nist_matto.py'
+      - '.github/workflows/audit-nist-data.yml'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python ml/audit_nist_matto.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nist-matto-data-inventory
+          path: ml/data/nist_audit/inventory.json
+          retention-days: 14
