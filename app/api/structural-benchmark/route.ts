@@ -1,0 +1,1 @@
+import {NextResponse} from "next/server";import {analyzeCantilever} from "@/lib/structural-benchmark";export const runtime="nodejs";export async function POST(request:Request){try{const value=await request.json();return NextResponse.json(analyzeCantilever(value))}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Invalid input"},{status:400})}}
