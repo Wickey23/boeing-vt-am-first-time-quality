@@ -1,0 +1,73 @@
+{
+  "model": "ridge_standardized_v1",
+  "features": [
+    "Power",
+    "Velocity",
+    "beam D",
+    "layer thickness"
+  ],
+  "mean": [
+    212.6123595505618,
+    685.6910112359551,
+    77.07865168539325,
+    62.02247191011236
+  ],
+  "sd": [
+    173.0111341615641,
+    862.335338477218,
+    77.38278191889901,
+    30.783031050096962
+  ],
+  "coefficients": [
+    128.4943820224719,
+    38.01926120701653,
+    -29.053626267829376,
+    -3.2310177927908716,
+    19.080151159171994
+  ],
+  "source_blob_sha": "153fa45ec2e7a5b6a020be4dd3a52ae062edb051",
+  "train_papers": [
+    "1",
+    "13",
+    "15",
+    "17",
+    "50",
+    "70",
+    "76"
+  ],
+  "report": {
+    "source": "BaratiLab/MeltpoolNet/Data/meltpoolnet_regression.csv",
+    "source_blob_sha": "153fa45ec2e7a5b6a020be4dd3a52ae062edb051",
+    "target": "depth of meltpool",
+    "units": "check source manuscript; column units not verified",
+    "filters": "Material Ti-6Al-4V; Process PBF; measured depth and positive numeric input values",
+    "row_count": 227,
+    "studies": 10,
+    "train_rows": 178,
+    "test_rows": 49,
+    "holdout_studies": [
+      "2",
+      "47",
+      "79"
+    ],
+    "features": [
+      "Power",
+      "Velocity",
+      "beam D",
+      "layer thickness"
+    ],
+    "results": {
+      "baseline_mean_mae": 84.1068562256364,
+      "ridge_mae": 37.465293413900966,
+      "knn7_mae": 20.60453342264126
+    },
+    "release_allowed": false,
+    "status": "TRAINED_RESEARCH_BASELINE_NOT_VALIDATED",
+    "limitations": [
+      "Paper-ID holdout, not independent process/machine qualification",
+      "Original source units and measurement type need validation",
+      "No support volume labels",
+      "No aerospace quality or structural predictions"
+    ]
+  }
+}
