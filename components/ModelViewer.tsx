@@ -8,7 +8,7 @@ import {RotateCcw} from "lucide-react";
 type Rotation={x:number;y:number;z:number};
 function Part({url,rotation,showOverhangs,overhangDeg}:{url:string;rotation?:Rotation;showOverhangs:boolean;overhangDeg:number}){
  const mesh=useLoader(STLLoader,url);
- const {geometry,origin,dimensions}=useMemo(()=>{
+ const {geometry,dimensions}=useMemo(()=>{
  const source=mesh.clone();
  const e=new THREE.Euler((rotation?.x||0)*Math.PI/180,(rotation?.y||0)*Math.PI/180,(rotation?.z||0)*Math.PI/180,"XYZ");
  source.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(e));
@@ -27,9 +27,9 @@ function Part({url,rotation,showOverhangs,overhangDeg}:{url:string;rotation?:Rot
  for(let i=0;i<count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);
  const n=b.sub(a).cross(c.sub(a)).normalize();const flag=n.y<threshold;for(let j=0;j<3;j++){const k=(i+j)*3;colors[k]=flag?1:.72;colors[k+1]=flag?.38:.82;colors[k+2]=flag?.2:.9;}}
  prepared.setAttribute("color",new THREE.BufferAttribute(colors,3));
- return {geometry:prepared,origin:shift,dimensions:v};
+ return {geometry:prepared,dimensions:v};
  },[mesh,rotation?.x,rotation?.y,rotation?.z,overhangDeg]);
- return <Bounds fit clip observe margin={1.35}><group><mesh geometry={geometry} castShadow receiveShadow><meshStandardMaterial color={showOverhangs?"white":"#b7cbdd"} vertexColors={showOverhangs} side={THREE.DoubleSide} metalness={.2} roughness={.62} flatShading={showOverhangs}/></mesh><mesh rotation={[-Math.PI/2,0,0]} position={[0,-.8,0]}><planeGeometry args={[Math.max(1,dimensions.x*1.45),Math.max(1,dimensions.z*1.45)]}/><meshStandardMaterial color="#173550" transparent opacity={.45} side={THREE.DoubleSide}/></mesh></group></Bounds>;
+ return <Bounds fit clip observe margin={1.35}><group><mesh geometry={geometry} castShadow receiveShadow><meshStandardMaterial color={showOverhangs?"white":"#b7cbdd"} vertexColors={showOverhangs} side={THREE.DoubleSide} metalness={.2} roughness={.62} flatShading={showOverhangs}/></mesh><mesh rotation={[-Math.PI/2,0,0]} position={[0,-.03,0]}><planeGeometry args={[Math.max(1,dimensions.x*1.45),Math.max(1,dimensions.z*1.45)]}/><meshStandardMaterial color="#173550" transparent opacity={.45} side={THREE.DoubleSide}/></mesh></group></Bounds>;
 }
 export default function ModelViewer({url,rotation,showOverhangs=false,overhangDeg=45}:{url?:string;rotation?:Rotation;showOverhangs?:boolean;overhangDeg?:number}){
  const[reset,setReset]=useState(0);
