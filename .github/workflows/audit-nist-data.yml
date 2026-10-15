@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'ml/audit_nist_matto.py'
+      - 'ml/inspect_nist_archive.py'
       - '.github/workflows/audit-nist-data.yml'
 jobs:
   audit:
@@ -14,10 +15,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - run: python -m pip install openpyxl
       - run: python ml/audit_nist_matto.py
+      - name: Inspect downloaded source tables
+        run: |
+          for archive in ml/data/nist_audit/*.zip; do
+            [ -f "$archive" ] || continue
+            python ml/inspect_nist_archive.py --zip "$archive" --out "ml/data/nist_audit/$(basename "$archive" .zip)_specimen_inventory.json"
+          done
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: nist-matto-data-inventory
-          path: ml/data/nist_audit/inventory.json
+          path: ml/data/nist_audit/*.json
           retention-days: 14
