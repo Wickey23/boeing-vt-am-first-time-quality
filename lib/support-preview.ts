@@ -3,7 +3,7 @@ export type Post={x:number;z:number;bottomY:number;topY:number;radius:number};
 export function sampleVerticalSupports(geometry:THREE.BufferGeometry,overhangDeg:number,limit=240):Post[]{
  const pos=geometry.getAttribute("position");
  if(!pos||pos.count%3!==0)return [];
- const box=new THREE.Box3().setFromBufferAttribute(pos),height=box.max.y-box.min.y;
+ geometry.computeBoundingBox();const box=geometry.boundingBox!;const height=box.max.y-box.min.y;
  const raycaster=new THREE.Raycaster(), mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
  mesh.updateMatrixWorld(true);
  const threshold=-Math.sin(Math.max(0,Math.min(89,overhangDeg))*Math.PI/180);
