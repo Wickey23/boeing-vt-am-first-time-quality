@@ -1,0 +1,54 @@
+/* Team-review presentation layer; extends the workspace's scoped engineering styles. */
+.designPage .reviewUpload{min-height:430px;border:1px dashed #397a9f;border-radius:12px;background:radial-gradient(circle at top,#143b54,#0a1b2c 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:13px;padding:34px}
+.designPage .reviewUploadIcon{display:grid;place-items:center;background:#173c59;border:1px solid #376e92;color:#75cfff;width:78px;height:78px;border-radius:18px}
+.designPage .reviewUpload h3{font-size:21px;margin:2px 0 0}
+.designPage .reviewUpload p{color:#9fbed0;max-width:470px;line-height:1.65;margin:0 0 10px}
+.designPage .reviewFileButton{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;min-width:218px;border-radius:7px;background:linear-gradient(#259cf3,#0877d3);padding:13px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.designPage .reviewFileButton input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.designPage .reviewFileButton:focus-within{outline:2px solid #b1e7ff;outline-offset:3px}
+.designPage .reviewQuietLink{font-size:12px;color:#89cdf9;text-decoration:underline;text-underline-offset:3px}
+.designPage .reviewViewport{height:400px;min-height:400px;border-radius:9px;background:#071522;overflow:hidden;border:1px solid #294d65}
+.designPage .reviewViewport .viewer{height:100%;min-height:400px}
+.designPage .reviewViewport .viewerHint{font-size:11px;bottom:12px;left:12px;right:auto}
+.designPage .reviewAside .card h3{display:flex;align-items:center;gap:8px}
+.designPage .reviewAside .card h3 svg{color:#7acafa}
+.designPage .reviewTextInput{width:100%;border:1px solid #3c5b71;background:#071521;color:#ebf7ff;padding:11px 12px;border-radius:6px;font-size:13px;font-family:inherit;min-height:40px}
+.designPage .reviewTwoCols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.designPage .reviewTwoCols label,.designPage .reviewThreeCols label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#acc6d8;font-weight:600;margin-bottom:14px}
+.designPage .reviewThreeCols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.designPage .reviewSubtle{font-size:12px;color:#91aebe;line-height:1.6;margin:12px 0 4px}
+.designPage .reviewInfo{margin:12px 0;background:#103149;border:1px solid #34688a;padding:11px;border-radius:6px;color:#a9d8f2;font-size:12px}
+.designPage .reviewError{margin:12px 0;background:#3a1d27;border:1px solid #89505c;padding:11px;border-radius:6px;color:#ffb7b7;font-size:12px;line-height:1.5}
+.designPage .reviewFingerprint{font-family:monospace;font-size:10px;overflow-wrap:anywhere;color:#8bacbc;padding:4px 2px 12px}
+.designPage .reviewSectionTop{display:flex;gap:14px;align-items:baseline;justify-content:space-between;margin:17px 0 0}
+.designPage .reviewSectionTop h3{margin:0;font-size:17px}
+.designPage .reviewSectionTop span{font-size:11px;color:#8bacbe}
+.designPage .reviewResultBlock{scroll-margin-top:20px}
+.designPage .reviewFitHeadline{background:#10354a;border-left:3px solid #45b4ee;padding:11px 12px;border-radius:3px;font-size:12px;color:#d3edff;margin:5px 0 12px}
+.designPage .reviewFitRows{display:flex;flex-direction:column;gap:0}
+.designPage .reviewFitRows>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #253f51;font-size:12px}
+.designPage .reviewFitRows small{display:block;color:#91afc1;font-size:11px;margin-top:2px}
+.designPage .reviewOk{color:#70dda6;font-size:11px}
+.designPage .reviewNo{color:#ffa8a8;font-size:11px}
+.designPage .reviewFull{width:100%;margin-bottom:12px}
+.designPage .reviewRisk{padding:11px 12px;border:1px solid #33556c;background:#102b3f;border-radius:6px;font-size:13px}
+.designPage .reviewRisk b{color:#ffd07d}
+.designPage .reviewRisk small{display:block;color:#9bb6c6;margin-top:5px;line-height:1.5}
+.designPage .reviewChecks{margin-top:10px}
+.designPage .reviewChecks>div{border-bottom:1px solid #233c4e;padding:13px 0}
+.designPage .reviewChecks>div>div{display:flex;justify-content:space-between;gap:9px}
+.designPage .reviewChecks strong{font-size:12px}
+.designPage .reviewChecks span{font-size:11px;color:#8fd2ff}
+.designPage .reviewChecks p{font-size:12px;line-height:1.55;color:#9cb6c7;margin:5px 0 0}
+.designPage .reviewActions{display:flex;flex-direction:column;gap:9px}
+.designPage .reviewActions button{width:100%;text-transform:none;font-size:12px;letter-spacing:0}
+.designPage .reviewPrintSheet{display:none}
+@media(max-width:750px){.designPage .reviewTwoCols{grid-template-columns:1fr}.designPage .reviewViewport,.designPage .reviewViewport .viewer{height:320px;min-height:320px}.designPage .reviewSectionTop{display:block}.designPage .reviewUpload{padding:25px 12px;min-height:350px}}
+@media print{
+ header,nav,aside,.designPage .uploadHero,.designPage .uploadWorkspace,.designPage .reviewBoundary{display:none!important}
+ html,body,.designPage{background:#fff!important;color:#111!important;margin:0!important;padding:0!important}
+ .designPage .reviewPrintSheet{display:block!important;color:#111;background:#fff;padding:12mm 14mm;font:12pt/1.45 Arial,sans-serif}
+ .designPage .reviewPrintSheet h1{font-size:20pt;border-bottom:2px solid #444;padding-bottom:12px}
+ .designPage .reviewPrintSheet h2{font-size:15pt;margin-top:24px}
+ .designPage .reviewPrintSheet p{margin:8px 0;overflow-wrap:anywhere}
+}
