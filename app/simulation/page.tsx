@@ -22,6 +22,7 @@ const analyzeLocal=async(file:File,settings:any,layerHeightMm?:number):Promise<a
 export default function SimulationStudio(){
  const [file,setFile]=useState<File|null>(null),[url,setUrl]=useState<string>(),[busy,setBusy]=useState(false),[error,setError]=useState(""),[results,setResults]=useState<Results|null>(null),[chosen,setChosen]=useState(""),[view,setView]=useState<"ranked"|"pareto">("ranked");
  const [mode,setMode]=useState<"geometry"|"thermal">("geometry");
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get("mode")==="thermal")setMode("thermal")},[]);
  const [overhangs,setOverhangs]=useState(true);
  const [settings,setSettings]=useState({x:250,y:250,z:300,overhangDeg:45,layerHeightMm:.04});
  useEffect(()=>{if(!file){setUrl(undefined);return}const u=URL.createObjectURL(file);setUrl(u);return()=>URL.revokeObjectURL(u)},[file]);
