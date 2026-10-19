@@ -7,7 +7,7 @@ test('STL upload, orientation, local persistence, fields and report share one ru
  await thermal.getByRole('checkbox').check();await thermal.getByRole('button',{name:'Run steady conduction',exact:true}).click();await expect(thermal.getByText(/Completed for/)).toBeVisible();
  const structural=page.locator('section').filter({has:page.getByRole('heading',{name:'Part-specific service-load elasticity',exact:true})});
  await structural.getByRole('checkbox').check();await structural.getByRole('button',{name:'Run service-load FEM',exact:true}).click();await expect(structural.getByText(/Completed for/)).toBeVisible();
- await page.getByLabel('Visualization',{exact:true}).selectOption('stress');await expect(page.getByText(/Calculated field:.*MPa/)).toBeVisible();
+ await page.getByRole('combobox',{name:'Visualization',exact:true}).selectOption('stress');await expect(page.getByText(/Calculated field:.*MPa/)).toBeVisible();
  await page.getByRole('link',{name:'Open consolidated report / PDF →',exact:true}).click();await expect(page.getByRole('heading',{name:'cube-10mm.stl',exact:true})).toBeVisible();
  const run=await page.getByText(/^Run .* · /).innerText();await page.reload();await expect(page.getByText(run,{exact:true})).toBeVisible();
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Download JSON',exact:true}).click();expect((await download).suggestedFilename()).toMatch(/^orientai-.*\.json$/);
