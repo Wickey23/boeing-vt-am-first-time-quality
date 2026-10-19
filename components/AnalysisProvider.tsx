@@ -10,7 +10,16 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const generation=useRef(0),stop=useRef<()=>void>(()=>{}),restored=useRef(false),saveQueue=useRef(Promise.resolve());
  const cancel=useCallback(()=>{generation.current++;stop.current();setBusy(false);setProgress(0);},[]);
  const invalidate=()=>{cancel();setResult(null);setSelected(null);setError('');};
- useEffect(()=>{let active=true;loadWorkspace().then(s=>{if(!active)return;if(s?.schema===1){setFile(s.file);setSettings({...DEFAULT_SETTINGS,...s.settings});setResult(s.result);setSelected(s.selected);restored.current=!!s.result;}}).catch(()=>{if(active)setStorageError('Local workspace could not be restored. This session remains usable.');}).finally(()=>{if(active)setReady(true);});return()=>{active=false;stop.current();};},[]);
+ useEffect(()=>{let active=true;loadWorkspace().then(s=>{if(!active)return;if(s?.schema===1){
+ const validFile=s.file===null||(typeof File!=="undefined"&&s.file instanceof File&&s.file.name.toLowerCase().endsWith('.stl'));
+ const validSettings=!!s.settings&&typeof s.settings==='object'&&Number.isFinite(s.settings.x)&&Number.isFinite(s.settings.y)&&Number.isFinite(s.settings.z);
+ const validResult=s.result===null||(!!s.result&&typeof s.result==='object'&&typeof s.result.runId==='string'&&Array.isArray(s.result.candidates)&&s.result.candidates.every(c=>c&&typeof c.id==='string'&&c.rotation&&Number.isFinite(c.score))&&s.result.source&&typeof s.result.source.fileHashSha256==='string');
+ if(validFile&&validSettings&&validResult){
+  setFile(s.file);setSettings({...DEFAULT_SETTINGS,...s.settings});
+  setResult(s.result);setSelected(s.selected&&s.result?.candidates.some(c=>c.id===s.selected)?s.selected:null);
+  restored.current=!!s.result;
+ }else{setStorageError('Old or incompatible local workspace was ignored. Start a new analysis; no server copy of the STL exists.');}
+}}).catch(()=>{if(active)setStorageError('Local workspace could not be restored. This session remains usable.');}).finally(()=>{if(active)setReady(true);});return()=>{active=false;stop.current();};},[]);
  useEffect(()=>{if(!ready)return;const snapshot={schema:1 as const,file,settings,result,selected};saveQueue.current=saveQueue.current.catch(()=>{}).then(()=>saveWorkspace(snapshot)).then(()=>setStorageError('')).catch(()=>setStorageError('Local save failed (storage unavailable or full). Export the report before closing this tab.'));},[ready,file,settings,result,selected]);
  useEffect(()=>{
   if(!ready||!file)return;
