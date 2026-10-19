@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "runtime": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.8.0"
+  },
+  "model_version": "ridge-standardized-alpha50-v2",
+  "model": {
+    "features": [
+      "Power",
+      "Velocity",
+      "beam D",
+      "layer thickness"
+    ],
+    "mean": [
+      212.6123595505618,
+      685.6910112359551,
+      77.07865168539325,
+      62.02247191011236
+    ],
+    "scale": [
+      173.0111341615641,
+      862.3353384772179,
+      77.38278191889906,
+      30.78303105009696
+    ],
+    "coefficients": [
+      38.0192612070165,
+      -29.05362626782937,
+      -3.2310177927908645,
+      19.080151159172
+    ],
+    "intercept": 128.4943820224719,
+    "alpha": 50.0
+  },
+  "training_paper_ids": [
+    1.0,
+    13.0,
+    15.0,
+    17.0,
+    50.0,
+    70.0,
+    76.0
+  ],
+  "cross_split_duplicate_feature_target_rows": 0,
+  "units_verified": false,
+  "inference_enabled": false,
+  "source": "https://raw.githubusercontent.com/BaratiLab/MeltpoolNet/main/Data/meltpoolnet_regression.csv",
+  "source_sha256": "197b111bcb3c531d38c8dd7ea0d4e1f78c8b6b03e0fd900a5505c2b18414a4f6",
+  "filter": "Ti-6Al-4V PBF with positive finite melt-pool depth and process features",
+  "n_rows": 227,
+  "train": 178,
+  "holdout": 49,
+  "held_out_paper_ids": [
+    2.0,
+    47.0,
+    79.0
+  ],
+  "ridge_mae": 37.465293413900966,
+  "knn7_mae": 20.781126116769663,
+  "mean_baseline_mae": 84.10685622563632,
+  "status": "UNQUALIFIED_RESEARCH_BASELINE",
+  "limitations": [
+    "Reported target units and measurement provenance require source-paper review",
+    "Study-ID holdout does not ensure independent-machine generalization",
+    "No first-time-quality certification or support-volume labels",
+    "KNN nearest-neighbor ties can vary by numerical library/version; recorded environment required for exact replication"
+  ]
+}
