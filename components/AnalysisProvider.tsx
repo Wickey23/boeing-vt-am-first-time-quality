@@ -3,10 +3,10 @@ import {createContext,useContext,useEffect,useRef,useState,useCallback} from 're
 import type {StructuralField} from "@/lib/voxel-structural";
 import type {ThermalField} from "@/lib/voxel-thermal";
 import {DEFAULT_SETTINGS,requestFor,loadWorkspace,saveWorkspace,type Settings,type Analysis} from '@/lib/analysis-workspace';
-type Context={file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void;clearThermal:()=>void;clearStructural:()=>void};
+type Context={projectName:string;setProjectName:(name:string)=>void;restoreProject:(snapshot:{projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>void;file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void;clearThermal:()=>void;clearStructural:()=>void};
 const C=createContext<Context|null>(null);
 export function AnalysisProvider({children}:{children:React.ReactNode}){
- const [file,setFile]=useState<File|null>(null),[settings,setSettings]=useState<Settings>(DEFAULT_SETTINGS),[result,setResult]=useState<Analysis|null>(null),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[error,setError]=useState(''),[storageError,setStorageError]=useState(''),[ready,setReady]=useState(false),[attempt,setAttempt]=useState(0);
+ const [projectName,setProjectName]=useState("Untitled part");const [file,setFile]=useState<File|null>(null),[settings,setSettings]=useState<Settings>(DEFAULT_SETTINGS),[result,setResult]=useState<Analysis|null>(null),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[error,setError]=useState(''),[storageError,setStorageError]=useState(''),[ready,setReady]=useState(false),[attempt,setAttempt]=useState(0);
  const generation=useRef(0),stop=useRef<()=>void>(()=>{}),restored=useRef(false),saveQueue=useRef(Promise.resolve());
  const cancel=useCallback(()=>{generation.current++;stop.current();setBusy(false);setProgress(0);},[]);
  const invalidate=()=>{cancel();setResult(null);setSelected(null);setError('');};
@@ -15,12 +15,12 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const validSettings=!!s.settings&&typeof s.settings==='object'&&Number.isFinite(s.settings.x)&&Number.isFinite(s.settings.y)&&Number.isFinite(s.settings.z);
  const validResult=s.result===null||(!!s.result&&typeof s.result==='object'&&typeof s.result.runId==='string'&&Array.isArray(s.result.candidates)&&s.result.candidates.every(c=>c&&typeof c.id==='string'&&c.rotation&&Number.isFinite(c.score))&&s.result.source&&typeof s.result.source.fileHashSha256==='string');
  if(validFile&&validSettings&&validResult){
-  setFile(s.file);setSettings({...DEFAULT_SETTINGS,...s.settings});
+  setProjectName(s.projectName||"Untitled part");setFile(s.file);setSettings({...DEFAULT_SETTINGS,...s.settings});
   setResult(s.result);setSelected(s.selected&&s.result?.candidates.some(c=>c.id===s.selected)?s.selected:null);
   restored.current=!!s.result;
  }else{setStorageError('Old or incompatible local workspace was ignored. Start a new analysis; no server copy of the STL exists.');}
 }}).catch(()=>{if(active)setStorageError('Local workspace could not be restored. This session remains usable.');}).finally(()=>{if(active)setReady(true);});return()=>{active=false;stop.current();};},[]);
- useEffect(()=>{if(!ready)return;const snapshot={schema:1 as const,file,settings,result,selected};saveQueue.current=saveQueue.current.catch(()=>{}).then(()=>saveWorkspace(snapshot)).then(()=>setStorageError('')).catch(()=>setStorageError('Local save failed (storage unavailable or full). Export the report before closing this tab.'));},[ready,file,settings,result,selected]);
+ useEffect(()=>{if(!ready)return;const snapshot={schema:1 as const,projectName,file,settings,result,selected};saveQueue.current=saveQueue.current.catch(()=>{}).then(()=>saveWorkspace(snapshot)).then(()=>setStorageError('')).catch(()=>setStorageError('Local save failed (storage unavailable or full). Export the report before closing this tab.'));},[ready,file,settings,result,selected,projectName]);
  useEffect(()=>{
   if(!ready||!file)return;
   if(restored.current){restored.current=false;return;}
@@ -44,7 +44,8 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const attachThermal=(runId:string,candidateId:string,field:ThermalField)=>setResult(r=>r?.runId===runId?{...r,thermal:{runId,candidateId,field}}:r);
  const clearThermal=()=>setResult(r=>r?{...r,thermal:undefined}:r);
  const clearStructural=()=>setResult(r=>r?{...r,structural:undefined}:r);
- const clear=()=>{invalidate();setFile(null);setSettings(DEFAULT_SETTINGS);};
- return <C.Provider value={{file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
+ const restoreProject=(snapshot:{projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>{invalidate();restored.current=!!snapshot.result;setProjectName(snapshot.projectName);setFile(snapshot.file);setSettings({...DEFAULT_SETTINGS,...snapshot.settings});setResult(snapshot.result);setSelected(snapshot.selected);setError("");};
+ const clear=()=>{invalidate();setFile(null);setSettings(DEFAULT_SETTINGS);setProjectName("Untitled part");};
+ return <C.Provider value={{projectName,setProjectName,restoreProject,file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
 }
 export function useAnalysis(){const value=useContext(C);if(!value)throw new Error('AnalysisProvider missing');return value;}
