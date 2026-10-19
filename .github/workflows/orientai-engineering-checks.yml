@@ -1,0 +1,25 @@
+name: ORIENTAI numerical and build checks
+on:
+  push:
+    branches:
+      - integration/orientai-unified-analysis
+      - main
+  pull_request:
+jobs:
+  engineering:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Numerical engineering regression tests
+        run: npm test
+      - name: TypeScript verification
+        run: npm run typecheck
+      - name: Next.js production build
+        run: npm run build
