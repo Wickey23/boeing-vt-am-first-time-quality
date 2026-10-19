@@ -1,0 +1,142 @@
+solid concept_thin_wall_channel
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 0.00000
+  vertex 65.00000 3.00000 0.00000
+  vertex 65.00000 0.00000 0.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 16.00000
+  vertex 65.00000 0.00000 16.00000
+  vertex 65.00000 3.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 0.00000
+  vertex 3.00000 3.00000 0.00000
+  vertex 65.00000 3.00000 0.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 16.00000
+  vertex 65.00000 3.00000 16.00000
+  vertex 3.00000 3.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 0.00000
+  vertex 3.00000 28.00000 0.00000
+  vertex 3.00000 3.00000 0.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 16.00000
+  vertex 3.00000 3.00000 16.00000
+  vertex 3.00000 28.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 0.00000
+  vertex 0.00000 28.00000 0.00000
+  vertex 3.00000 28.00000 0.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 16.00000
+  vertex 3.00000 28.00000 16.00000
+  vertex 0.00000 28.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 0.00000
+  vertex 65.00000 0.00000 0.00000
+  vertex 65.00000 0.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 0.00000 0.00000
+  vertex 65.00000 0.00000 16.00000
+  vertex 0.00000 0.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 65.00000 0.00000 0.00000
+  vertex 65.00000 3.00000 0.00000
+  vertex 65.00000 3.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 65.00000 0.00000 0.00000
+  vertex 65.00000 3.00000 16.00000
+  vertex 65.00000 0.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 65.00000 3.00000 0.00000
+  vertex 3.00000 3.00000 0.00000
+  vertex 3.00000 3.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 65.00000 3.00000 0.00000
+  vertex 3.00000 3.00000 16.00000
+  vertex 65.00000 3.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 3.00000 3.00000 0.00000
+  vertex 3.00000 28.00000 0.00000
+  vertex 3.00000 28.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 3.00000 3.00000 0.00000
+  vertex 3.00000 28.00000 16.00000
+  vertex 3.00000 3.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 3.00000 28.00000 0.00000
+  vertex 0.00000 28.00000 0.00000
+  vertex 0.00000 28.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 3.00000 28.00000 0.00000
+  vertex 0.00000 28.00000 16.00000
+  vertex 3.00000 28.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 28.00000 0.00000
+  vertex 0.00000 0.00000 0.00000
+  vertex 0.00000 0.00000 16.00000
+ endloop
+endfacet
+facet normal 0 0 0
+ outer loop
+  vertex 0.00000 28.00000 0.00000
+  vertex 0.00000 0.00000 16.00000
+  vertex 0.00000 28.00000 16.00000
+ endloop
+endfacet
+endsolid concept_thin_wall_channel
