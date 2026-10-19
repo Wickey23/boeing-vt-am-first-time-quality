@@ -15,8 +15,9 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - name: Install locked dependencies
-        run: npm ci
+          cache-dependency-path: package.json
+      - name: Resolve compatible React 18 dependencies
+        run: npm install --no-audit --no-fund
       - name: Numerical engineering regression tests
         run: npm test
       - name: TypeScript verification
