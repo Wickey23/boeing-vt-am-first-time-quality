@@ -13,7 +13,7 @@ Production was READY at 778a77b9; preceding b580e668 failed a TypeScript click h
 - Physics jobs require review of illustrative inputs. Material name does not silently select qualified properties. Thermal and structural runs are tied to part run UUID and candidate. No physical metrics influence orientation scores yet.
 - One report with JSON and downloadable client-generated PDF; captured configuration, all candidates, findings, performed solvers, omitted capabilities, ML provenance and engineering review requirements.
 - ML rerun: 227 / 178 / 49, Ridge MAE 37.465293413900966 reproduced; KNN 20.781126116769663 vs historical 20.60453342264126 unresolved. Dataset checksum, finite-value cleaning, study disjointness, cross-split duplicates, runtime versions and Ridge parameters recorded. Source units unverified, inference disabled.
-- Next.js 15.5.28, lockfile, numerical regression tests. Legacy fuselage viewer loaded client-side to preserve build compatibility.
+- Next.js 14.2.35 with React 18.3.1 / React Three Fiber 8 restored after browser testing exposed an incompatible upgrade; reproducible lockfile and numerical regression tests. Legacy fuselage viewer loaded client-side to preserve build compatibility.
 
 ## Verification scope
 Automated tests cover box rotations/contact/support, envelope and units, invalid settings, exact thermal slab solution and energy conservation, voxel refinement, zero load, disconnected geometry rejection, exact uniaxial elastic bar and STL field-array correspondence. These verify selected numerical cases, not general solver accuracy or experimental LPBF validity.
@@ -32,3 +32,6 @@ Evaluated primary sources: CalculiX (https://www.calculix.de/ and https://github
 Next: conforming mesh + boundary selection; temperature-dependent k/cp/rho/E/nu/expansion/yield/hardening datasets with provenance; transient laser scan and layer activation benchmarks; sequential thermoplastic coupling; support release and plate removal; calibrated inherent-strain comparison; coupon thermography, displacement and diffraction validation. Run expensive jobs in an explicitly approved local worker or controlled backend, with signed run manifests and checksums. Do not derive residual stress from the current steady temperature field.
 
 Additional data candidates: NIST AM-Bench (controlled benchmark comparisons), NIST AM material data already audited in ml/, BaratiLab MeltpoolNet (melt-pool labels). Compatibility, license, process and unit review precedes training. None supplies automatic support-volume labels; obtain slicer labels on actual CAD geometries for that task.
+
+## Completion follow-up
+Preserved integration viewer recovery and contour legends. Fixed PDF font spacing; restored completed solver inputs on navigation; invalidate input review when switching part/orientation; added original-geometry mode and unlit scalar colors. Added browser regression coverage for upload, local persistence, solver fields and JSON/PDF export. Numerical checks are verification, not experimental validation.

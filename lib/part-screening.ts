@@ -19,8 +19,8 @@ export function screenCandidate(c:ScreenCandidate,all:ScreenCandidate[]):Finding
  return findings;
 }
 export const UNAVAILABLE_PHYSICS=[
- {label:"Part-specific thermal field",state:"Not calculated",detail:"Requires validated laser heat source, scan strategy, material properties and numerical thermal solver."},
+ {label:"Part-specific thermal field",state:"Not calculated",detail:"Run the reviewed steady-conduction case below. Transient laser heating and layer deposition are not implemented."},
  {label:"Residual stress and distortion",state:"Not calculated",detail:"Requires transient thermomechanical analysis, appropriate constraints and calibration."},
- {label:"Service-load stress and displacement",state:"Not calculated",detail:"Requires meshing, loads, fixture conditions and structural FEM."},
+ {label:"Service-load stress and displacement",state:"Not calculated",detail:"Run the reviewed linear-elastic case below. Bottom clamp and top-face loads are idealized; no residual stress is computed."},
  {label:"Porosity, cracking and first-time failure",state:"Not calculated",detail:"Requires verified process and defect models plus physical validation."}
 ] as const;
