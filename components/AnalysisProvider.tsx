@@ -3,7 +3,7 @@ import {createContext,useContext,useEffect,useRef,useState,useCallback} from 're
 import type {StructuralField} from "@/lib/voxel-structural";
 import type {ThermalField} from "@/lib/voxel-thermal";
 import {DEFAULT_SETTINGS,requestFor,loadWorkspace,saveWorkspace,type Settings,type Analysis} from '@/lib/analysis-workspace';
-type Context={file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void};
+type Context={file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void;clearThermal:()=>void;clearStructural:()=>void};
 const C=createContext<Context|null>(null);
 export function AnalysisProvider({children}:{children:React.ReactNode}){
  const [file,setFile]=useState<File|null>(null),[settings,setSettings]=useState<Settings>(DEFAULT_SETTINGS),[result,setResult]=useState<Analysis|null>(null),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[error,setError]=useState(''),[storageError,setStorageError]=useState(''),[ready,setReady]=useState(false),[attempt,setAttempt]=useState(0);
@@ -33,7 +33,9 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const retry=()=>{invalidate();setAttempt(x=>x+1);};
  const attachStructural=(runId:string,candidateId:string,field:StructuralField)=>setResult(r=>r?.runId===runId?{...r,structural:{runId,candidateId,field}}:r);
  const attachThermal=(runId:string,candidateId:string,field:ThermalField)=>setResult(r=>r?.runId===runId?{...r,thermal:{runId,candidateId,field}}:r);
+ const clearThermal=()=>setResult(r=>r?{...r,thermal:undefined}:r);
+ const clearStructural=()=>setResult(r=>r?{...r,structural:undefined}:r);
  const clear=()=>{invalidate();setFile(null);setSettings(DEFAULT_SETTINGS);};
- return <C.Provider value={{file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural}}>{children}</C.Provider>;
+ return <C.Provider value={{file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
 }
 export function useAnalysis(){const value=useContext(C);if(!value)throw new Error('AnalysisProvider missing');return value;}
