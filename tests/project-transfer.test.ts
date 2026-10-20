@@ -19,3 +19,5 @@ test("project import rejects tampered STL payload",async()=>{
  packed.stlBase64=btoa("altered");
  await assert.rejects(importPortableProject(JSON.stringify(packed)),/checksum mismatch/);
 });
+
+test('project import rejects incomplete process settings',async()=>{const file=new File([readFileSync('public/verification/cube-10mm.stl')],'cube.stl');const data=JSON.parse(await exportPortableProject('test',file,DEFAULT_SETTINGS,null,null));delete data.settings.layerHeightMm;await assert.rejects(importPortableProject(JSON.stringify(data)),/configuration field/);});

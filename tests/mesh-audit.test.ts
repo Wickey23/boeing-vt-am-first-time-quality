@@ -26,3 +26,5 @@ test("aerospace bracket and hollow nozzle sleeve remain connected",()=>{
   assert.equal(result.openEdges,0,name);
  }
 });
+
+test('mounting lug remains watertight with a through bore',()=>{const bytes=readFileSync('public/verification/aerospace-mounting-lug.stl');const a=auditSTL(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));assert.equal(a.openEdges,0);assert.equal(a.nonManifoldEdges,0);assert.equal(a.disconnectedShells,1);});

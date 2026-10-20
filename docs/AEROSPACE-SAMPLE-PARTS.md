@@ -24,3 +24,6 @@ All dimensions in these ASCII STL examples are **millimeters**. The examples are
 3. Attempt physical solvers only after confirmed closure and voxel resolution; compare coarse/fine meshes.
 4. Load an intentionally open or non-manifold STL and verify a clear, actionable error.
 5. Export and independently review a complete report. A Vercel READY status alone is not acceptance.
+
+## Reproducible mounting-lug example
+`aerospace-mounting-lug.stl` is an original extruded lug with a 10 mm bore, 6 mm thickness and 40 × 44 mm outline. Regenerate with `node --import tsx scripts/generate-mounting-lug.ts`. No flight component drawing was copied. Source inspiration is the component category, not dimensions or topology: Airbus documents titanium printed pylon brackets (https://www.airbus.com/en/newsroom/press-releases/2017-09-first-titanium-3d-printed-part-installed-into-serial-production). This specimen is an educational bracket, not that Airbus part.

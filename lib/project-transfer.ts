@@ -1,3 +1,4 @@
+import {DEFAULT_SETTINGS} from "./analysis-workspace";
 import type {Analysis,Settings} from "./analysis-workspace";
 export type PortableProject={format:"ORIENTAI_PROJECT_V1";name:string;createdAt:string;fileName:string;fileSha256:string;stlBase64:string;settings:Settings;result:Analysis|null;selected:string|null};
 const hex=(buf:ArrayBuffer)=>Array.from(new Uint8Array(buf),b=>b.toString(16).padStart(2,"0")).join("");
@@ -18,7 +19,10 @@ export async function importPortableProject(text:string){
  const digest=await hash(bytes.buffer);if(digest.toLowerCase()!==data.fileSha256.toLowerCase())throw Error("Project STL checksum mismatch; import stopped");
  const s=data.settings;
  if(!s||!Number.isFinite(s.x)||!Number.isFinite(s.y)||!Number.isFinite(s.z)||!Number.isFinite(s.unitScale)||s.unitScale<=0)throw Error("Invalid manufacturing configuration");
+ for(const [k,v] of Object.entries(DEFAULT_SETTINGS)){const actual=(s as unknown as Record<string,unknown>)[k];if(typeof actual!==typeof v||(typeof actual==='number'&&!Number.isFinite(actual)))throw Error('Invalid configuration field: '+k);}
+ if(s.x<=0||s.y<=0||s.z<=0||s.layerHeightMm<=0||s.searchSamples<0||s.searchSamples>360||!Number.isInteger(s.searchSamples))throw Error('Configuration out of range');
  const r=data.result;
+ if(r&&Object.keys(DEFAULT_SETTINGS).some(k=>(r.configuration as unknown as Record<string,unknown>)?.[k]!==(s as unknown as Record<string,unknown>)[k]))throw Error('Saved results use a different manufacturing configuration');
  const valid=r===null||(r&&Array.isArray(r.candidates)&&r.candidates.every(c=>c&&typeof c.id==="string"&&c.rotation&&Number.isFinite(c.score))&&typeof r.runId==="string"&&r.source?.fileHashSha256===digest);
  if(!valid)throw Error("Analysis result doesn't match imported part or has an incompatible schema");
  const file=new File([bytes],data.fileName,{type:"model/stl"});
