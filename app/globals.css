@@ -35,3 +35,4 @@ html,body{background:#f5f7fb;color:#14253d;font-family:Inter,Arial,Helvetica,san
 .researchNavigation{margin:28px 14px;color:#9fb7cd;font-size:13px}.researchNavigation summary{padding:10px 0}.guidedIntro p{overflow-wrap:anywhere}
 
 .sampleGrid button{height:auto;min-height:210px}.sampleGrid img{display:block;width:100%;height:115px;object-fit:contain;margin-bottom:10px}.setupDiagram{width:230px;max-width:100%;height:105px;display:block;margin:12px auto}.setupDiagram text{font-size:12px;fill:#365d79}.guidedIntro h1:focus{outline:none}
+.guidedWelcome .uploadButton{color:#fff}.guidedWelcome .uploadButton:hover{background:#174d94}
