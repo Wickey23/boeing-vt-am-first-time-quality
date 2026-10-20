@@ -1,3 +1,5 @@
 /// <reference lib="webworker" />
 import {solvePartStructural} from '../lib/voxel-structural';
-self.onmessage=e=>{try{const {file,rotation,unitScale,input}=e.data;self.postMessage({ok:true,field:solvePartStructural(file,rotation,unitScale,input)});}catch(e){self.postMessage({ok:false,error:e instanceof Error?e.message:'Structural solve failed'});}};
+self.onmessage=e=>{try{const {file,rotation,unitScale,input}=e.data;
+ if(e.data.compare){const coarse=solvePartStructural(file,rotation,unitScale,input);const resolution=Math.min(12,input.resolution+2);if(resolution<=input.resolution)throw Error('Already at maximum structural resolution');const finer=solvePartStructural(file,rotation,unitScale,{...input,resolution});self.postMessage({ok:true,comparison:{coarse:{resolution:input.resolution,stressMPa:coarse.solver.maxVonMisesMPa,displacementMm:coarse.solver.maxDisplacementMm},finer:{resolution,stressMPa:finer.solver.maxVonMisesMPa,displacementMm:finer.solver.maxDisplacementMm},note:'Two resolutions measure sensitivity, not mesh independence or validation. Clamped-edge stress may remain singular; linear tetrahedra can be overly stiff in bending.'}})}else self.postMessage({ok:true,field:solvePartStructural(file,rotation,unitScale,input)});
+ }catch(e){self.postMessage({ok:false,error:e instanceof Error?e.message:'Structural solve failed'});}};
