@@ -50,3 +50,37 @@ test('welcome hides results and unit changes require confirmation',async({page})
  await page.getByLabel('STL source units',{exact:true}).selectOption('25.4');await expect(page.getByText('254.00 × 254.00 × 254.00',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:'2 · Manufacturing setup',exact:true})).toBeDisabled();
  await expect(page.getByText('Active workspace saved on this device.',{exact:true})).toBeVisible();await page.reload();await expect(page.getByRole('button',{name:'Confirm dimensions & continue',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'3 · Results',exact:true})).toBeDisabled();
 });
+
+test('original-part service settings persist and edits invalidate the old field',async({page})=>{
+ page.setDefaultTimeout(10000);
+ const errors:string[]=[];page.on('pageerror',e=>{errors.push(e.message);console.log('Service page error:',e.message)});
+ await upload(page);console.log('Service test: uploaded');
+ await page.getByRole('button',{name:'Optional studies',exact:true}).click();
+ await page.getByText('Service-load stress study',{exact:true}).click();
+ const panel=page.locator('section').filter({has:page.getByRole('heading',{name:'Part-specific service-load elasticity',exact:true})});
+ await panel.getByLabel('Fixed end in original part axes',{exact:true}).selectOption('y-max');console.log('Service test: fixture selected');
+ await page.getByRole('button',{name:'Show service-load boundary schematic',exact:true}).click();console.log('Service test: schematic requested');
+ await expect(page.getByText('Original-part y-max: clamped end',{exact:false})).toBeVisible();
+ await panel.getByLabel('Total Y force (N)',{exact:true}).fill('-25');
+ await panel.getByLabel('Maximum allowed displacement (mm, optional)',{exact:true}).fill('0.01');
+ await panel.getByRole('checkbox').check();
+ await panel.getByRole('button',{name:'Run service-load FEM',exact:true}).click();console.log('Service test: solver requested');
+ await expect(panel.getByText(/Completed for/)).toBeVisible();
+ await expect(panel.getByText(/Displacement requirement: within-model-limit/)).toBeVisible();
+ await expect(page.getByText('Active workspace saved on this device.',{exact:true})).toBeVisible();
+ await page.reload();console.log('Service test: reloaded');
+ await page.getByRole('button',{name:'Optional studies',exact:true}).click();
+ await page.getByText('Service-load stress study',{exact:true}).click();
+ await expect(panel.getByLabel('Fixed end in original part axes',{exact:true})).toHaveValue('y-max');
+ await expect(panel.getByLabel('Total Y force (N)',{exact:true})).toHaveValue('-25');
+ await expect(panel.getByText(/Completed for/)).toBeVisible();
+ // Restoring a project intentionally requires a fresh geometry confirmation before edits.
+ await page.getByRole('button',{name:'Confirm dimensions before a study',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm dimensions & continue',exact:true}).click();
+ await page.getByRole('button',{name:'3 · Results',exact:true}).click();
+ await page.getByText('Service-load stress study',{exact:true}).click();
+ await panel.getByLabel('Total Y force (N)',{exact:true}).fill('-50');
+ await expect(panel.getByText(/Completed for/)).toHaveCount(0);
+ await expect(panel.getByRole('button',{name:'Run service-load FEM',exact:true})).toBeDisabled();
+ expect(errors).toEqual([]);
+});

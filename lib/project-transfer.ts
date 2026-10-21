@@ -1,3 +1,4 @@
+import {validateServiceSetup} from './service-load';
 import {DEFAULT_SETTINGS} from "./analysis-workspace";
 import type {Analysis,Settings} from "./analysis-workspace";
 export type PortableProject={format:"ORIENTAI_PROJECT_V1";name:string;createdAt:string;fileName:string;fileSha256:string;stlBase64:string;settings:Settings;result:Analysis|null;selected:string|null};
@@ -25,6 +26,7 @@ export async function importPortableProject(text:string){
  if(r&&Object.keys(DEFAULT_SETTINGS).some(k=>(r.configuration as unknown as Record<string,unknown>)?.[k]!==(s as unknown as Record<string,unknown>)[k]))throw Error('Saved results use a different manufacturing configuration');
  const valid=r===null||(r&&Array.isArray(r.candidates)&&r.candidates.every(c=>c&&typeof c.id==="string"&&c.rotation&&Number.isFinite(c.score))&&typeof r.runId==="string"&&r.source?.fileHashSha256===digest);
  if(!valid)throw Error("Analysis result doesn't match imported part or has an incompatible schema");
+ if(r?.serviceSetup)validateServiceSetup(r.serviceSetup);
  const file=new File([bytes],data.fileName,{type:"model/stl"});
  return {name:typeof data.name==="string"?data.name.slice(0,120):"Imported part",file,settings:s,result:r,selected:r&&r.candidates.some(c=>c.id===data.selected)?data.selected:null};
 }
