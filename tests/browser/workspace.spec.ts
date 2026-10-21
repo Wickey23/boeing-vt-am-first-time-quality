@@ -52,11 +52,14 @@ test('welcome hides results and unit changes require confirmation',async({page})
 });
 
 test('original-part service settings persist and edits invalidate the old field',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await upload(page);
  await page.getByRole('button',{name:'Optional studies',exact:true}).click();
  await page.getByText('Service-load stress study',{exact:true}).click();
  const panel=page.locator('section').filter({has:page.getByRole('heading',{name:'Part-specific service-load elasticity',exact:true})});
  await panel.getByLabel('Fixed end in original part axes',{exact:true}).selectOption('y-max');
+ await page.getByRole('button',{name:'Show service-load boundary schematic',exact:true}).click();
+ await expect(page.getByText('Original-part y-max: clamped end',{exact:false})).toBeVisible();
  await panel.getByLabel('Total Y force (N)',{exact:true}).fill('-25');
  await panel.getByLabel('Maximum allowed displacement (mm, optional)',{exact:true}).fill('0.01');
  await panel.getByRole('checkbox').check();
@@ -73,4 +76,5 @@ test('original-part service settings persist and edits invalidate the old field'
  await panel.getByLabel('Total Y force (N)',{exact:true}).fill('-50');
  await expect(panel.getByText(/Completed for/)).toHaveCount(0);
  await expect(panel.getByRole('button',{name:'Run service-load FEM',exact:true})).toBeDisabled();
+ expect(errors).toEqual([]);
 });
