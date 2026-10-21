@@ -74,6 +74,11 @@ test('original-part service settings persist and edits invalidate the old field'
  await expect(panel.getByLabel('Fixed end in original part axes',{exact:true})).toHaveValue('y-max');
  await expect(panel.getByLabel('Total Y force (N)',{exact:true})).toHaveValue('-25');
  await expect(panel.getByText(/Completed for/)).toBeVisible();
+ // Restoring a project intentionally requires a fresh geometry confirmation before edits.
+ await page.getByRole('button',{name:'Confirm dimensions before a study',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm dimensions & continue',exact:true}).click();
+ await page.getByRole('button',{name:'3 · Results',exact:true}).click();
+ await page.getByText('Service-load stress study',{exact:true}).click();
  await panel.getByLabel('Total Y force (N)',{exact:true}).fill('-50');
  await expect(panel.getByText(/Completed for/)).toHaveCount(0);
  await expect(panel.getByRole('button',{name:'Run service-load FEM',exact:true})).toBeDisabled();
