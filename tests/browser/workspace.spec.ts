@@ -84,3 +84,44 @@ test('original-part service settings persist and edits invalidate the old field'
  await expect(panel.getByRole('button',{name:'Run service-load FEM',exact:true})).toBeDisabled();
  expect(errors).toEqual([]);
 });
+
+test('multiple load cases persist through manufacturing changes and export',async({page})=>{
+ await upload(page);
+ const openService=async()=>{
+  await page.getByRole('button',{name:'Optional studies',exact:true}).click();
+  await page.getByText('Service-load stress study',{exact:true}).click();
+ };
+ await openService();
+ const panel=page.locator('section').filter({has:page.getByRole('heading',{name:'Part-specific service-load elasticity',exact:true})});
+ await panel.getByLabel('Case name',{exact:true}).fill('Axial case');
+ await panel.getByLabel('Total Z force (N)',{exact:true}).fill('120');
+ await panel.getByRole('checkbox').check();
+ await panel.getByRole('button',{name:'Run service-load FEM',exact:true}).click();
+ await expect(panel.getByText(/Completed for Axial case/)).toBeVisible();
+ await panel.getByRole('button',{name:'Duplicate as new load case',exact:true}).click();
+ await panel.getByLabel('Case name',{exact:true}).fill('Lateral case');
+ await panel.getByLabel('Total X force (N)',{exact:true}).fill('40');
+ await expect(panel.getByText(/Completed for/)).toHaveCount(0);
+ await panel.getByLabel('Service load case',{exact:true}).selectOption({label:'Axial case'});
+ await expect(panel.getByText(/Completed for Axial case/)).toBeVisible();
+ await advanced(page);
+ await page.getByLabel('Arbitrary-angle samples (plus 24 orthogonal)',{exact:true}).fill('0');
+ await page.getByRole('button',{name:'Find build orientations',exact:true}).click();
+ await expect(page.getByText('24 evaluated',{exact:true})).toBeVisible();
+ await openService();
+ await expect(panel.getByLabel('Total Z force (N)',{exact:true})).toHaveValue('120');
+ await expect(panel.getByText(/Completed for/)).toHaveCount(0);
+ await panel.getByLabel('Service load case',{exact:true}).selectOption({label:'Lateral case'});
+ await expect(panel.getByLabel('Total X force (N)',{exact:true})).toHaveValue('40');
+ await page.getByRole('button',{name:'Save & report',exact:true}).click();
+ const download=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Export project backup',exact:true}).click();
+ const {readFile}=await import('node:fs/promises');
+ const data=JSON.parse(await readFile((await (await download).path())!,'utf8'));
+ expect(data.servicePlan.cases.map((c:{name:string})=>c.name)).toEqual(['Axial case','Lateral case']);
+ expect(data.servicePlan.cases[1].input.forceXN).toBe(40);
+ await expect(page.getByText('Active workspace saved on this device.',{exact:true})).toBeVisible();
+ await page.reload();await openService();
+ await expect(panel.getByLabel('Service load case',{exact:true})).toHaveValue(data.servicePlan.activeCaseId);
+ await expect(panel.getByLabel('Total X force (N)',{exact:true})).toHaveValue('40');
+});
