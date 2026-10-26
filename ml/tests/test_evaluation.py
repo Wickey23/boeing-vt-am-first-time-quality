@@ -40,6 +40,12 @@ class EvaluationTests(unittest.TestCase):
         self.assertFalse(report['inference_enabled'])
         self.assertEqual(report['split_sha256'],changed['split_sha256'])
 
+    def test_cross_study_duplicates_also_block_development_folds(self):
+        duplicated=self.train.copy()
+        duplicated.loc[2, ['x','y']]=duplicated.loc[0, ['x','y']].to_numpy()
+        with self.assertRaises(ValueError):
+            diagnostics(duplicated,self.holdout,['x'],'y',{'model':[14.,16.]})
+
     def test_metrics_reject_missing_or_nonfinite_predictions(self):
         for actual,predicted in [([],[]),([1],[np.nan]),([1,2],[1])]:
             with self.assertRaises(ValueError):metrics(actual,predicted)

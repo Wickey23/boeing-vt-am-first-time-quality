@@ -38,6 +38,7 @@ def diagnostics(train, holdout, features, target, predictions, group="paper ID")
     for study in sorted(train[group].unique()):
         fit = train[train[group] != study]
         test = train[train[group] == study]
+        validate_study_split(fit, test, features, target, group)
         if len(fit) < 2:
             raise ValueError("Insufficient independent development studies")
         model = make_pipeline(StandardScaler(), Ridge(alpha=50.0))
