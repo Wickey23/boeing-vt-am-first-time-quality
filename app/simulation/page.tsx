@@ -1,3 +1,18 @@
 "use client";
-import {useState} from 'react';import Link from 'next/link';import AppShell from '@/components/v2/AppShell';import ThermalPanel from '@/components/v2/ThermalPanel';import StructuralPanel from '@/components/v2/StructuralPanel';import {useAnalysis} from '@/components/AnalysisProvider';
-export default function Simulation(){const {file,result}=useAnalysis();const [mode,setMode]=useState<'thermal'|'structural'>('thermal');return <AppShell title="Solver verification benchmarks"><section className="studioCard"><h2>Active component: {file?.name??'No part selected'}</h2><p>{result?'Active analysis run: '+result.runId:'Upload a component in the analysis workspace.'}</p><Link className="studioAction primary" href="/orientation">Return to unified part analysis →</Link><p>The following analytic benchmarks verify isolated equations. Their results are not fields on your uploaded component and are not included as part-specific simulations in its report.</p><button onClick={()=>setMode('thermal')}>1D thermal benchmark</button><button onClick={()=>setMode('structural')}>Beam structural benchmark</button></section>{mode==='thermal'?<ThermalPanel/>:<StructuralPanel/>}</AppShell>}
+import Link from "next/link";
+import AppShell from "@/components/v2/AppShell";
+import DedPlanningStudio from "@/components/DedPlanningStudio";
+export default function SimulationCenter(){
+ return <AppShell title="Simulation Center">
+  <div className="guidedIntro">
+   <p className="guidedEyebrow">ORIENTAI · MANUFACTURING SIMULATION</p>
+   <h2>Understand the build, the part, and the manufacturing route.</h2>
+   <p>DED path planning and deterministic manufacturing-flow comparison are working teaching tools. FEA, thermal and distortion capabilities carry independent evidence limits, not a single generalized simulation pass.</p>
+   <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:18}}>
+    <Link className="studioAction secondary" href="/orientation">Part Workspace / service FEA →</Link>
+    <Link className="studioAction secondary" href="/simulation/benchmarks">Numerical solver benchmarks →</Link>
+   </div>
+  </div>
+  <DedPlanningStudio/>
+ </AppShell>;
+}

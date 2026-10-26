@@ -1,0 +1,30 @@
+import {test,expect} from "@playwright/test";
+test("simulation center computes DED teaching tracks and exports Simio input tables",async({page})=>{
+ const errors:string[]=[];
+ page.on("pageerror",e=>errors.push(e.message));
+ await page.goto("/simulation");
+ await expect(page.getByRole("heading",{name:"Simulation Center",exact:true})).toBeVisible();
+ await expect(page.getByText("An STL is loaded",{exact:false})).toHaveCount(0);
+ await expect(page.getByText("No STL is loaded",{exact:false})).toBeVisible();
+ await expect(page.getByLabel("DED process variant")).toHaveValue("DED_LB_WIRE");
+ await expect(page.getByText("480 mm",{exact:false})).toBeVisible();
+ await expect(page.getByText("2.773 min",{exact:false})).toBeVisible();
+ await expect(page.getByText("NOT EVALUATED",{exact:false}).first()).toBeVisible();
+ await page.getByLabel("Track strategy").selectOption("one-way");
+ await expect(page.getByText("480 mm",{exact:false})).toBeVisible();
+ await page.getByLabel("DED process variant").selectOption("DED_LB_POWDER");
+ await expect(page.getByLabel("DED process variant")).toHaveValue("DED_LB_POWDER");
+ const downloadEvent=page.waitForEvent("download");
+ await page.getByRole("button",{name:"Export scenario for Simio (ZIP)"}).click();
+ const download=await downloadEvent;
+ expect(download.suggestedFilename()).toMatch(/^orientai-ded-wall-[a-f0-9]{8}-simio-exchange\.zip$/);
+ expect(errors).toEqual([]);
+});
+test("invalid process input prevents reference output and export",async({page})=>{
+ await page.goto("/simulation");
+ await page.getByLabel("Nominal wall length (mm)").fill("500");
+ await expect(page.getByRole("alert").first()).toContainText("fit the substrate");
+ await expect(page.getByRole("button",{name:"Export scenario for Simio (ZIP)"})).toHaveCount(0);
+ await page.getByRole("button",{name:"Reset example inputs"}).click();
+ await expect(page.getByRole("button",{name:"Export scenario for Simio (ZIP)"})).toBeEnabled();
+});
