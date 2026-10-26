@@ -74,8 +74,7 @@ export default function UnifiedOrientationPage(){
  const dedSet=(key:keyof DedWallInput,value:unknown)=>a.setDedInput({...j.dedInput,[key]:value});
  const dedNumber=(key:keyof DedWallInput,label:string)=> <label key={key}>{label}<input type="number" step={key==="batchSize"?1:"any"} value={Number.isFinite(j.dedInput[key] as number)?j.dedInput[key] as number:""} onChange={e=>dedSet(key,Number(e.target.value))}/></label>;
  const exportSimio=()=>{if(!ded.plan||!ded.flow)return;try{
-  const files=createSimioExchange(ded.plan,ded.flow);
-  files["README.txt"]="ORIENTAI example DED wall. CSV scenario data for a separately authored Simio model; NOT a Simio execution. No machine feasibility, thermal distortion or physical qualification is established.\n";
+  const files={...createSimioExchange(ded.plan,ded.flow),"README.txt":"ORIENTAI example DED wall. CSV scenario data for a separately authored Simio model; NOT a Simio execution. No machine feasibility, thermal distortion or physical qualification is established.\n"};
   download(ded.plan.scenarioId+"-simio-data.zip",zipTextFiles(files),"application/zip");setMessage("Simio data tables exported. A separately configured Simio model is required.");
  }catch(e){setMessage(e instanceof Error?e.message:"Export failed");}};
  const exportProject=async()=>{if(!a.file)return;setExportBusy(true);setMessage("");try{
@@ -95,10 +94,10 @@ export default function UnifiedOrientationPage(){
  const summaryName=isDed?"Synthetic DED teaching wall":a.file?.name??"No part selected";
  const preview=<div className="journeyPartPreview">
    <div className="journeyViewerHeader"><strong>{summaryName}</strong><Status kind={isDed?"info":a.file?"ok":"missing"}>{isDed?"Example geometry":a.file?"Your STL":"No part"}</Status></div>
-   {isDed&&ded.plan?<DedWallViewer plan={ded.plan}/>:a.file&&viewerUrl?<div className="journeyViewerFrame"><ViewerErrorBoundary><ModelViewer url={viewerUrl} rotation={j.step==="options"||j.step==="studies"||j.step==="decision"?candidate?.rotation:undefined} unitScale={a.settings.unitScale} overhangDeg={a.settings.overhangDeg} showOverhangs={j.step==="options"||j.step==="decision"} field={
+   {isDed&&ded.plan?<DedWallViewer plan={ded.plan}/>:a.file&&viewerUrl?<div className="journeyViewerFrame"><ViewerErrorBoundary><ModelViewer url={viewerUrl} rotation={j.step==="options"||j.step==="studies"||j.step==="decision"?candidate?.rotation:undefined} unitScale={a.settings.unitScale} overhangDeg={a.settings.overhangDeg} showOverhangs={j.step==="options"||j.step==="decision"} field={isLPBF?(
       showFields==="stress"?a.result?.structural?.field.stress:
       showFields==="displacement"?a.result?.structural?.field.displacement:
-      showFields==="thermal"&&a.result?.thermal?.candidateId===a.selected?a.result.thermal.field:undefined
+      showFields==="thermal"&&a.result?.thermal?.candidateId===a.selected?a.result.thermal.field:undefined):undefined
      } fieldLabel={showFields==="stress"?"Service stress":showFields==="displacement"?"Service displacement":showFields==="thermal"?"Steady conduction temperature":undefined}/></ViewerErrorBoundary></div>:
      <div className="journeyEmptyViewer"><span aria-hidden="true">⬡</span><p>{isDed?ded.error:"Upload an STL or open a teaching example to see the part here."}</p></div>}
    <div className="journeyViewerNote">{isDed?"Synthetic wall with assumed bead dimensions — not your uploaded geometry":a.file?"Actual uploaded STL · model orientation and research contours only":"No geometry is being analyzed"}</div>
