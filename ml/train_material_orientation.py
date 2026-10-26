@@ -16,6 +16,7 @@ def run(path:Path, output:Path):
  d=pd.read_csv(path)
  missing=set(REQUIRED)-set(d)
  if missing: raise ValueError("Missing required measured columns: "+str(sorted(missing)))
+ if d[REQUIRED].isna().any().any() or any(d[c].astype(str).str.strip().eq("").any() for c in ["study_id","specimen_id","material","process_profile_id"]): raise ValueError("Missing specimen identity or process provenance")
  if d.study_id.nunique()<3 or len(d)<30: raise ValueError("Require >=30 experimental specimens and >=3 independently identifiable studies for holdout validation")
  if d.material.nunique()!=1 or d.process_profile_id.nunique()!=1: raise ValueError("One material and process profile per model")
  d["build_angle_deg"]=pd.to_numeric(d.build_angle_deg,errors="coerce")
@@ -30,7 +31,7 @@ def run(path:Path, output:Path):
  model=RandomForestRegressor(n_estimators=200,min_samples_leaf=3,random_state=42)
  model.fit(X[tr],y[tr]); p=model.predict(X[te])
  dummy=DummyRegressor(strategy="mean");dummy.fit(X[tr],y[tr]);b=dummy.predict(X[te])
- report={"status":"RESEARCH_ONLY_NOT_QUALIFIED","target":"measured_yield_strength_mpa","material":str(d.material.iloc[0]),"process_profile":str(d.process_profile_id.iloc[0]),"sample_count":len(d),"training_studies":int(d.study_id.iloc[tr].nunique()),"holdout_studies":int(d.study_id.iloc[te].nunique()),"holdout_mae_mpa":float(mean_absolute_error(y[te],p)),"naive_baseline_mae_mpa":float(mean_absolute_error(y[te],b)),"data_sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"release_eligible":bool(mean_absolute_error(y[te],p)<mean_absolute_error(y[te],b)),"note":"Study-held-out exploratory validation only; no aircraft allowable inference or qualification"}
+ report={"status":"RESEARCH_ONLY_NOT_QUALIFIED","target":"measured_yield_strength_mpa","material":str(d.material.iloc[0]),"process_profile":str(d.process_profile_id.iloc[0]),"sample_count":len(d),"training_studies":int(d.study_id.iloc[tr].nunique()),"holdout_studies":int(d.study_id.iloc[te].nunique()),"holdout_mae_mpa":float(mean_absolute_error(y[te],p)),"naive_baseline_mae_mpa":float(mean_absolute_error(y[te],b)),"data_sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"beats_mean_baseline":bool(mean_absolute_error(y[te],p)<mean_absolute_error(y[te],b)),"release_eligible":False,"inference_enabled":False,"release_blockers":["Independent provenance/property-condition review required","External validation and predeclared engineering tolerances required","Predictive uncertainty and applicability domain not validated"],"note":"Study-held-out exploratory validation only; no aircraft allowable inference or qualification"}
  output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(report,indent=2)+"\n");print(json.dumps(report,indent=2))
 if __name__=="__main__":
  a=argparse.ArgumentParser();a.add_argument("--csv",required=True,type=Path);a.add_argument("--out",default="ml/reports/material-orientation.json",type=Path);p=a.parse_args();run(p.csv,p.out)

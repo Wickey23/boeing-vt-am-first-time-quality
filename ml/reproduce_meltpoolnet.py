@@ -10,6 +10,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import StandardScaler
+from evaluation import diagnostics, validate_study_split
 
 SOURCE="https://raw.githubusercontent.com/BaratiLab/MeltpoolNet/main/Data/meltpoolnet_regression.csv"
 FEATURES=["Power","Velocity","beam D","layer thickness"]
@@ -36,7 +37,7 @@ def main():
  papers=sorted(d["paper ID"].unique())
  held=set(x for i,x in enumerate(papers) if i%4==1)
  tr=d[~d["paper ID"].isin(held)];te=d[d["paper ID"].isin(held)]
- assert set(tr["paper ID"]).isdisjoint(set(te["paper ID"]))
+ validate_study_split(tr,te,FEATURES,"depth of meltpool")
  duplicate_keys=FEATURES+["depth of meltpool"]
  overlap=tr[duplicate_keys].merge(te[duplicate_keys],on=duplicate_keys).drop_duplicates()
  if len(d)<100 or len(papers)<5 or len(tr)<50 or len(te)<20:raise ValueError("Dataset underpowered or incompatible")
@@ -46,5 +47,10 @@ def main():
  knn=KNeighborsRegressor(n_neighbors=7,weights="distance").fit(xtrain,tr["depth of meltpool"])
  actual=te["depth of meltpool"]
  report={"schema_version":2,"runtime":{"python":platform.python_version(),"numpy":np.__version__,"pandas":pd.__version__,"scikit_learn":sklearn.__version__},"model_version":"ridge-standardized-alpha50-v2","model":{"features":FEATURES,"mean":scale.mean_.tolist(),"scale":scale.scale_.tolist(),"coefficients":ridge.coef_.tolist(),"intercept":float(ridge.intercept_),"alpha":50.0},"training_paper_ids":sorted(set(tr["paper ID"])),"cross_split_duplicate_feature_target_rows":len(overlap),"units_verified":False,"inference_enabled":False,"source":SOURCE,"source_sha256":source_sha,"filter":"Ti-6Al-4V PBF with positive finite melt-pool depth and process features","n_rows":len(d),"train":len(tr),"holdout":len(te),"held_out_paper_ids":sorted(held),"ridge_mae":float(mean_absolute_error(actual,np.maximum(0,ridge.predict(xtest)))),"knn7_mae":float(mean_absolute_error(actual,knn.predict(xtest))),"mean_baseline_mae":float(mean_absolute_error(actual,np.repeat(tr["depth of meltpool"].mean(),len(te)))),"status":"UNQUALIFIED_RESEARCH_BASELINE","limitations":["Reported target units and measurement provenance require source-paper review","Study-ID holdout does not ensure independent-machine generalization","No first-time-quality certification or support-volume labels","KNN nearest-neighbor ties can vary by numerical library/version; recorded environment required for exact replication"]}
+ report["evaluation"]=diagnostics(tr,te,FEATURES,"depth of meltpool",{
+  "ridge":np.maximum(0,ridge.predict(xtest)),"knn7":knn.predict(xtest),
+  "mean_baseline":np.repeat(tr["depth of meltpool"].mean(),len(te))})
+ report["audit"]={"raw_records":len(df),"material_process_records":int(((df.Material=="Ti-6Al-4V")&(df.Process=="PBF")).sum()),"usable_records":len(d),"within_filtered_duplicate_feature_target_rows":int(d.duplicated(FEATURES+["depth of meltpool"]).sum()),"note":"Duplicate records require source review; no deduplication or experimental independence is assumed."}
+ report["model_sha256"]=hashlib.sha256(json.dumps(report["model"],sort_keys=True,separators=(",",":")).encode()).hexdigest()
  a.out.parent.mkdir(parents=True,exist_ok=True);a.out.write_text(json.dumps(report,indent=2)+"\n");print(json.dumps(report,indent=2))
 if __name__=="__main__":main()
