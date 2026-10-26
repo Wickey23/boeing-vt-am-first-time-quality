@@ -1,3 +1,4 @@
+import {validateFlowConfiguration,simulateProductionFlow} from "./production-flow";
 import {restoreServicePlan,type ServicePlan} from "./service-plan";
 import {DEFAULT_SETTINGS} from "./analysis-workspace";
 import type {Analysis,Settings} from "./analysis-workspace";
@@ -27,6 +28,14 @@ export async function importPortableProject(text:string){
  const valid=r===null||(r&&Array.isArray(r.candidates)&&r.candidates.every(c=>c&&typeof c.id==="string"&&c.rotation&&Number.isFinite(c.score))&&typeof r.runId==="string"&&r.source?.fileHashSha256===digest);
  if(!valid)throw Error("Analysis result doesn't match imported part or has an incompatible schema");
 
+ if(r?.productionFlowSetup)validateFlowConfiguration(r.productionFlowSetup,false);
+ if(r?.productionFlow){
+  if(r.productionFlow.runId!==r.runId)throw Error('Production study uses a different analysis run.');
+  validateFlowConfiguration(r.productionFlow.configuration);
+  if(r.productionFlow.configuration.printTimeSource==='orientation-estimate'&&!r.candidates.some(c=>c.id===r.productionFlow!.configuration.candidateId))throw Error('Production study orientation is missing.');
+  if(r.productionFlowSetup&&JSON.stringify(r.productionFlowSetup)!==JSON.stringify(r.productionFlow.configuration))throw Error('Production study inputs differ from the saved scenario.');
+  r.productionFlow.result=simulateProductionFlow(r.productionFlow.configuration);
+ }
  const file=new File([bytes],data.fileName,{type:"model/stl"});
  return {servicePlan:restoreServicePlan(data.servicePlan,r),name:typeof data.name==="string"?data.name.slice(0,120):"Imported part",file,settings:s,result:r,selected:r&&r.candidates.some(c=>c.id===data.selected)?data.selected:null};
 }

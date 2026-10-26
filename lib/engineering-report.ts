@@ -17,6 +17,7 @@ export async function reportPDF(run:Analysis,selected:string|null,file?:File|nul
  if(run.thermal){write('Steady thermal calculation',true);const {values,...details}=run.thermal.field;write(JSON.stringify(details));write('Full surface-projected temperature array is included in the JSON report.');}
  if(run.structural){write('Service-load structural calculation',true);const {stress,displacement,...details}=run.structural.field;write(JSON.stringify(details));write('Surface-projected stress and displacement arrays are included in JSON. No residual-stress prediction.');}
  if(run.meshSensitivity){write('Mesh sensitivity comparisons (not validation)',true);write(JSON.stringify(run.meshSensitivity));}
+ if(run.productionFlow){write('Production flow simulation - deterministic scenario',true);write(JSON.stringify(run.productionFlow.configuration));const {events,...summary}=run.productionFlow.result;write(JSON.stringify(summary));write('Full event schedule is included in JSON. No quality or acceptance prediction.');}
  write('Machine learning evidence (not applied to this component)',true);write(JSON.stringify(report.ml));
  write('Limitations and engineering review',true);for(const l of [...run.limitations,...report.recommendations])write(l);write(report.dataHandling);write('Engineer signoff: not provided.');
  for(let i=1;i<=doc.getNumberOfPages();i++){doc.setPage(i);doc.setFontSize(8);doc.text(`ORIENTAI | ${run.runId} | ${i}/${doc.getNumberOfPages()}`,18,290);}return doc;}
