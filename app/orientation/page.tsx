@@ -48,8 +48,8 @@ export default function UnifiedOrientationPage(){
   if(!a.ready||initialized.current)return;
   initialized.current=true;
   const query=new URLSearchParams(window.location.search);
-  if(query.get("example")==="ded")a.startDedExample();
-  else if(query.get("step")&&STEPS.includes(query.get("step") as JourneyStep))a.setJourneyStep(query.get("step") as JourneyStep);
+  if(query.get("example")==="ded"&&j.mode!=="ded-example")a.startDedExample();
+  else if(query.get("step")&&STEPS.includes(query.get("step") as JourneyStep)&&completedPart(j,a.file,a.settings.unitScale))a.setJourneyStep(query.get("step") as JourneyStep);
  },[a.ready]);
  const isDed=dedExample(j);
  const isLPBF=allowsGeometryRanking(j);
