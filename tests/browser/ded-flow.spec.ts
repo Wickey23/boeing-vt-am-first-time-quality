@@ -8,7 +8,7 @@ test("simulation center computes DED teaching tracks and exports Simio input tab
  await expect(page.getByText("No STL is loaded",{exact:false})).toBeVisible();
  await expect(page.getByLabel("DED process variant")).toHaveValue("DED_LB_WIRE");
  await expect(page.getByText("480 mm",{exact:false})).toBeVisible();
- await expect(page.getByText("166.35",{exact:false})).toBeVisible();
+ await expect(page.getByText("2.773 min",{exact:false})).toBeVisible();
  await expect(page.getByText("NOT EVALUATED",{exact:false}).first()).toBeVisible();
  await page.getByLabel("Track strategy").selectOption("one-way");
  await expect(page.getByText("480 mm",{exact:false})).toBeVisible();
