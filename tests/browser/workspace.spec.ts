@@ -1,6 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 async function upload(page:Page,name='cube-10mm'){
- await page.goto('/orientation');await page.getByLabel('CAD file',{exact:true}).setInputFiles('public/verification/'+name+'.stl');
+ await page.goto('/orientation/advanced');await page.getByLabel('CAD file',{exact:true}).setInputFiles('public/verification/'+name+'.stl');
  await expect(page.getByRole('button',{name:'Confirm dimensions & continue',exact:true})).toBeEnabled();
  await expect(page.getByText('96 evaluated',{exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'Confirm dimensions & continue',exact:true}).click();
@@ -36,7 +36,7 @@ test('saved revisions preserve projects and comparison renders',async({page})=>{
 test('teaching samples and invalid mesh inspection on mobile',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  for(const name of ['aerospace-overhang-bracket','aerospace-thin-wall-channel','aerospace-nozzle-sleeve','invalid-open-surface']){
-  await page.goto('/orientation');await expect(page.getByRole('heading',{level:1})).toBeVisible();if(await page.getByRole('button',{name:'Check or replace part',exact:true}).count()){await page.getByRole('button',{name:'Check or replace part',exact:true}).click();await page.getByText('Replace this part',{exact:true}).click()}
+  await page.goto('/orientation/advanced');await expect(page.getByRole('heading',{level:1})).toBeVisible();if(await page.getByRole('button',{name:'Check or replace part',exact:true}).count()){await page.getByRole('button',{name:'Check or replace part',exact:true}).click();await page.getByText('Replace this part',{exact:true}).click()}
   await page.getByLabel('CAD file',{exact:true}).setInputFiles('public/verification/'+name+'.stl');await expect(page.getByRole('button',{name:'Confirm dimensions & continue',exact:true})).toBeEnabled();
   if(name==='invalid-open-surface')await expect(page.getByText(/OPEN_SURFACE/)).toBeVisible();
   await page.getByRole('button',{name:'Confirm dimensions & continue',exact:true}).click();await page.getByRole('button',{name:'Find build orientations',exact:true}).click();await expect(page.getByText('96 evaluated',{exact:true})).toBeVisible();
@@ -45,7 +45,7 @@ test('teaching samples and invalid mesh inspection on mobile',async({page})=>{
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
 });
 test('welcome hides results and unit changes require confirmation',async({page})=>{
- await page.goto('/orientation');await expect(page.getByRole('heading',{name:'Upload your part',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Find build orientations',exact:true})).toHaveCount(0);await expect(page.getByText('Part-specific steady conduction',{exact:true})).toHaveCount(0);
+ await page.goto('/orientation/advanced');await expect(page.getByRole('heading',{name:'Upload your part',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Find build orientations',exact:true})).toHaveCount(0);await expect(page.getByText('Part-specific steady conduction',{exact:true})).toHaveCount(0);
  await page.getByLabel('CAD file',{exact:true}).setInputFiles('public/verification/cube-10mm.stl');await expect(page.getByText('10.00 × 10.00 × 10.00',{exact:false})).toBeVisible();
  await page.getByLabel('STL source units',{exact:true}).selectOption('25.4');await expect(page.getByText('254.00 × 254.00 × 254.00',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:'2 · Manufacturing setup',exact:true})).toBeDisabled();
  await expect(page.getByText('Active workspace saved on this device.',{exact:true})).toBeVisible();await page.reload();await expect(page.getByRole('button',{name:'Confirm dimensions & continue',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'3 · Results',exact:true})).toBeDisabled();

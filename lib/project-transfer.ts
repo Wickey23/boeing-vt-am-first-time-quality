@@ -1,14 +1,15 @@
 import {restoreServicePlan,type ServicePlan} from "./service-plan";
 import {DEFAULT_SETTINGS} from "./analysis-workspace";
 import type {Analysis,Settings} from "./analysis-workspace";
-export type PortableProject={servicePlan?:ServicePlan;format:"ORIENTAI_PROJECT_V1";name:string;createdAt:string;fileName:string;fileSha256:string;stlBase64:string;settings:Settings;result:Analysis|null;selected:string|null};
+import {restoreJourney,type Journey} from "./engineering-journey";
+export type PortableProject={journey?:Journey;servicePlan?:ServicePlan;format:"ORIENTAI_PROJECT_V1";name:string;createdAt:string;fileName:string;fileSha256:string;stlBase64:string;settings:Settings;result:Analysis|null;selected:string|null};
 const hex=(buf:ArrayBuffer)=>Array.from(new Uint8Array(buf),b=>b.toString(16).padStart(2,"0")).join("");
 const hash=async(bytes:ArrayBuffer)=>hex(await crypto.subtle.digest("SHA-256",bytes));
-export async function exportPortableProject(name:string,file:File,settings:Settings,result:Analysis|null,selected:string|null,servicePlan?:ServicePlan){
+export async function exportPortableProject(name:string,file:File,settings:Settings,result:Analysis|null,selected:string|null,servicePlan?:ServicePlan,journey?:Journey){
  if(!file.name.toLowerCase().endsWith(".stl")||!file.size||file.size>20_000_000)throw Error("Export requires an STL up to 20 MB");
  const bytes=await file.arrayBuffer(),octets=new Uint8Array(bytes);let binary="";
  for(let i=0;i<octets.length;i+=32768)binary+=String.fromCharCode(...octets.subarray(i,i+32768));
- const saved:PortableProject={format:"ORIENTAI_PROJECT_V1",name:name.trim().slice(0,120)||"Untitled part",createdAt:new Date().toISOString(),fileName:file.name,fileSha256:await hash(bytes),stlBase64:btoa(binary),settings,result,selected,servicePlan:restoreServicePlan(servicePlan,result)};
+ const saved:PortableProject={format:"ORIENTAI_PROJECT_V1",name:name.trim().slice(0,120)||"Untitled part",createdAt:new Date().toISOString(),fileName:file.name,fileSha256:await hash(bytes),stlBase64:btoa(binary),settings,result,selected,journey:journey?restoreJourney(journey):undefined,servicePlan:restoreServicePlan(servicePlan,result)};
  return JSON.stringify(saved);
 }
 export async function importPortableProject(text:string){
@@ -28,5 +29,5 @@ export async function importPortableProject(text:string){
  if(!valid)throw Error("Analysis result doesn't match imported part or has an incompatible schema");
 
  const file=new File([bytes],data.fileName,{type:"model/stl"});
- return {servicePlan:restoreServicePlan(data.servicePlan,r),name:typeof data.name==="string"?data.name.slice(0,120):"Imported part",file,settings:s,result:r,selected:r&&r.candidates.some(c=>c.id===data.selected)?data.selected:null};
+ return {journey:restoreJourney(data.journey),servicePlan:restoreServicePlan(data.servicePlan,r),name:typeof data.name==="string"?data.name.slice(0,120):"Imported part",file,settings:s,result:r,selected:r&&r.candidates.some(c=>c.id===data.selected)?data.selected:null};
 }

@@ -2,8 +2,8 @@ import {test,expect} from "@playwright/test";
 test("simulation center computes DED teaching tracks and exports Simio input tables",async({page})=>{
  const errors:string[]=[];
  page.on("pageerror",e=>errors.push(e.message));
- await page.goto("/simulation");
- await expect(page.getByRole("heading",{name:"Simulation Center",exact:true})).toBeVisible();
+ await page.goto("/simulation/lab");
+ await expect(page.getByRole("heading",{name:"DED Teaching Lab",exact:true})).toBeVisible();
  await expect(page.getByText("An STL is loaded",{exact:false})).toHaveCount(0);
  await expect(page.getByText("No STL is loaded",{exact:false})).toBeVisible();
  await expect(page.getByLabel("DED process variant")).toHaveValue("DED_LB_WIRE");
@@ -21,7 +21,7 @@ test("simulation center computes DED teaching tracks and exports Simio input tab
  expect(errors).toEqual([]);
 });
 test("invalid process input prevents reference output and export",async({page})=>{
- await page.goto("/simulation");
+ await page.goto("/simulation/lab");
  await page.getByLabel("Nominal wall length (mm)").fill("500");
  await expect(page.getByRole("alert").first()).toContainText("fit the substrate");
  await expect(page.getByRole("button",{name:"Export scenario for Simio (ZIP)"})).toHaveCount(0);

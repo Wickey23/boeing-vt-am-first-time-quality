@@ -1,0 +1,76 @@
+.journeyWrap{max-width:1500px;margin:0 auto;padding-bottom:16px}
+.journeyHead{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:0 0 18px}
+.journeyHead h1{font-size:clamp(26px,3vw,38px);line-height:1.15;letter-spacing:-.035em;margin:6px 0 6px}
+.journeyHead p{margin:3px 0;color:#b4c6d8}
+.journeySaved{font-size:12px;color:#9dc3d3;text-align:right}
+.journeyStepper{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #294962;border-radius:14px;background:#0c2030;padding:7px;gap:4px;margin-bottom:18px}
+.journeyStepper button{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 6px;font-size:12px;font-weight:650;border:1px solid transparent;background:transparent;color:#9fb6cb;border-radius:9px;white-space:nowrap;cursor:pointer}
+.journeyStepper button:hover:not(:disabled){background:#17384d;color:white}
+.journeyStepper button.selected{background:#1b4561;color:#fff;border-color:#3b8ab5}
+.journeyStepper button:disabled{opacity:.4;cursor:not-allowed}
+.journeyStepper button span{font-size:11px;width:22px;height:22px;border-radius:50%;background:#274c62;display:grid;place-items:center}
+.journeyStepper button.selected span{background:#36b7e1;color:#092039}
+.journeyBody{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);align-items:start;gap:18px}
+.journeyPartPreview,.journeyStage{border:1px solid #315269;border-radius:16px;background:linear-gradient(160deg,#10273c,#0b1d2e);padding:22px;min-width:0}
+.journeyPartPreview{position:sticky;top:18px}
+.journeyStage{min-height:540px}
+.journeyStage h2{font-size:clamp(21px,2.4vw,29px);line-height:1.2;margin:4px 0 10px;letter-spacing:-.02em}
+.journeyStage h3{font-size:17px;margin:20px 0 10px}
+.journeyStage p{color:#bacbda;font-size:13px;line-height:1.65}
+.journeyStage label,.journeyPartPreview label{display:flex;flex-direction:column;gap:6px;color:#dbeaf5;font-size:12px;font-weight:650;margin:12px 0}
+.journeyStage input:not([type=checkbox]),.journeyStage select,.journeyPartPreview select{display:block;width:100%;border:1px solid #46657a;border-radius:8px;background:#081a29;color:#f3faff;font-size:14px;padding:10px;max-width:100%;min-height:41px}
+.journeyStage button,.journeyStage a.studioAction,.journeyFooter button{cursor:pointer}
+.journeyStage button:disabled{opacity:.5;cursor:not-allowed}
+.journeyFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
+.journeyFields label{min-width:0}
+.journeyViewerHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;font-size:14px}
+.journeyViewerFrame{height:390px;background:#081c2d;border-radius:10px;overflow:hidden}
+.journeyPartPreview .viewer{min-height:390px!important}
+.journeyEmptyViewer{height:330px;display:flex;flex-direction:column;justify-content:center;align-items:center;background:radial-gradient(#183b55,#061725);border-radius:10px;text-align:center;padding:16px}
+.journeyEmptyViewer span{font-size:80px;color:#4f87a8}
+.journeyEmptyViewer p{font-size:13px;max-width:280px;color:#abc4d8}
+.journeyViewerNote{color:#afc2d5;font-size:11px;margin-top:10px;line-height:1.55}
+.journeyStatus{display:inline-flex;align-items:center;border:1px solid #567184;background:#1a3649;color:#e8f5fd;font-size:11px;font-weight:700;padding:5px 9px;border-radius:99px;max-width:100%}
+.journeyStatus.ok{border-color:#358b86;color:#a6f0dc;background:#173834}
+.journeyStatus.missing{border-color:#9b7846;color:#f8d499;background:#382b1a}
+.journeyStatus.info{border-color:#447c9f;color:#b3e7ff;background:#16374a}
+.journeyNotice{border:1px solid #6e6e48;background:#262b26;border-radius:11px;padding:13px 16px;color:#f2ead1;font-size:13px;line-height:1.55;margin:13px 0}
+.journeyNotice p{margin:7px 0;color:#e1d9be}
+.journeyNotice button{margin-top:8px}
+.journeyFooter{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:26px;padding-top:20px;border-top:1px solid #345167}
+.journeyFooter button{border:1px solid #436a86;border-radius:9px;background:#16354b;color:#fff;padding:12px 16px;font-size:13px;font-weight:700}
+.journeyFooter span{color:#acbdcc;font-size:12px}
+.journeyFooter a,.journeyStage a{color:#8edbff}
+.journeyStage .studioAction.primary,.journeyFooter .studioAction.primary{display:inline-flex;justify-content:center;align-items:center;gap:7px;background:linear-gradient(115deg,#1b83cb,#1366ab);color:white;border:1px solid #2695e4;border-radius:9px;text-decoration:none;padding:12px 17px;font-size:13px;font-weight:750}
+.journeyStage .studioAction.secondary{display:inline-flex;align-items:center;justify-content:center;background:#163449;color:#dcf3ff;border:1px solid #417391;border-radius:9px;text-decoration:none;padding:11px 16px;font-size:13px;margin:4px 5px 4px 0}
+.journeyChoiceGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:9px;margin:15px 0}
+.journeyChoiceGrid button{border:1px solid #355b72;background:#102a40;color:white;border-radius:10px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px}
+.journeyChoiceGrid button.selected{border-color:#69cef0;box-shadow:inset 0 0 0 1px #46bfe9;background:#173e54}
+.journeyChoiceGrid button span,.journeyChoiceGrid button small{color:#b5cbd7;font-size:12px;line-height:1.45}
+.journeyChoiceGrid button strong{font-size:14px}
+.journeyMetrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin:14px 0}
+.journeyMetrics article{border:1px solid #426377;border-radius:9px;padding:14px;background:#122d43}
+.journeyMetrics article small{display:block;color:#a5c1d1;font-size:11px;margin-bottom:8px}
+.journeyMetrics article b{color:#fff;font-size:17px}
+.journeyUpload{border:1px dashed #478ab4;padding:18px;border-radius:10px;background:#0b2c42}
+.journeySampleGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.journeySampleGrid button{display:flex;flex-direction:column;gap:6px;align-items:center;background:#15344a;border:1px solid #395b72;border-radius:8px;color:#e5f4ff;padding:8px}
+.journeySampleGrid img{max-width:100%;height:80px;object-fit:contain}
+.journeyDivider{color:#8caec8;border-top:1px solid #2d4e67;margin:21px 0 10px;font-size:10px;padding-top:13px;letter-spacing:.08em}
+.journeyStudy{padding:15px 0;border-top:1px solid #345167}
+.journeyStudy:first-of-type{border-top:none}
+.journeyScroll{overflow:auto;max-height:350px}
+.journeyScroll table{width:100%;border-collapse:collapse;font-size:12px}
+.journeyScroll th,.journeyScroll td{padding:8px;border-bottom:1px solid #33516a;text-align:left}
+.journeyScroll button{background:transparent;border:0;text-decoration:underline;color:#89d4f7}
+.journeyActions{display:flex;gap:10px;flex-wrap:wrap}
+.journeyActions button{padding:9px 12px;background:#173a50;color:#fff;border:1px solid #46738b;border-radius:8px}
+.journeyBottom{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:14px;border:1px solid #2f4c64;border-radius:10px;padding:11px 16px;background:#0b1f30;font-size:11px;color:#c4d8e6}
+.journeyBottom a{margin-left:auto;color:#96d8ff}
+.journeyStage summary{cursor:pointer;font-weight:700;font-size:13px;padding:10px 0;color:#b6eaff}
+.journeyStage details{margin:10px 0}
+.journeyStage .geometryReview{border-radius:10px;border:1px solid #345771;padding:14px;background:#102b40}
+.journeyStage .geometryReview h3{margin:8px 0;font-size:14px}
+.journeyStage .partDimensions{font-size:18px;font-weight:750}
+@media(max-width:1100px){.journeyBody{grid-template-columns:1fr}.journeyPartPreview{position:relative;top:auto}.journeyPartPreview .journeyViewerFrame{height:330px}.journeyStepper button{flex-direction:column;font-size:10px;padding:10px 4px}}
+@media(max-width:650px){.journeyHead{align-items:flex-start}.journeySaved{max-width:105px}.journeyStepper{overflow-x:auto;display:flex}.journeyStepper button{flex:0 0 90px}.journeyBody{gap:12px}.journeyPartPreview,.journeyStage{padding:15px}.journeyFields{grid-template-columns:1fr}.journeyViewerFrame{height:300px!important}.journeyFooter button.studioAction{flex:1}.journeyBottom a{margin-left:0}}

@@ -5,14 +5,17 @@ import type {StructuralField} from "@/lib/voxel-structural";
 import type {ThermalField} from "@/lib/voxel-thermal";
 import {DEFAULT_SETTINGS,requestFor,loadWorkspace,saveWorkspace,type Settings,type Analysis,type Snapshot} from '@/lib/analysis-workspace';
 import {createServicePlan,restoreServicePlan,syncServicePlan,activeServiceCase,serviceInputKey,attachServiceResult,MAX_SERVICE_CASES,type ServicePlan} from "@/lib/service-plan";
-type Context={servicePlan:ServicePlan;selectServiceCase:(id:string)=>void;addServiceCase:()=>void;removeServiceCase:()=>void;renameServiceCase:(name:string)=>void;setServiceSetup:(input:ServiceSetup)=>void;saving:boolean;attachMeshSensitivity:(kind:"thermal"|"structural",runId:string,candidateId:string,data:{input:object;comparison:object})=>void;projectName:string;setProjectName:(name:string)=>void;restoreProject:(snapshot:{servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>void;file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField,caseId:string,inputKey:string)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void;clearThermal:()=>void;clearStructural:()=>void};
+import {newJourney,restoreJourney,switchProcess,type Journey,type JourneyStep,type ProcessKind} from "@/lib/engineering-journey";
+import type {DedWallInput} from "@/lib/ded-planning";
+type Context={journey:Journey;setJourneyStep:(step:JourneyStep)=>void;setJourneyProcess:(process:ProcessKind)=>void;setDedInput:(input:DedWallInput)=>void;startDedExample:()=>void;startUploadedProject:()=>void;confirmPart:()=>void;servicePlan:ServicePlan;selectServiceCase:(id:string)=>void;addServiceCase:()=>void;removeServiceCase:()=>void;renameServiceCase:(name:string)=>void;setServiceSetup:(input:ServiceSetup)=>void;saving:boolean;attachMeshSensitivity:(kind:"thermal"|"structural",runId:string,candidateId:string,data:{input:object;comparison:object})=>void;projectName:string;setProjectName:(name:string)=>void;restoreProject:(snapshot:{journey?:Journey;servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>void;file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField,caseId:string,inputKey:string)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void;clearThermal:()=>void;clearStructural:()=>void};
 const C=createContext<Context|null>(null);
 export function AnalysisProvider({children}:{children:React.ReactNode}){
+ const [journey,setJourney]=useState<Journey>(newJourney);
  const [servicePlan,setServicePlan]=useState<ServicePlan>(createServicePlan);
  const planRef=useRef(servicePlan);planRef.current=servicePlan;
  const [projectName,setProjectName]=useState("Untitled part");const [file,setFile]=useState<File|null>(null),[settings,setSettings]=useState<Settings>(DEFAULT_SETTINGS),[result,setResult]=useState<Analysis|null>(null),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[error,setError]=useState(''),[storageError,setStorageError]=useState(''),[ready,setReady]=useState(false),[attempt,setAttempt]=useState(0);
  const [savedSnapshot,setSavedSnapshot]=useState<Snapshot|null>(null);
- const saving=ready&&(!savedSnapshot||savedSnapshot.servicePlan!==servicePlan||savedSnapshot.file!==file||savedSnapshot.settings!==settings||savedSnapshot.result!==result||savedSnapshot.selected!==selected||savedSnapshot.projectName!==projectName);
+ const saving=ready&&(!savedSnapshot||savedSnapshot.servicePlan!==servicePlan||savedSnapshot.journey!==journey||savedSnapshot.file!==file||savedSnapshot.settings!==settings||savedSnapshot.result!==result||savedSnapshot.selected!==selected||savedSnapshot.projectName!==projectName);
  const generation=useRef(0),stop=useRef<()=>void>(()=>{}),saveQueue=useRef(Promise.resolve());
  const cancel=useCallback(()=>{generation.current++;stop.current();setBusy(false);setProgress(0);},[]);
  const invalidate=()=>{cancel();setAttempt(0);setResult(null);setSelected(null);setError('');};
@@ -23,12 +26,14 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  if(validFile&&validSettings&&validResult){
   const restored=restoreServicePlan(s.servicePlan,s.result);
   setProjectName(s.projectName||"Untitled part");setFile(s.file);setSettings({...DEFAULT_SETTINGS,...s.settings});
+  const restoredJourney=restoreJourney(s.journey);
+  setJourney(restoredJourney.mode==="uploaded"||s.file===null?restoredJourney:{...restoredJourney,mode:"uploaded",process:"PBF_LB_METAL",step:"part"});
   setServicePlan(restored);planRef.current=restored;
   setResult(s.result?syncServicePlan(s.result,restored):null);setSelected(s.selected&&s.result?.candidates.some(c=>c.id===s.selected)?s.selected:null);
 
  }else{setStorageError('Old or incompatible local workspace was ignored. Start a new analysis; no server copy of the STL exists.');}
 }}).catch(()=>{if(active)setStorageError('Local workspace could not be restored. This session remains usable.');}).finally(()=>{if(active)setReady(true);});return()=>{active=false;stop.current();};},[]);
- useEffect(()=>{if(!ready)return;const snapshot={schema:1 as const,servicePlan,projectName,file,settings,result,selected};saveQueue.current=saveQueue.current.catch(()=>{}).then(()=>saveWorkspace(snapshot)).then(()=>{setSavedSnapshot(snapshot);setStorageError('')}).catch(()=>setStorageError('Local save failed (storage unavailable or full). Export the report before closing this tab.'));},[ready,file,settings,result,selected,projectName,servicePlan]);
+ useEffect(()=>{if(!ready)return;const snapshot={schema:1 as const,journey,servicePlan,projectName,file,settings,result,selected};saveQueue.current=saveQueue.current.catch(()=>{}).then(()=>saveWorkspace(snapshot)).then(()=>{setSavedSnapshot(snapshot);setStorageError('')}).catch(()=>setStorageError('Local save failed (storage unavailable or full). Export the report before closing this tab.'));},[ready,file,settings,result,selected,projectName,servicePlan,journey]);
  useEffect(()=>{
   if(!ready||!file||attempt===0)return;
 
@@ -45,8 +50,14 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
    }catch(e){cleanup();if(seq===generation.current){setBusy(false);setError(e instanceof Error?e.message:'Analysis failed');}}
   },500);return cleanup;
  },[ready,file,settings,attempt]);
- const upload=(f:File|null)=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;if(f&&(!f.name.toLowerCase().endsWith('.stl')||f.size>20*1024*1024||!f.size)){setFile(null);setError('Select a nonempty STL up to 20 MB. STEP is not supported.');return;}setFile(f);setAttempt(0);};
+ const upload=(f:File|null)=>{invalidate();setJourney(j=>({...j,mode:"uploaded",process:"PBF_LB_METAL",step:"part",confirmedFileName:null,confirmedUnitScale:null}));const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;if(f&&(!f.name.toLowerCase().endsWith('.stl')||f.size>20*1024*1024||!f.size)){setFile(null);setError('Select a nonempty STL up to 20 MB. STEP is not supported.');return;}setFile(f);setAttempt(0);};
  const update=<K extends keyof Settings>(k:K,v:Settings[K])=>{invalidate();setSettings(s=>({...s,[k]:v}));};
+ const setJourneyStep=(step:JourneyStep)=>setJourney(j=>({...j,step}));
+ const setJourneyProcess=(process:ProcessKind)=>{if(journey.mode==="uploaded"&&journey.process!==process)invalidate();setJourney(j=>switchProcess(j,process));};
+ const setDedInput=(input:DedWallInput)=>setJourney(j=>({...j,dedInput:input,process:input.process}));
+ const confirmPart=()=>{if(file)setJourney(j=>({...j,confirmedFileName:file.name,confirmedUnitScale:settings.unitScale}));};
+ const startDedExample=()=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;setFile(null);setProjectName("DED teaching wall");setJourney({...newJourney(),mode:"ded-example",process:"DED_LB_WIRE",step:"part"});};
+ const startUploadedProject=()=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;setFile(null);setProjectName("Untitled part");setJourney(newJourney());};
  const retry=()=>{cancel();setBusy(true);setResult(null);setSelected(null);setError('');setAttempt(x=>x+1);};
  const commitPlan=(next:ServicePlan)=>{planRef.current=next;setServicePlan(next);setResult(r=>r?syncServicePlan(r,next):r);};
  const setServiceSetup=(input:ServiceSetup)=>{const p=planRef.current;commitPlan({...p,cases:p.cases.map(c=>c.id===p.activeCaseId?{...c,input}:c)});};
@@ -59,8 +70,8 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const attachMeshSensitivity:Context["attachMeshSensitivity"]=(kind,runId,candidateId,data)=>setResult(r=>r?.runId===runId&&(kind!=="structural"||serviceInputKey(activeServiceCase(planRef.current).input)===serviceInputKey(data.input as ServiceSetup))?{...r,meshSensitivity:{...r.meshSensitivity,[kind]:{runId,candidateId,...data}}}:r);
  const clearThermal=()=>setResult(r=>r?{...r,thermal:undefined,meshSensitivity:{...r.meshSensitivity,thermal:undefined}}:r);
  const clearStructural=()=>setResult(r=>r?{...r,structural:undefined,structuralCases:Object.fromEntries(Object.entries(r.structuralCases??{}).filter(([id])=>id!==planRef.current.activeCaseId)),meshSensitivity:{...r.meshSensitivity,structural:undefined}}:r);
- const restoreProject=(snapshot:{servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>{const restored=restoreServicePlan(snapshot.servicePlan,snapshot.result);invalidate();setProjectName(snapshot.projectName);setFile(snapshot.file);setSettings({...DEFAULT_SETTINGS,...snapshot.settings});setServicePlan(restored);planRef.current=restored;setResult(snapshot.result?syncServicePlan(snapshot.result,restored):null);setSelected(snapshot.selected);setError("");};
- const clear=()=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;setFile(null);setSettings(DEFAULT_SETTINGS);setProjectName("Untitled part");};
- return <C.Provider value={{servicePlan,selectServiceCase,addServiceCase,removeServiceCase,renameServiceCase,setServiceSetup,saving,attachMeshSensitivity,projectName,setProjectName,restoreProject,file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
+ const restoreProject=(snapshot:{journey?:Journey;servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>{const restored=restoreServicePlan(snapshot.servicePlan,snapshot.result);invalidate();setProjectName(snapshot.projectName);setFile(snapshot.file);setJourney(restoreJourney(snapshot.journey));setSettings({...DEFAULT_SETTINGS,...snapshot.settings});setServicePlan(restored);planRef.current=restored;setResult(snapshot.result?syncServicePlan(snapshot.result,restored):null);setSelected(snapshot.selected);setError("");};
+ const clear=()=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;setFile(null);setSettings(DEFAULT_SETTINGS);setProjectName("Untitled part");setJourney(newJourney());};
+ return <C.Provider value={{journey,setJourneyStep,setJourneyProcess,setDedInput,startDedExample,startUploadedProject,confirmPart,servicePlan,selectServiceCase,addServiceCase,removeServiceCase,renameServiceCase,setServiceSetup,saving,attachMeshSensitivity,projectName,setProjectName,restoreProject,file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
 }
 export function useAnalysis(){const value=useContext(C);if(!value)throw new Error('AnalysisProvider missing');return value;}
