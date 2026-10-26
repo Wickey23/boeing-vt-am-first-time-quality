@@ -78,7 +78,9 @@ export default function DedPlanningStudio(){
     ""
    ].join("\n");
    const zip=zipTextFiles({...files,"README.txt":readme});
-   const blob=new Blob([zip],{type:"application/zip"});
+   const zipBuffer=new ArrayBuffer(zip.byteLength);
+   new Uint8Array(zipBuffer).set(zip);
+   const blob=new Blob([zipBuffer],{type:"application/zip"});
    const url=URL.createObjectURL(blob);
    const link=document.createElement("a");
    link.href=url;link.download="orientai-"+result.plan.scenarioId+"-simio-exchange.zip";
