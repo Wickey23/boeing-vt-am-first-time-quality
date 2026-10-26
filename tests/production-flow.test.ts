@@ -35,3 +35,20 @@ test('flow model rejects impossible capacities and malformed inputs',()=>{
  assert.throws(()=>simulateProductionFlow({...base(),stages:base().stages.map(s=>({...s,durationHours:0}))}));
  assert.throws(()=>validateFlowConfiguration({...base(),printTimeSource:'orientation-estimate'}));
 });
+
+test('portable flow import recomputes outcomes and rejects a mismatched run',async()=>{
+ const {readFileSync}=await import('node:fs');const {File}=await import('node:buffer');
+ const {analyzeOrientations}=await import('../lib/orientation-engine');
+ const {DEFAULT_SETTINGS,requestFor}=await import('../lib/analysis-workspace');
+ const {exportPortableProject,importPortableProject}=await import('../lib/project-transfer');
+ const bytes=Uint8Array.from(readFileSync('public/verification/cube-10mm.stl'));
+ const file=new File([bytes],'cube.stl') as unknown as globalThis.File;
+ const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
+ const configuration=base();
+ const result={...analyzeOrientations(bytes.buffer,requestFor(DEFAULT_SETTINGS)),generatedAt:'2026-10-26T00:00:00Z',algorithm:'test',runId:'flow-test',configuration:DEFAULT_SETTINGS,source:{fileName:'cube.stl',fileHashSha256:hash,byteSize:bytes.byteLength},productionFlowSetup:configuration,productionFlow:{runId:'flow-test',createdAt:'2026-10-26T00:00:00Z',configuration,result:simulateProductionFlow(configuration)}};
+ const packed=JSON.parse(await exportPortableProject('Flow test',file,DEFAULT_SETTINGS,result,null));
+ packed.result.productionFlow.result.makespanHours=999999;
+ const imported=await importPortableProject(JSON.stringify(packed));assert.equal(imported.result!.productionFlow!.result.makespanHours,6);
+ packed.result.productionFlow.runId='wrong';
+ await assert.rejects(importPortableProject(JSON.stringify(packed)),/different analysis run/);
+});

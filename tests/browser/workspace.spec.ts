@@ -135,7 +135,7 @@ test('production simulation shares the part run and survives navigation',async({
  await reviewed.check();
  await page.getByRole('button',{name:'Run production-flow simulation',exact:true}).click();
  await expect(page.getByRole('region',{name:'Production simulation results',exact:true})).toBeVisible();
- await expect(page.getByText('Completed builds:',{exact:false})).toContainText('3');
+ await expect(page.getByText('Completed builds: 3',{exact:true})).toBeVisible();
  await page.getByRole('link',{name:'Download the consolidated engineering report',exact:true}).click();
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Download JSON',exact:true}).click();
  const {readFile}=await import('node:fs/promises');const data=JSON.parse(await readFile((await (await download).path())!,'utf8'));
