@@ -1,4 +1,5 @@
 import type {ServicePlan} from "./service-plan";
+import type {Journey} from "./engineering-journey";
 import type {MeshAudit} from "./stl-mesh-audit";
 import type {ServiceSetup} from "./service-load";
 import type {StructuralField} from "./voxel-structural";
@@ -8,7 +9,7 @@ export const DEFAULT_SETTINGS={x:250,y:250,z:300,overhangDeg:45,support:55,heigh
 export type Settings=typeof DEFAULT_SETTINGS;
 export type Analysis=ReturnType<typeof analyzeOrientations>&{servicePlan?:ServicePlan;structuralCases?:Record<string,{candidateId:string;runId:string;inputKey:string;field:StructuralField}>;serviceSetup?:ServiceSetup;meshAudit?:MeshAudit;meshSensitivity?:Partial<Record<"thermal"|"structural",{runId:string;candidateId:string;input:object;comparison:object}>>;source:{fileName:string;fileHashSha256:string;byteSize:number};generatedAt:string;algorithm:string;runId:string;configuration:Settings;structural?:{candidateId:string;runId:string;field:StructuralField};thermal?:{candidateId:string;runId:string;field:ThermalField}};
 export function requestFor(s:Settings):OrientationRequest{return {machine:{x:s.x,y:s.y,z:s.z},overhangDeg:s.overhangDeg,weights:{support:s.support,height:s.height,contact:s.contact},searchSamples:s.searchSamples,unitScale:s.unitScale,layerHeightMm:s.layerHeightMm,recoatSeconds:s.recoatSeconds,scanSecondsPerLayer:s.scanSecondsPerLayer,machineHourlyRate:s.machineHourlyRate,criticalFaces:s.criticalFaces.trim()?s.criticalFaces.split(',').map(x=>Number(x.trim())):[]};}
-export type Snapshot={schema:1;servicePlan?:ServicePlan;projectName?:string;file:File|null;settings:Settings;result:Analysis|null;selected:string|null};
+export type Snapshot={schema:1;journey?:Journey;servicePlan?:ServicePlan;projectName?:string;file:File|null;settings:Settings;result:Analysis|null;selected:string|null};
 function database():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{const r=indexedDB.open('orientai-local-workspace',1);r.onupgradeneeded=()=>r.result.createObjectStore('workspace');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 export async function loadWorkspace():Promise<Snapshot|undefined>{const db=await database();try{return await new Promise((resolve,reject)=>{const r=db.transaction('workspace').objectStore('workspace').get('active');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}finally{db.close();}}
 export async function saveWorkspace(value:Snapshot){const db=await database();try{await new Promise<void>((resolve,reject)=>{const t=db.transaction('workspace','readwrite');t.objectStore('workspace').put(value,'active');t.oncomplete=()=>resolve();t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error);});}finally{db.close();}}
