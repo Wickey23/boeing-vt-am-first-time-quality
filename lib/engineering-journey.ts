@@ -25,7 +25,7 @@ export function restoreJourney(value:unknown):Journey{
  try{if(o.dedInput){planDedWall(o.dedInput);dedInput=o.dedInput;}}catch{/* Reject invalid persisted DED inputs. */}
  // An uploaded part is not silently promoted to a DED deposition path study.
  return {
-  schema:2,mode:o.mode,process:o.process,step:o.step,
+  schema:2,mode:o.mode,process:o.process as ProcessKind,step:o.step as JourneyStep,
   confirmedFileName:typeof o.confirmedFileName==="string"?o.confirmedFileName:null,
   confirmedUnitScale:Number.isFinite(o.confirmedUnitScale)?o.confirmedUnitScale!:null,
   dedInput,
