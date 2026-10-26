@@ -53,7 +53,7 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const upload=(f:File|null)=>{invalidate();setJourney(j=>({...j,mode:"uploaded",process:"PBF_LB_METAL",step:"part",confirmedFileName:null,confirmedUnitScale:null}));const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;if(f&&(!f.name.toLowerCase().endsWith('.stl')||f.size>20*1024*1024||!f.size)){setFile(null);setError('Select a nonempty STL up to 20 MB. STEP is not supported.');return;}setFile(f);setAttempt(0);};
  const update=<K extends keyof Settings>(k:K,v:Settings[K])=>{invalidate();setSettings(s=>({...s,[k]:v}));};
  const setJourneyStep=(step:JourneyStep)=>setJourney(j=>({...j,step}));
- const setJourneyProcess=(process:ProcessKind)=>setJourney(j=>switchProcess(j,process));
+ const setJourneyProcess=(process:ProcessKind)=>{if(journey.mode==="uploaded"&&journey.process!==process)invalidate();setJourney(j=>switchProcess(j,process));};
  const setDedInput=(input:DedWallInput)=>setJourney(j=>({...j,dedInput:input,process:input.process}));
  const confirmPart=()=>{if(file)setJourney(j=>({...j,confirmedFileName:file.name,confirmedUnitScale:settings.unitScale}));};
  const startDedExample=()=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;setFile(null);setProjectName("DED teaching wall");setJourney({...newJourney(),mode:"ded-example",process:"DED_LB_WIRE",step:"part"});};
