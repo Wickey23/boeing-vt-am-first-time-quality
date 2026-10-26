@@ -1,79 +1,223 @@
-'use client';
-import {useEffect,useState,useRef} from 'react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import AppShell from '@/components/v2/AppShell';
-import {useAnalysis} from '@/components/AnalysisProvider';
-import ViewerErrorBoundary from '@/components/ViewerErrorBoundary';
-import ProjectHistory from '@/components/ProjectHistory';
-import ManufacturingSetup from '@/components/ManufacturingSetup';
-import PartInspection,{usePartInspection} from '@/components/PartInspection';
-import {serviceCaseSummary} from '@/lib/service-plan';
-import {screenCandidate} from '@/lib/part-screening';
-import {exportPortableProject,importPortableProject} from '@/lib/project-transfer';
-const ModelViewer=dynamic(()=>import('@/components/ModelViewer'),{ssr:false});
-const OrientationCompare=dynamic(()=>import('@/components/OrientationCompare'));
-const Thermal=dynamic(()=>import('@/components/PartThermalPanel'));
-const Structural=dynamic(()=>import('@/components/PartStructuralPanel'));
-const samples=[
- {id:'aerospace-mounting-lug',name:'Mounting lug with bore',desc:'40 × 44 × 6 mm · Compare flat and upright builds',icon:'◉'},
- {id:'aerospace-overhang-bracket',name:'Overhanging bracket',desc:'Explore support and orientation tradeoffs',icon:'⌑'},
- {id:'aerospace-thin-wall-channel',name:'Thin-wall channel',desc:'Investigate small-feature mesh resolution',icon:'⊔'},
- {id:'aerospace-nozzle-sleeve',name:'Hollow nozzle sleeve',desc:'Inspect a cavity and internal surfaces',icon:'◎'},
- {id:'cube-10mm',name:'10 mm verification cube',desc:'Check units and numerical benchmarks',icon:'◇'},
-];
-type Stage='verify'|'setup'|'results';
-type Tab='summary'|'compare'|'concerns'|'studies'|'save';
-const actions:Record<string,string>={BUILD_ENVELOPE:'Compare another orientation or correct the usable build envelope.',SUPPORT_LIMIT:'Review the support estimate and select an alternative.',DOWN_FACING:'Inspect the orange surfaces and plan supports in your slicer.',PLATE_CONTACT:'Inspect the bottom of the part and review attachment to the build plate.',SUPPORT_COMPARISON:'Compare lower-support alternatives and check whether supports can be removed.'};
-export default function Orientation(){
- const a=useAnalysis();const {file,result,settings,selected}=a;
- const [stageOverride,setStage]=useState<Stage|null>(null),[tab,setTab]=useState<Tab>('summary');
- const [confirmed,setConfirmed]=useState<{file:File;scale:number}|null>(null);
- const [url,setUrl]=useState<string>(),[overhangs,setOverhangs]=useState(true),[supports,setSupports]=useState(false),[field,setField]=useState('geometry'),[boundary,setBoundary]=useState<'none'|'thermal'|'structural'>('none');
- const [transferBusy,setTransferBusy]=useState(false),[message,setMessage]=useState(''),[sampleBusy,setSampleBusy]=useState(false),[allCandidates,setAllCandidates]=useState(false);
- const inspection=usePartInspection(file,settings.unitScale);
- const isConfirmed=confirmed?.file===file&&confirmed?.scale===settings.unitScale;
- const stage=stageOverride??(result?'results':'verify');
- const heading=useRef<HTMLHeadingElement>(null);useEffect(()=>{heading.current?.focus()},[stage,file]);
- useEffect(()=>{if(!file){setUrl(undefined);return}const u=URL.createObjectURL(file);setUrl(u);return()=>URL.revokeObjectURL(u)},[file]);
- // Restored projects can have a different file identity; never carry confirmation between parts.
- useEffect(()=>{setStage(null);setTab('summary');setField('geometry');setBoundary('none');setAllCandidates(false)},[file]);
- const upload=(f:File|null)=>{setConfirmed(null);setMessage('');a.upload(f)};
- const loadSample=async(id:string)=>{setSampleBusy(true);setMessage('');try{const r=await fetch('/verification/'+id+'.stl');if(!r.ok)throw Error('Sample unavailable. Try uploading your own STL.');upload(new File([await r.arrayBuffer()],id+'.stl',{type:'model/stl'}))}catch(e){setMessage(e instanceof Error?e.message:'Unable to load sample')}finally{setSampleBusy(false)}};
- const openProject=async(f:File|null)=>{if(!f)return;setTransferBusy(true);try{const p=await importPortableProject(await f.text());a.restoreProject({servicePlan:p.servicePlan,projectName:p.name,file:p.file,settings:p.settings,result:p.result,selected:p.selected});setConfirmed(null);setStage(null);setMessage('Project opened. Review dimensions before running a new study.')}catch(e){setMessage(e instanceof Error?e.message:'Import failed')}finally{setTransferBusy(false)}};
- const exportProject=async()=>{if(!file)return;setTransferBusy(true);try{const data=await exportPortableProject(a.projectName,file,settings,result,selected,a.servicePlan);const u=URL.createObjectURL(new Blob([data],{type:'application/json'}));const link=document.createElement('a');link.href=u;link.download=(a.projectName||'orientai-project').replace(/[^a-z0-9_-]/gi,'-')+'.orientai.json';link.click();setTimeout(()=>URL.revokeObjectURL(u),2000);setMessage('Project backup exported. It includes your STL and results.')}catch(e){setMessage(e instanceof Error?e.message:'Export failed')}finally{setTransferBusy(false)}};
- const run=()=>{setTab('summary');setStage('results');setField('geometry');setBoundary('none');a.retry()};
- const active=result?.candidates.find(c=>c.id===selected);
- const original=result?.candidates.find(c=>c.id==='O01');
- const feasible=result?.candidates.filter(c=>c.feasible)??[];
- const recommended=feasible[0];
- const picks=[{label:'Highest ranked for your priorities',c:recommended},{label:'Lowest support estimate',c:[...feasible].sort((x,y)=>x.supportProxyMm3-y.supportProxyMm3)[0]},{label:'Lowest build height',c:[...feasible].sort((x,y)=>x.buildHeightMm-y.buildHeightMm)[0]}].filter((p,i,list)=>p.c&&list.findIndex(x=>x.c?.id===p.c?.id)===i);
- const findings=active&&result?screenCandidate(active,result.candidates):[];
- const thermal=result?.thermal?.candidateId===selected?result.thermal.field:undefined;
- const structural=result?.structural?.field.input.coordinateFrame==='part'?result.structural.field:undefined;
- const visibleField=field==='thermal'&&!thermal||((field==='stress'||field==='displacement')&&!structural)?'geometry':field;
- const savedControls=<><label>Local project name<input value={a.projectName} maxLength={120} onChange={e=>a.setProjectName(e.target.value)}/></label><ProjectHistory/><button className="studioAction secondary" disabled={!file||transferBusy} onClick={()=>void exportProject()}>Export project backup</button><label>Import saved project<input type="file" accept=".json,application/json" disabled={transferBusy} onChange={e=>{void openProject(e.target.files?.[0]??null);e.currentTarget.value=''}}/></label><p>Saved on this device, not in a team cloud vault. Export a backup to keep or share the complete project, including its geometry.</p></>;
- if(!a.ready)return <AppShell title="Part Workspace" focused><p role="status">Restoring local workspace…</p></AppShell>;
- return <AppShell title="Part Workspace" focused><div className="guidedIntro"><p className="guidedEyebrow">ORIENTAI · METAL ADDITIVE MANUFACTURING</p><h1 ref={heading} tabIndex={-1}>{!file?'Start with your part':stage==='verify'?'Check your part':stage==='setup'?'Set your manufacturing priorities':'Review your build orientations'}</h1><p>{!file?'Compare build orientations and identify geometric manufacturing concerns for metal 3D printing.':file.name}</p></div>
- {(message||a.error||a.storageError)&&<div role="alert" className="guidedNotice">{message||a.error||a.storageError}</div>}
- {!file?<section className="studioCard guidedWelcome"><div className="uploadDrop" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();upload(e.dataTransfer.files[0]??null)}}><span className="uploadSymbol" aria-hidden="true">↑</span><h2>Upload your part</h2><p>Drop an STL here, or choose a file.</p><label className="uploadButton">Choose STL file<input aria-label="CAD file" type="file" accept=".stl" disabled={!a.ready} onChange={e=>upload(e.target.files?.[0]??null)}/></label><small>STL · up to 20 MB · STEP is not supported<br/>Geometry stays in your browser. No STL server upload.</small></div><details className="sampleLibrary"><summary>Try an example part</summary><p>Original teaching models inspired by aerospace part categories. Not certified aircraft designs.</p><div className="sampleGrid">{samples.map(s=><div key={s.id}><button disabled={sampleBusy} onClick={()=>void loadSample(s.id)}><img src={'/verification/previews/'+s.id+'.svg'} alt="" width={240} height={150}/><strong>{s.name}</strong><small>{s.desc}</small></button><a href={'/verification/'+s.id+'.stl'} download>Download STL</a></div>)}</div></details><details><summary>Open a saved project</summary>{savedControls}</details></section>:<>
- <nav className="guidedSteps" aria-label="Analysis workflow">{([{id:'verify',label:'1 · Check part'},{id:'setup',label:'2 · Manufacturing setup'},{id:'results',label:'3 · Results'}] as const).map(s=><button key={s.id} aria-current={stage===s.id?'step':undefined} disabled={s.id==='setup'&&!isConfirmed||s.id==='results'&&!result&&!a.busy} onClick={()=>setStage(s.id)}>{s.label}</button>)}</nav>
- <div className="guidedWorkspace"><section className="studioCard guidedViewer"><div className="viewerHeading"><h2>{stage==='results'?'Selected build orientation':'Your uploaded part'}</h2><span className="studioBadge">Drag to orbit · scroll to zoom</span></div><div className="studioViewer">{url&&<ViewerErrorBoundary><ModelViewer url={url} rotation={stage==='results'&&visibleField!=='original'?active?.rotation:undefined} unitScale={settings.unitScale} showOverhangs={stage==='results'&&overhangs} showSupports={stage==='results'&&supports} overhangDeg={settings.overhangDeg} serviceSetup={result?.serviceSetup} boundaryCase={stage==='results'?boundary:'none'} field={stage==='results'?(visibleField==='thermal'?thermal:visibleField==='stress'?structural?.stress:visibleField==='displacement'?structural?.displacement:undefined):undefined} fieldLabel={visibleField==='thermal'?'Steady temperature':visibleField==='stress'?'Von Mises service-load stress':visibleField==='displacement'?'Displacement magnitude':'Geometry'}/></ViewerErrorBoundary>}</div>{stage==='results'&&result&&<><p>{active?.id} · Orange shows downward-facing surfaces, not predicted defects.</p><details><summary>Viewer settings & calculated fields</summary><label>Visualization<select value={visibleField} onChange={e=>setField(e.target.value)}><option value="original">Original geometry</option><option value="geometry">Geometry / overhangs</option><option value="thermal" disabled={!thermal}>Calculated steady temperature</option><option value="stress" disabled={!structural}>Calculated service-load von Mises</option><option value="displacement" disabled={!structural}>Calculated displacement magnitude</option></select></label><label>Boundary conditions<select value={boundary} onChange={e=>setBoundary(e.target.value as typeof boundary)}><option value="none">Off</option><option value="thermal">Top heat input / fixed base temperature</option><option value="structural">Part-attached service fixture / force</option></select></label><label className="guidedCheck"><input type="checkbox" checked={overhangs} onChange={e=>setOverhangs(e.target.checked)}/>Highlight overhangs</label><label className="guidedCheck"><input type="checkbox" checked={supports} onChange={e=>setSupports(e.target.checked)}/>Show conceptual support posts (not printable supports)</label></details></>}{stage!=='results'&&<p>Check the shape and units before continuing. Rotate the part to inspect all sides.</p>}</section>
- <div className="guidedPanel">
- {stage==='verify'&&<section className="studioCard"><p className="guidedEyebrow">STEP 1 · VERIFY GEOMETRY</p><h2>Confirm size and units</h2><label>STL source units<select aria-label="STL source units" value={settings.unitScale} onChange={e=>{setConfirmed(null);a.update('unitScale',Number(e.target.value))}}><option value={1}>Millimeters</option><option value={25.4}>Inches</option><option value={1000}>Meters</option></select></label>{inspection.data?<PartInspection data={inspection.data}/>:<p role="status">{inspection.error||'Inspecting geometry…'}</p>}<button className="studioPrimaryButton" disabled={!inspection.data} onClick={()=>{setConfirmed({file,scale:settings.unitScale});setStage('setup')}}>Confirm dimensions & continue</button><details><summary>Replace this part</summary><label>CAD file<input type="file" accept=".stl" onChange={e=>upload(e.target.files?.[0]??null)}/></label><button onClick={()=>{a.clear();setConfirmed(null)}}>Choose another example</button></details></section>}
- {stage==='setup'&&<><ManufacturingSetup onRun={run}/><p role="status">{result?'Existing results match the current settings. Editing a setting clears the previous run.':'Ready for a new analysis. Results appear after you select Find build orientations.'}</p></>}
- {stage==='results'&&<section className="studioCard"><p className="guidedEyebrow">STEP 3 · REVIEW RESULTS</p>{a.busy||!result?<><h2>{a.busy?'Comparing build orientations…':'Analysis is not current'}</h2>{a.busy?<><progress aria-label="Orientation search progress" value={a.progress} max={1}/><p role="status">{Math.round(a.progress*100)}% complete · local browser calculation</p><button onClick={a.cancel}>Cancel analysis</button></>:<><p>Review your setup, then run the search. Previous calculations are cleared when inputs change.</p><button className="studioPrimaryButton" onClick={run}>Retry orientation search</button></>}</>:<><div className="resultHeading"><h2>{active?.id===recommended?.id?'Your recommended starting point':'Your selected alternative'}</h2><span className="studioBadge">{result.candidates.length} evaluated</span></div><nav className="resultTabs" aria-label="Results sections">{([{id:'summary',name:'Recommendation'},{id:'compare',name:'Compare alternatives'},{id:'concerns',name:'Review concerns'},{id:'studies',name:'Optional studies'},{id:'save',name:'Save & report'}] as const).map(t=><button key={t.id} aria-pressed={tab===t.id} onClick={()=>setTab(t.id)}>{t.name}{t.id==='concerns'&&findings.length?' ('+findings.length+')':''}</button>)}</nav>
- {tab==='summary'&&active&&<><h3>{recommended?'Ranked for your selected priorities':'No evaluated orientation satisfies the configured constraints'}</h3><p>{recommended?'Ranking balances the support estimate, build height and plate contact using your chosen weights. Review the tradeoffs before selecting a build.':'Review the machine envelope and the geometric warnings before proceeding.'}</p><div className="resultMetrics"><div><span>Build height</span><strong>{active.buildHeightMm.toFixed(1)} mm</strong><small>{active.estimatedLayers} estimated layers</small></div><div><span>Estimated support requirement</span><strong>{active.supportProxyMm3.toFixed(1)} mm³</strong><small>Geometric comparison estimate</small></div><div><span>Machine envelope</span><strong>{active.fitsEnvelope?'Fits':'Does not fit'}</strong><small>Bounding-box check only</small></div></div>{original&&<div className="guidedNotice"><strong>Compared with the uploaded orientation</strong><p>Build height: {(active.buildHeightMm-original.buildHeightMm).toFixed(1)} mm change.<br/>Support estimate: {(active.supportProxyMm3-original.supportProxyMm3).toFixed(1)} mm³ change.</p></div>}<p>The support estimate helps compare orientations. It is not the amount of support a slicer will generate. A lower estimate does not establish printability.</p><button className="studioPrimaryButton" onClick={()=>setTab('compare')}>Compare recommended options</button><div className="guidedNotice"><h3>What has actually been checked?</h3><p>Orientation ranking: geometric comparison only.</p><ul>{serviceCaseSummary(result).map(c=><li key={c.id}>{c.name||'Unnamed case'}: displacement {c.status.replaceAll('-',' ')}.</li>)}</ul><p>Strength, fatigue, manufacturing distortion and first-time acceptance: not evaluated.</p><button onClick={()=>setTab('studies')}>Define loads and review service requirements</button></div><details><summary>Technical measurements & assumptions</summary><p>Down-facing area: {active.downFacingAreaMm2.toFixed(1)} mm² · near-plate contact: {active.contactAreaMm2.toFixed(1)} mm²</p><p>Relative ranking score: {active.score.toFixed(1)}. This is not a quality, safety or confidence score.</p><p>Assumed time: {active.estimatedBuildHours.toFixed(2)} h · machine cost: ${active.estimatedMachineCost.toFixed(2)}. Uses fixed per-layer times; excludes material, supports removal, labor and postprocessing.</p><p>Critical down-facing area: {active.criticalDownFacingAreaMm2.toFixed(2)} mm²</p></details></>}
- {tab==='compare'&&<><h3>Compare distinct tradeoffs</h3><p>If multiple priorities choose the same orientation, it appears only once.</p><div className="candidateChoices">{picks.map(p=><button key={p.c!.id} aria-pressed={selected===p.c!.id} onClick={()=>a.select(p.c!.id)}><strong>{p.label}</strong><span>{p.c!.id} · {p.c!.buildHeightMm.toFixed(1)} mm high · {p.c!.supportProxyMm3.toFixed(1)} mm³ support estimate</span></button>)}</div><button aria-expanded={allCandidates} onClick={()=>setAllCandidates(!allCandidates)}>All evaluated orientations</button>{allCandidates&&<div className="candidateScroll"><table className="studioCandidateTable"><thead><tr><th>Candidate</th><th>Height</th><th>Support estimate</th><th>Fits constraints</th></tr></thead><tbody>{result.candidates.map(c=><tr key={c.id}><td><button onClick={()=>a.select(c.id)} aria-pressed={selected===c.id}>{c.id}{c.pareto?' ★':''}</button></td><td>{c.buildHeightMm.toFixed(1)} mm</td><td>{c.supportProxyMm3.toFixed(1)} mm³</td><td>{c.feasible?'Yes':'No'}</td></tr>)}</tbody></table><p>★ Pareto candidate: no evaluated candidate improves every ranking objective.</p></div>}</>}
- {tab==='concerns'&&<><h3>What needs attention?</h3>{findings.length===0&&<p>No orientation warnings under the current thresholds. This is not a manufacturing pass or failure prediction.</p>}{findings.map(f=><article className="guidedNotice" key={f.code}><strong>{f.code.replaceAll('_',' ')} · {f.severity==='blocker'?'Outside constraints':'Engineering review'}</strong><p>{f.message}</p><p><b>Next step:</b> {actions[f.code]}</p>{f.code==='DOWN_FACING'&&<button onClick={()=>{setField('geometry');setOverhangs(true);setBoundary('none')}}>Highlight downward-facing surfaces</button>}<small>Geometric screen · {f.basis}</small></article>)}{inspection.data&&<PartInspection data={inspection.data}/>}<p>Residual stress, distortion, porosity and cracking are not predicted by this geometry screen.</p></>}
- {tab==='studies'&&<><h3>What would you like to investigate?</h3><p>Optional studies use prescribed properties and idealized boundaries. Service loads use original-part axes; thermal boundaries use build axes. They do not simulate the LPBF printing process.</p>{!isConfirmed&&<button onClick={()=>setStage('verify')}>Confirm dimensions before a study</button>}<button onClick={()=>{setBoundary('thermal');setField('geometry')}}>Show heat-transfer boundary schematic</button><button onClick={()=>{setBoundary('structural');setField('geometry')}}>Show service-load boundary schematic</button><p>Review properties, inspect boundary locations, then choose resolution and run the study below.</p><p>Manufacturing residual stress, distortion and defect prediction remain unavailable.</p></>}
- {tab==='save'&&<><h3>Save your work and share the evidence</h3>{savedControls}<h3>Report contents</h3><p>Geometry identification, checksum, manufacturing configuration, orientation comparisons and geometric concerns.</p><p>Steady heat transfer: {result.thermal?'calculated for '+result.thermal.candidateId:'not calculated'}<br/>Service-load elasticity: {Object.keys(result.structuralCases??{}).length} of {a.servicePlan.cases.length} cases calculated (unvalidated)<br/>Manufacturing residual stress, distortion and defect probabilities: not calculated.</p><Link className="studioPrimaryButton" href="/report">Download engineering report</Link><p>Review the consolidated report and download PDF or JSON.</p></>}
- </>}</section>}
- </div></div>
- {stage==='results'&&result&&tab==='compare'&&<OrientationCompare url={url}/>}
- {stage==='results'&&result&&tab==='studies'&&<fieldset disabled={!isConfirmed||!!inspection.data?.audit.findings.some(f=>f.level==='blocker')||!inspection.data} className="guidedStudies"><details><summary>Steady heat-transfer study</summary><p>Question: how does this solid conduct a prescribed heat input? Inspect the top and bottom planes in the viewer. Other faces are insulated.</p><Thermal/></details><details><summary>Service-load stress study</summary><p>Question: how does the clamped part respond to prescribed forces? Choose a fixed end in the original part axes; the opposite end receives the total service force.</p><Structural/></details>{inspection.data?.audit.findings.some(f=>f.level==='blocker')&&<p role="status">Physical studies are blocked by mesh-topology issues. Repair the STL before proceeding.</p>}</fieldset>}
- <footer className="workspaceFooter"><span>{a.storageError?'Local save needs attention':a.saving?'Saving active workspace…':'Active workspace saved on this device.'}</span><button onClick={()=>{setTab('save');setStage('results')}} disabled={!result}>Save project</button><button onClick={()=>{setStage('verify')}}>Check or replace part</button></footer>
- </>}
- <p className="researchFootnote">Research comparisons for engineering review. No aerospace qualification or reliable first-time-quality prediction is claimed.</p>
- </AppShell>
+"use client";
+import {useEffect,useMemo,useState} from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import {useSearchParams} from "next/navigation";
+import AppShell from "@/components/v2/AppShell";
+import {useAnalysis} from "@/components/AnalysisProvider";
+import PartInspection,{usePartInspection} from "@/components/PartInspection";
+import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
+import {END_FACES,type EndFace} from "@/lib/service-load";
+import {activeServiceCase,serviceCaseSummary} from "@/lib/service-plan";
+import {allowsGeometryRanking,completedPart,dedExample,STEPS,STEP_LABELS,type JourneyStep,type ProcessKind} from "@/lib/engineering-journey";
+import {screenCandidate} from "@/lib/part-screening";
+import {planDedWall,simulateReferenceFlow,createSimioExchange,type DedWallInput} from "@/lib/ded-planning";
+import {zipTextFiles} from "@/lib/zip-store";
+import {exportPortableProject,importPortableProject} from "@/lib/project-transfer";
+import "./guided.css";
+
+const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
+const DedWallViewer=dynamic(()=>import("@/components/DedWallViewer"),{ssr:false});
+const Structural=dynamic(()=>import("@/components/PartStructuralPanel"),{ssr:false});
+const Thermal=dynamic(()=>import("@/components/PartThermalPanel"),{ssr:false});
+
+const samples=[["aerospace-mounting-lug","Mounting lug"],["aerospace-overhang-bracket","Overhang bracket"],["aerospace-thin-wall-channel","Thin-wall channel"],["aerospace-nozzle-sleeve","Nozzle sleeve"],["cube-10mm","Verification cube"]] as const;
+const num=(n:number)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:3}):"—";
+function download(name:string,content:string|Uint8Array,type:string){
+ const binary=typeof content==="string"?new TextEncoder().encode(content):content;
+ const buffer=new ArrayBuffer(binary.byteLength);new Uint8Array(buffer).set(binary);
+ const u=URL.createObjectURL(new Blob([buffer],{type}));
+ const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+ window.setTimeout(()=>URL.revokeObjectURL(u),2000);
+}
+function Status({kind,children}:{kind:"ok"|"missing"|"info";children:React.ReactNode}){return <span className={"journeyStatus "+kind}>{children}</span>;}
+export default function UnifiedOrientationPage(){
+ const a=useAnalysis(), j=a.journey;
+ const search=useSearchParams();
+ const [viewerUrl,setViewerUrl]=useState<string>();
+ const [message,setMessage]=useState("");
+ const [exportBusy,setExportBusy]=useState(false);
+ const [sampleBusy,setSampleBusy]=useState(false);
+ const [showFields,setShowFields]=useState<"geometry"|"stress"|"displacement"|"thermal">("geometry");
+ const inspection=usePartInspection(a.file,a.settings.unitScale);
+ useEffect(()=>{
+  if(!a.file){setViewerUrl(undefined);return;}
+  const u=URL.createObjectURL(a.file);setViewerUrl(u);return()=>URL.revokeObjectURL(u);
+ },[a.file]);
+ // Links from home are explicit user actions. A query only initializes an example when asked.
+ useEffect(()=>{
+  if(!a.ready)return;
+  if(search.get("example")==="ded"&&j.mode!=="ded-example")a.startDedExample();
+ },[a.ready,search,j.mode]);
+ const isDed=dedExample(j);
+ const isLPBF=allowsGeometryRanking(j);
+ const verified=completedPart(j,a.file,a.settings.unitScale);
+ const candidate=a.result?.candidates.find(x=>x.id===a.selected);
+ const proposals=a.result?.candidates.filter(x=>x.feasible)??[];
+ const ded=useMemo(()=>{
+  if(!isDed)return {plan:null,flow:null,error:""};
+  try{const plan=planDedWall(j.dedInput);return {plan,flow:simulateReferenceFlow(plan),error:""};}
+  catch(e){return {plan:null,flow:null,error:e instanceof Error?e.message:"Invalid DED inputs"};}
+ },[isDed,j.dedInput]);
+ const setStage=(stage:JourneyStep)=>{
+  if(stage!=="part"&&!verified){setMessage("Confirm your part before proceeding.");a.setJourneyStep("part");return;}
+  setMessage("");a.setJourneyStep(stage);
+ };
+ const upload=(f:File|null)=>{if(!f)return;setMessage("");a.upload(f);a.setProjectName(f.name.replace(/\.stl$/i,""));};
+ const loadSample=async(id:string)=>{setSampleBusy(true);setMessage("");try{
+   const r=await fetch("/verification/"+id+".stl");
+   if(!r.ok)throw Error("Example unavailable.");
+   upload(new File([await r.arrayBuffer()],id+".stl",{type:"model/stl"}));
+ }catch(e){setMessage(e instanceof Error?e.message:"Could not load example");}finally{setSampleBusy(false);}};
+ const dedSet=(key:keyof DedWallInput,value:unknown)=>a.setDedInput({...j.dedInput,[key]:value});
+ const dedNumber=(key:keyof DedWallInput,label:string)=> <label key={key}>{label}<input type="number" step={key==="batchSize"?1:"any"} value={Number.isFinite(j.dedInput[key] as number)?j.dedInput[key] as number:""} onChange={e=>dedSet(key,Number(e.target.value))}/></label>;
+ const exportSimio=()=>{if(!ded.plan||!ded.flow)return;try{
+  const files=createSimioExchange(ded.plan,ded.flow);
+  files["README.txt"]="ORIENTAI example DED wall. CSV scenario data for a separately authored Simio model; NOT a Simio execution. No machine feasibility, thermal distortion or physical qualification is established.\n";
+  download(ded.plan.scenarioId+"-simio-data.zip",zipTextFiles(files),"application/zip");setMessage("Simio data tables exported. A separately configured Simio model is required.");
+ }catch(e){setMessage(e instanceof Error?e.message:"Export failed");}};
+ const exportProject=async()=>{if(!a.file)return;setExportBusy(true);setMessage("");try{
+   download((a.projectName||"orientai")+"-project.orientai.json",await exportPortableProject(a.projectName,a.file,a.settings,a.result,a.selected,a.servicePlan,j),"application/json");
+ }catch(e){setMessage(e instanceof Error?e.message:"Export failed");}finally{setExportBusy(false);}};
+ const importProject=async(f:File|null)=>{if(!f)return;setExportBusy(true);try{
+  const p=await importPortableProject(await f.text());
+  a.restoreProject({servicePlan:p.servicePlan,projectName:p.name,file:p.file,settings:p.settings,result:p.result,selected:p.selected,journey:p.journey});
+  setMessage("Imported project. Check the original part units and confirmation.");
+ }catch(e){setMessage(e instanceof Error?e.message:"Import failed");}finally{setExportBusy(false);}};
+ const next=()=>{
+  if(j.step==="part"&&!verified){setMessage("Confirm dimensions and units first.");return;}
+  const index=STEPS.indexOf(j.step);if(index<STEPS.length-1)setStage(STEPS[index+1]);
+ };
+ const needsStructural=a.servicePlan.cases.some(c=>c.input.forceXN!==0||(c.input.forceYN??0)!==0||c.input.forceZN!==0);
+ if(!a.ready)return <AppShell title="Engineering Workspace" focused><p role="status">Restoring your saved project…</p></AppShell>;
+ const summaryName=isDed?"Synthetic DED teaching wall":a.file?.name??"No part selected";
+ const preview=<div className="journeyPartPreview">
+   <div className="journeyViewerHeader"><strong>{summaryName}</strong><Status kind={isDed?"info":a.file?"ok":"missing"}>{isDed?"Example geometry":a.file?"Your STL":"No part"}</Status></div>
+   {isDed&&ded.plan?<DedWallViewer plan={ded.plan}/>:a.file&&viewerUrl?<div className="journeyViewerFrame"><ViewerErrorBoundary><ModelViewer url={viewerUrl} rotation={j.step==="options"||j.step==="studies"||j.step==="decision"?candidate?.rotation:undefined} unitScale={a.settings.unitScale} overhangDeg={a.settings.overhangDeg} showOverhangs={j.step==="options"||j.step==="decision"} field={
+      showFields==="stress"?a.result?.structural?.field.stress:
+      showFields==="displacement"?a.result?.structural?.field.displacement:
+      showFields==="thermal"&&a.result?.thermal?.candidateId===a.selected?a.result.thermal.field:undefined
+     } fieldLabel={showFields==="stress"?"Service stress":showFields==="displacement"?"Service displacement":showFields==="thermal"?"Steady conduction temperature":undefined}/></ViewerErrorBoundary></div>:
+     <div className="journeyEmptyViewer"><span aria-hidden="true">⬡</span><p>{isDed?ded.error:"Upload an STL or open a teaching example to see the part here."}</p></div>}
+   <div className="journeyViewerNote">{isDed?"Synthetic wall with assumed bead dimensions — not your uploaded geometry":a.file?"Actual uploaded STL · model orientation and research contours only":"No geometry is being analyzed"}</div>
+   {(j.step==="studies"||j.step==="decision")&&a.result&&isLPBF&&<label>Viewer result<select aria-label="Viewer result" value={showFields} onChange={e=>setShowFields(e.target.value as typeof showFields)}><option value="geometry">Geometry</option><option value="stress" disabled={!a.result.structural}>Service stress</option><option value="displacement" disabled={!a.result.structural}>Service displacement</option><option value="thermal" disabled={!a.result.thermal||a.result.thermal.candidateId!==a.selected}>Steady temperature</option></select></label>}
+ </div>;
+ const activeCase=activeServiceCase(a.servicePlan),load=activeCase.input;
+ return <AppShell title="Engineering Workspace" focused>
+  <div className="journeyWrap">
+   <header className="journeyHead">
+     <div><p className="guidedEyebrow">ORIENTAI · SINGLE PROJECT WORKFLOW</p><h1>{j.mode==="ded-example"?"DED research example":a.projectName==="Untitled part"?"New part analysis":a.projectName}</h1><p>From engineering requirements to a traceable manufacturing comparison.</p></div>
+     <span className="journeySaved">{a.storageError?a.storageError:a.saving?"Saving locally…":"Locally saved"}</span>
+   </header>
+   <nav className="journeyStepper" aria-label="Project stages">{STEPS.map((s,index)=><button key={s} type="button" aria-current={j.step===s?"step":undefined} aria-label={"Step "+(index+1)+": "+STEP_LABELS[s]} disabled={s!=="part"&&!verified} className={j.step===s?"selected":""} onClick={()=>setStage(s)}><span>{index+1}</span>{STEP_LABELS[s]}</button>)}</nav>
+   {(message||a.error)&&<div className="journeyNotice" role="status">{message||a.error}</div>}
+   <div className="journeyBody">
+    {preview}
+    <section className="journeyStage" aria-label={STEP_LABELS[j.step]+" stage"}>
+     {j.step==="part"&&<>
+      <p className="guidedEyebrow">STEP 1 / PART INTAKE</p><h2>What component are we analyzing?</h2><p>Start with the real part when possible. Teaching examples are separate projects.</p>
+      <label>Project name<input aria-label="Project name" value={a.projectName} maxLength={120} onChange={e=>a.setProjectName(e.target.value)}/></label>
+      {isDed?<><div className="journeyNotice"><strong>DED teaching example</strong><p>A single-bead wall on a substrate. Calculations on this page belong only to this example, not an uploaded STL or qualified machine.</p></div><button onClick={a.startUploadedProject} className="studioAction secondary">Start with my own STL</button></>:
+       <><label className="journeyUpload">Upload STL (up to 20 MB)<input aria-label="Upload STL" type="file" accept=".stl" onChange={e=>upload(e.target.files?.[0]??null)}/></label>
+       <details><summary>Or select a teaching part</summary><div className="journeySampleGrid">{samples.map(([id,title])=><button key={id} disabled={sampleBusy} onClick={()=>void loadSample(id)}><img src={"/verification/previews/"+id+".svg"} alt="" width={124} height={78}/><span>{title}</span></button>)}</div></details>
+       <div className="journeyDivider">DED RESEARCH EXAMPLE</div><button className="studioAction secondary" onClick={a.startDedExample}>Open DED teaching wall</button>
+       {a.file&&<><label>STL units<select aria-label="STL units" value={a.settings.unitScale} onChange={e=>a.update("unitScale",Number(e.target.value))}><option value={1}>Millimeters</option><option value={25.4}>Inches</option><option value={1000}>Meters</option></select></label>
+       {inspection.data?<PartInspection data={inspection.data}/>:<p role="status">{inspection.error||"Inspecting geometry…"}</p>}
+       <button className="studioAction primary" disabled={!inspection.data||inspection.data.audit.findings.some(f=>f.level==="blocker")} onClick={()=>{a.confirmPart();a.setJourneyStep("requirements");}}>Confirm units and continue</button>
+       {verified&&<Status kind="ok">Part units confirmed</Status>}</>}
+       </>}
+       <details><summary>Import saved project</summary><label>ORIENTAI JSON backup<input aria-label="Import ORIENTAI project" type="file" accept=".json" disabled={exportBusy} onChange={e=>void importProject(e.target.files?.[0]??null)}/></label></details>
+     </>}
+     {j.step==="requirements"&&<>
+      <p className="guidedEyebrow">STEP 2 / ENGINEERING REQUIREMENTS</p><h2>What does this part need to withstand?</h2>
+      {isDed?<><p>This wall is a manufacturing demonstration, not a flight-design mechanical component. No structural strength or service compliance claim is associated with it.</p><div className="journeyNotice">Mechanical properties, dimensional tolerances, fixture loads and acceptance criteria have not been established for this example.</div></>:<>
+       <p>Define named service cases in the part's original axes. The current solver only supports a fully fixed extreme end face and total force on the opposite end; bores, bolts, pressures and realistic mounting surfaces are not yet modeled.</p>
+       <div className="journeyFields"><label>Load case<select aria-label="Load case" value={activeCase.id} onChange={e=>a.selectServiceCase(e.target.value)}>{a.servicePlan.cases.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Case name<input aria-label="Case name" value={activeCase.name} onChange={e=>a.renameServiceCase(e.target.value)}/></label></div>
+       <div className="journeyActions"><button onClick={a.addServiceCase} disabled={a.servicePlan.cases.length>=8}>Add load case</button><button onClick={a.removeServiceCase} disabled={a.servicePlan.cases.length===1}>Remove case</button></div>
+       <label>Clamped original-part face<select aria-label="Clamped original-part face" value={load.fixedFace??"z-min"} onChange={e=>a.setServiceSetup({...load,fixedFace:e.target.value as EndFace})}>{END_FACES.map(f=><option key={f} value={f}>{f}</option>)}</select></label>
+       <div className="journeyFields">{([["forceXN","Force X (N)"],["forceYN","Force Y (N)"],["forceZN","Force Z (N)"]] as const).map(([key,label])=><label key={key}>{label}<input type="number" aria-label={label} value={load[key]??0} onChange={e=>a.setServiceSetup({...load,[key]:Number(e.target.value)})}/></label>)}</div>
+       <label>Maximum displacement requirement (mm; optional)<input type="number" aria-label="Maximum displacement requirement" min={0} step="any" value={load.displacementLimitMm??""} onChange={e=>a.setServiceSetup({...load,displacementLimitMm:e.target.value===""?undefined:Number(e.target.value)})}/></label>
+       <details><summary>Numerical model assumptions</summary><div className="journeyFields">{([["youngModulusMPa","Young's modulus (MPa)"],["poissonRatio","Poisson ratio"],["resolution","Voxel resolution (6–12)"]] as const).map(([key,label])=><label key={key}>{label}<input type="number" aria-label={label} step="any" value={load[key]} onChange={e=>a.setServiceSetup({...load,[key]:Number(e.target.value)})}/></label>)}</div><p>These illustrative properties and end-face fixtures require engineering review; no yield or fatigue allowables are inferred.</p></details>
+       <div className="journeyNotice">Unknown fatigue, yield and qualification criteria are not considered satisfied. Structural runs require a separate boundary-condition review in the Simulations step.</div>
+      </>}
+     </>}
+     {j.step==="process"&&<>
+      <p className="guidedEyebrow">STEP 3 / PRINT PROCESS</p><h2>How will this component be manufactured?</h2>
+      <p>Process choice determines which analyses are applicable. We do not reuse powder-bed support estimates as DED feasibility results.</p>
+      {isDed?<><label>DED variant<select aria-label="DED variant" value={j.process} onChange={e=>a.setJourneyProcess(e.target.value as ProcessKind)}><option value="DED_LB_WIRE">Laser wire-fed DED</option><option value="DED_LB_POWDER">Laser powder-fed DED</option></select></label>
+       <label>Material identification<input aria-label="DED material" value={j.dedInput.materialLabel} onChange={e=>dedSet("materialLabel",e.target.value)}/></label>
+       <Status kind="missing">Machine model / head kinematics not provided</Status>
+       <p>Arc-wire and electron-beam variants remain unsupported. No qualified parameter window, wire angle, powder capture efficiency, shielding or motion reach is inferred.</p></>:
+      <><label>Manufacturing process<select aria-label="Manufacturing process" value={j.process} onChange={e=>a.setJourneyProcess(e.target.value as ProcessKind)}><option value="PBF_LB_METAL">Laser powder-bed fusion (LPBF) · geometric screening</option><option value="DED_LB_WIRE">Laser wire DED · not available for arbitrary STL</option><option value="DED_LB_POWDER">Laser powder DED · not available for arbitrary STL</option></select></label>
+      {isLPBF?<><label>Material name<input aria-label="Material name" value={a.settings.material} onChange={e=>a.update("material",e.target.value)}/></label>
+       <h3>Usable build envelope (mm)</h3><div className="journeyFields">{(["x","y","z"] as const).map(k=><label key={k}>{k.toUpperCase()} (mm)<input type="number" aria-label={"Envelope "+k} value={a.settings[k]} onChange={e=>a.update(k,Number(e.target.value))}/></label>)}</div>
+       <div className="journeyFields"><label>Layer thickness (mm)<input type="number" step="any" aria-label="Layer thickness" value={a.settings.layerHeightMm} onChange={e=>a.update("layerHeightMm",Number(e.target.value))}/></label><label>Overhang threshold (°)<input type="number" aria-label="Overhang threshold" value={a.settings.overhangDeg} onChange={e=>a.update("overhangDeg",Number(e.target.value))}/></label></div>
+       <details><summary>Advanced screening assumptions</summary><div className="journeyFields">{([["support","Support preference"],["height","Lower height preference"],["contact","Contact preference"],["searchSamples","Additional orientation samples"],["recoatSeconds","Assumed recoating seconds/layer"],["scanSecondsPerLayer","Assumed scan seconds/layer"],["machineHourlyRate","Machine cost per hour"]] as const).map(([k,label])=><label key={k}>{label}<input type="number" aria-label={label} value={a.settings[k]} onChange={e=>a.update(k,Number(e.target.value))}/></label>)}</div></details>
+       <div className="journeyNotice">Support and time are geometric/assumed estimates only. Material name does not assign approved mechanical properties.</div></>:
+       <div className="journeyNotice"><strong>DED path generation is not supported for arbitrary STL files yet.</strong><p>Your STL remains attached to this project. To explore deposition paths and factory-flow simulation now, open the separate labeled DED teaching-wall project.</p><button onClick={a.startDedExample}>Switch to DED teaching example (replaces current active project)</button></div>}
+      </>}
+     </>}
+     {j.step==="options"&&<>
+       <p className="guidedEyebrow">STEP 4 / MANUFACTURING OPTIONS</p><h2>Which build strategies should we compare?</h2>
+       {isLPBF?<><p>Compare sampled part orientations by height, down-facing surface and conceptual support burden. All inputs are visible in the Print process step.</p>
+         {!a.result?<><button className="studioAction primary" onClick={a.retry} disabled={a.busy}>{a.busy?"Evaluating orientations…":"Generate orientation candidates"}</button>{a.busy&&<><progress value={a.progress} max={1} aria-label="Orientation progress"/><button onClick={a.cancel}>Cancel</button></>}</>:<>
+          <Status kind="ok">{a.result.candidates.length} sampled orientations</Status>
+          <div className="journeyChoiceGrid">{proposals.slice(0,5).map(c=><button key={c.id} className={a.selected===c.id?"selected":""} onClick={()=>a.select(c.id)}><strong>{c.id} · {c.buildHeightMm.toFixed(1)} mm tall</strong><span>{c.supportProxyMm3.toFixed(1)} mm³ geometric support proxy</span><small>{c.pareto?"Pareto candidate":"Geometrically eligible"}</small></button>)}</div>
+          {!proposals.length&&<p role="alert">No candidate satisfies the entered geometric envelope. Review your machine configuration.</p>}
+          <details><summary>All orientations and tradeoffs</summary><div className="journeyScroll"><table><thead><tr><th>Option</th><th>Height</th><th>Support proxy</th><th>Envelope</th></tr></thead><tbody>{a.result.candidates.map(c=><tr key={c.id}><td><button onClick={()=>a.select(c.id)}>{c.id}</button></td><td>{num(c.buildHeightMm)} mm</td><td>{num(c.supportProxyMm3)} mm³</td><td>{c.fitsEnvelope?"fits":"exceeds"}</td></tr>)}</tbody></table></div></details>
+          <button className="studioAction secondary" onClick={a.retry}>Re-run geometry screening</button>
+         </>}
+       </>:isDed?<><p>Define a nominal single-bead wall and compare deposition strategies. This is example geometry; not slicing of a real uploaded STL.</p>
+          <div className="journeyFields">{dedNumber("wallLengthMm","Wall length (mm)")}{dedNumber("wallHeightMm","Wall height (mm)")}{dedNumber("beadWidthMm","Assumed bead width (mm)")}{dedNumber("beadHeightMm","Assumed bead height (mm)")}{dedNumber("substrateLengthMm","Substrate length (mm)")}{dedNumber("substrateWidthMm","Substrate width (mm)")}{dedNumber("substrateThicknessMm","Substrate thickness (mm)")}</div>
+          <label>Deposition strategy<select aria-label="Deposition strategy" value={j.dedInput.strategy} onChange={e=>dedSet("strategy",e.target.value)}><option value="alternating">Alternate direction each layer</option><option value="one-way">Deposit one direction; reposition each layer</option></select></label>
+          <div className="journeyFields">{dedNumber("depositionSpeedMmS","Commanded deposition speed (mm/s)")}{dedNumber("traverseSpeedMmS","Commanded reposition speed (mm/s)")}{dedNumber("interpassDwellS","Interpass dwell (s)")}</div>
+          {ded.plan?<><Status kind="info">Idealized motion estimate</Status><div className="journeyMetrics"><article><small>Tracks</small><b>{ded.plan.layers}</b></article><article><small>Deposited distance</small><b>{num(ded.plan.depositionLengthMm)} mm</b></article><article><small>Commanded time</small><b>{num(ded.plan.commandedSubtotalSeconds/60)} min</b></article></div><p>Machine reach and nozzle collision are unverified. No deposition thermal, dimensional distortion or first-pass quality calculation was performed.</p></>:<p role="alert">{ded.error}</p>}
+         </>:<div className="journeyNotice">No validated toolpath engine for your uploaded STL and selected DED process. The system will not reuse LPBF orientation estimates as DED results.</div>}
+     </>}
+     {j.step==="studies"&&<>
+      <p className="guidedEyebrow">STEP 5 / SIMULATION</p><h2>What have we actually calculated?</h2>
+      {isLPBF?<>{a.result?<><div className="journeyStudy"><h3>Service-load response</h3><p>Idealized original-part fixture and force; run only after reviewing properties and constraints.</p><details><summary>Configure and run structural calculation</summary><Structural/></details></div>
+       <div className="journeyStudy"><h3>Steady conduction</h3><p>Heat transfer through a solid under assumed boundary conditions, not laser or LPBF thermal history.</p><details><summary>Configure and run thermal calculation</summary><Thermal/></details></div>
+       <div className="journeyStudy"><h3>Manufacturing distortion</h3><Status kind="missing">Not supported</Status><p>No validated residual-strain/thermal distortion estimate for this part.</p></div>
+       <div className="journeyStudy"><h3>Factory-flow simulation</h3><Status kind="missing">Not configured</Status><p>Machine and shop-floor operation/resource data are not available for this LPBF project.</p></div>
+      </>:<div className="journeyNotice">First generate orientations in the previous stage. Structural and steady thermal studies require an active analysis run.</div>}</>:
+      isDed?<><div className="journeyStudy"><h3>Manufacturing-flow research scenario</h3><p>Assume one resource per operation, FIFO processing, no machine failures or scrap. These are user-entered teaching assumptions, not measured factory data.</p>
+       <div className="journeyFields">{dedNumber("setupMin","Setup (min)")}{dedNumber("cooldownMin","Cooling (min)")}{dedNumber("machiningMin","Machining (min)")}{dedNumber("inspectionMin","Inspection (min)")}{dedNumber("batchSize","Number of jobs")}{dedNumber("releaseIntervalMin","Release interval (min)")}</div>
+       {ded.flow?<><div className="journeyMetrics"><article><small>Jobs completed</small><b>{ded.flow.completed}</b></article><article><small>Mean lead time</small><b>{num(ded.flow.meanLeadTimeMin)} min</b></article><article><small>Mean queue time</small><b>{num(ded.flow.meanQueueTimeMin)} min</b></article></div><button className="studioAction secondary" onClick={exportSimio}>Export Simio CSV tables (ZIP)</button></>:<p role="alert">{ded.error}</p>}</div>
+       <div className="journeyStudy"><h3>Structural, thermal and distortion studies</h3><Status kind="missing">Not evaluated</Status><p>No DED part-specific FEM, transient thermal, residual stress or manufacturing quality prediction is generated from this teaching geometry.</p></div>
+      </>:<div className="journeyNotice">No DED simulation is available for this arbitrary uploaded STL. Please select an explicit teaching example or return to process setup.</div>}
+     </>}
+     {j.step==="decision"&&<>
+      <p className="guidedEyebrow">STEP 6 / ENGINEERING DECISION</p><h2>What can we conclude?</h2>
+      {isLPBF&&candidate&&a.result?<><div className="journeyMetrics"><article><small>Selected option</small><b>{candidate.id}</b></article><article><small>Build height</small><b>{num(candidate.buildHeightMm)} mm</b></article><article><small>Support proxy</small><b>{num(candidate.supportProxyMm3)} mm³</b></article></div>
+       <Status kind={candidate.feasible?"ok":"missing"}>{candidate.feasible?"Within configured geometric bounds":"Fails entered geometric constraints"}</Status>
+       <h3>Items needing review</h3>{screenCandidate(candidate,a.result.candidates).map(f=><p key={f.code}><strong>{f.code}:</strong> {f.message}</p>)}
+       {serviceCaseSummary(a.result).map(c=><p key={c.id}><strong>{c.name} displacement:</strong> {c.status.replaceAll("-"," ")}. Strength and fatigue not evaluated.</p>)}
+       <div className="journeyNotice"><strong>Not a print approval.</strong><p>Orientation ranking is based on geometry and user preferences; material strength, defect risk, process distortion and first-time acceptance require separate validation.</p></div>
+      </>:isDed&&ded.plan&&ded.flow?<><h3>Compare example deposition directions</h3>
+        <div className="journeyChoiceGrid">{(["alternating","one-way"] as const).map(strategy=>{const r=planDedWall({...j.dedInput,strategy});return <button key={strategy} className={strategy===j.dedInput.strategy?"selected":""} onClick={()=>dedSet("strategy",strategy)}><strong>{strategy==="alternating"?"Alternating direction":"One-way tracks"}</strong><span>Commanded time {num(r.commandedSubtotalSeconds/60)} min</span><small>Reposition {num(r.repositionLengthMm)} mm · illustrative geometry</small></button>;})}</div>
+        <p>Factory scenario mean lead time: {num(ded.flow.meanLeadTimeMin)} min. This is an assumed deterministic flow-shop outcome, not verified production throughput.</p>
+        <Status kind="missing">Print feasibility and quality not established</Status>
+      </>:<div className="journeyNotice">No process-specific decision is available. Return to options to generate supported results.</div>}
+     </>}
+     {j.step==="report"&&<>
+      <p className="guidedEyebrow">STEP 7 / ENGINEERING REVIEW</p><h2>Export what we know—and what we do not.</h2>
+      {isLPBF&&a.result?<><p>The report contains the current STL checksum, geometric screening, original-part service cases, numerical findings and missing evidence.</p><Link className="studioAction primary" href="/report">Open engineering PDF / JSON report</Link><button className="studioAction secondary" onClick={()=>void exportProject()} disabled={exportBusy}>Export complete project backup</button></>:
+       isDed&&ded.plan&&ded.flow?<><p>This example's results are teaching motion and manufacturing-flow estimates. No aerospace qualification, physical acceptance or actual Simio run is included.</p>
+         <button className="studioAction primary" onClick={()=>download(ded.plan!.scenarioId+"-engineering-review.json",JSON.stringify({schema:"orientai-example-review-v1",source:"synthetic-ded-wall",project:a.projectName,process:j.process,inputs:j.dedInput,plan:ded.plan,manufacturingFlow:ded.flow,evidence:"illustrative",machineFeasibility:"not_evaluated",structural:"not_evaluated",thermal:"not_evaluated",distortion:"not_evaluated",firstPassQuality:"not_evaluated"},null,2),"application/json")}>Download DED research review (JSON)</button>
+         <button className="studioAction secondary" onClick={exportSimio}>Download Simio scenario tables (ZIP)</button></>:
+        <div className="journeyNotice">No current supported result to export. Check the process and calculation status in previous stages.</div>}
+       <h3>Before manufacturing</h3><p>Review missing material properties, machine-specific constraints, fixtures, tolerance requirements and independent physical evidence. This is a research engineering review, not an approval to manufacture or certify a part.</p>
+       <details><summary>Advanced research tools</summary><p><Link href="/orientation/advanced">Legacy advanced part calculations</Link> · <Link href="/simulation/benchmarks">Numerical benchmarks</Link> · <Link href="/ml">ML research</Link></p></details>
+     </>}
+     <footer className="journeyFooter">
+      <button onClick={()=>setStage(STEPS[Math.max(0,STEPS.indexOf(j.step)-1)])} disabled={j.step==="part"}>Back</button>
+      <span>{STEPS.indexOf(j.step)+1} of 7</span>
+      {j.step!=="report"&&<button className="studioAction primary" onClick={next} disabled={!verified&&j.step==="part"}>Continue: {STEP_LABELS[STEPS[STEPS.indexOf(j.step)+1]]} →</button>}
+     </footer>
+    </section>
+   </div>
+   <div className="journeyBottom"><span><strong>Part:</strong> {summaryName}</span><span><strong>Process:</strong> {isDed?j.process:j.process==="PBF_LB_METAL"?"LPBF":j.process+" (unsupported for user STL)"}</span><span><strong>Evidence:</strong> research / not qualified</span><Link href="/orientation/advanced">Advanced tools</Link></div>
+  </div>
+ </AppShell>;
 }
