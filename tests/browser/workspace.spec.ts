@@ -125,3 +125,25 @@ test('multiple load cases persist through manufacturing changes and export',asyn
  await expect(panel.getByLabel('Service load case',{exact:true})).toHaveValue(data.servicePlan.activeCaseId);
  await expect(panel.getByLabel('Total X force (N)',{exact:true})).toHaveValue('40');
 });
+
+test('production simulation shares the part run and survives navigation',async({page})=>{
+ await upload(page);
+ await page.getByRole('link',{name:'Production Flow',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'How long will the manufacturing route take?',exact:true})).toBeVisible();
+ await page.getByLabel('Number of builds',{exact:true}).fill('3');
+ const reviewed=page.getByRole('checkbox',{name:'I reviewed the route, durations, capacities and cost assumptions.',exact:true});
+ await reviewed.check();
+ await page.getByRole('button',{name:'Run production-flow simulation',exact:true}).click();
+ await expect(page.getByRole('region',{name:'Production simulation results',exact:true})).toBeVisible();
+ await expect(page.getByText('Completed builds:',{exact:false})).toContainText('3');
+ await page.getByRole('link',{name:'Download the consolidated engineering report',exact:true}).click();
+ const download=page.waitForEvent('download');await page.getByRole('button',{name:'Download JSON',exact:true}).click();
+ const {readFile}=await import('node:fs/promises');const data=JSON.parse(await readFile((await (await download).path())!,'utf8'));
+ expect(data.productionFlow.runId).toBe(data.runId);expect(data.productionFlow.result.completedJobs).toBe(3);
+ await page.getByRole('link',{name:'Production Flow',exact:true}).click();
+ await expect(page.getByLabel('Number of builds',{exact:true})).toHaveValue('3');
+ await page.reload();await expect(page.getByRole('region',{name:'Production simulation results',exact:true})).toBeVisible();
+ await page.getByLabel('Number of builds',{exact:true}).fill('4');
+ await expect(page.getByRole('region',{name:'Production simulation results',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Run production-flow simulation',exact:true})).toBeDisabled();
+});

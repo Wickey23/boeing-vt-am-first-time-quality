@@ -1,11 +1,12 @@
 "use client";
+import {validateFlowConfiguration,type FlowConfiguration,type FlowStudy} from "@/lib/production-flow";
 import {createContext,useContext,useEffect,useRef,useState,useCallback} from 'react';
 import {type ServiceSetup} from "@/lib/service-load";
 import type {StructuralField} from "@/lib/voxel-structural";
 import type {ThermalField} from "@/lib/voxel-thermal";
 import {DEFAULT_SETTINGS,requestFor,loadWorkspace,saveWorkspace,type Settings,type Analysis,type Snapshot} from '@/lib/analysis-workspace';
 import {createServicePlan,restoreServicePlan,syncServicePlan,activeServiceCase,serviceInputKey,attachServiceResult,MAX_SERVICE_CASES,type ServicePlan} from "@/lib/service-plan";
-type Context={servicePlan:ServicePlan;selectServiceCase:(id:string)=>void;addServiceCase:()=>void;removeServiceCase:()=>void;renameServiceCase:(name:string)=>void;setServiceSetup:(input:ServiceSetup)=>void;saving:boolean;attachMeshSensitivity:(kind:"thermal"|"structural",runId:string,candidateId:string,data:{input:object;comparison:object})=>void;projectName:string;setProjectName:(name:string)=>void;restoreProject:(snapshot:{servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>void;file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField,caseId:string,inputKey:string)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void;clearThermal:()=>void;clearStructural:()=>void};
+type Context={setProductionFlowSetup:(input:FlowConfiguration)=>void;attachProductionFlow:(study:FlowStudy)=>void;servicePlan:ServicePlan;selectServiceCase:(id:string)=>void;addServiceCase:()=>void;removeServiceCase:()=>void;renameServiceCase:(name:string)=>void;setServiceSetup:(input:ServiceSetup)=>void;saving:boolean;attachMeshSensitivity:(kind:"thermal"|"structural",runId:string,candidateId:string,data:{input:object;comparison:object})=>void;projectName:string;setProjectName:(name:string)=>void;restoreProject:(snapshot:{servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>void;file:File|null;settings:Settings;result:Analysis|null;selected:string|null;busy:boolean;progress:number;error:string;storageError:string;ready:boolean;upload:(f:File|null)=>void;update:<K extends keyof Settings>(k:K,v:Settings[K])=>void;select:(id:string)=>void;retry:()=>void;cancel:()=>void;clear:()=>void;attachStructural:(runId:string,candidateId:string,field:StructuralField,caseId:string,inputKey:string)=>void;attachThermal:(runId:string,candidateId:string,field:ThermalField)=>void;clearThermal:()=>void;clearStructural:()=>void};
 const C=createContext<Context|null>(null);
 export function AnalysisProvider({children}:{children:React.ReactNode}){
  const [servicePlan,setServicePlan]=useState<ServicePlan>(createServicePlan);
@@ -21,6 +22,7 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const validSettings=!!s.settings&&typeof s.settings==='object'&&Number.isFinite(s.settings.x)&&Number.isFinite(s.settings.y)&&Number.isFinite(s.settings.z);
  const validResult=s.result===null||(!!s.result&&typeof s.result==='object'&&typeof s.result.runId==='string'&&Array.isArray(s.result.candidates)&&s.result.candidates.every(c=>c&&typeof c.id==='string'&&c.rotation&&Number.isFinite(c.score))&&s.result.source&&typeof s.result.source.fileHashSha256==='string');
  if(validFile&&validSettings&&validResult){
+  if(s.result?.productionFlowSetup)validateFlowConfiguration(s.result.productionFlowSetup,false);
   const restored=restoreServicePlan(s.servicePlan,s.result);
   setProjectName(s.projectName||"Untitled part");setFile(s.file);setSettings({...DEFAULT_SETTINGS,...s.settings});
   setServicePlan(restored);planRef.current=restored;
@@ -49,6 +51,8 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const update=<K extends keyof Settings>(k:K,v:Settings[K])=>{invalidate();setSettings(s=>({...s,[k]:v}));};
  const retry=()=>{cancel();setBusy(true);setResult(null);setSelected(null);setError('');setAttempt(x=>x+1);};
  const commitPlan=(next:ServicePlan)=>{planRef.current=next;setServicePlan(next);setResult(r=>r?syncServicePlan(r,next):r);};
+ const setProductionFlowSetup=(input:FlowConfiguration)=>{validateFlowConfiguration(input,false);setResult(r=>r?{...r,productionFlowSetup:input,productionFlow:undefined}:r);};
+ const attachProductionFlow=(study:FlowStudy)=>setResult(r=>r?.runId===study.runId?{...r,productionFlowSetup:study.configuration,productionFlow:study}:r);
  const setServiceSetup=(input:ServiceSetup)=>{const p=planRef.current;commitPlan({...p,cases:p.cases.map(c=>c.id===p.activeCaseId?{...c,input}:c)});};
  const selectServiceCase=(id:string)=>{const p=planRef.current;if(p.cases.some(c=>c.id===id))commitPlan({...p,activeCaseId:id});};
  const addServiceCase=()=>{const p=planRef.current;if(p.cases.length>=MAX_SERVICE_CASES)return;const id=crypto.randomUUID();commitPlan({...p,activeCaseId:id,cases:[...p.cases,{id,name:`Service case ${p.cases.length+1}`,input:{...activeServiceCase(p).input}}]});};
@@ -61,6 +65,6 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const clearStructural=()=>setResult(r=>r?{...r,structural:undefined,structuralCases:Object.fromEntries(Object.entries(r.structuralCases??{}).filter(([id])=>id!==planRef.current.activeCaseId)),meshSensitivity:{...r.meshSensitivity,structural:undefined}}:r);
  const restoreProject=(snapshot:{servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>{const restored=restoreServicePlan(snapshot.servicePlan,snapshot.result);invalidate();setProjectName(snapshot.projectName);setFile(snapshot.file);setSettings({...DEFAULT_SETTINGS,...snapshot.settings});setServicePlan(restored);planRef.current=restored;setResult(snapshot.result?syncServicePlan(snapshot.result,restored):null);setSelected(snapshot.selected);setError("");};
  const clear=()=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;setFile(null);setSettings(DEFAULT_SETTINGS);setProjectName("Untitled part");};
- return <C.Provider value={{servicePlan,selectServiceCase,addServiceCase,removeServiceCase,renameServiceCase,setServiceSetup,saving,attachMeshSensitivity,projectName,setProjectName,restoreProject,file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
+ return <C.Provider value={{setProductionFlowSetup,attachProductionFlow,servicePlan,selectServiceCase,addServiceCase,removeServiceCase,renameServiceCase,setServiceSetup,saving,attachMeshSensitivity,projectName,setProjectName,restoreProject,file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
 }
 export function useAnalysis(){const value=useContext(C);if(!value)throw new Error('AnalysisProvider missing');return value;}
