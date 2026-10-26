@@ -1,8 +1,7 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import {useSearchParams} from "next/navigation";
 import AppShell from "@/components/v2/AppShell";
 import {useAnalysis} from "@/components/AnalysisProvider";
 import PartInspection,{usePartInspection} from "@/components/PartInspection";
@@ -33,7 +32,7 @@ function download(name:string,content:string|Uint8Array,type:string){
 function Status({kind,children}:{kind:"ok"|"missing"|"info";children:React.ReactNode}){return <span className={"journeyStatus "+kind}>{children}</span>;}
 export default function UnifiedOrientationPage(){
  const a=useAnalysis(), j=a.journey;
- const search=useSearchParams();
+ const initialized=useRef(false);
  const [viewerUrl,setViewerUrl]=useState<string>();
  const [message,setMessage]=useState("");
  const [exportBusy,setExportBusy]=useState(false);
@@ -46,9 +45,12 @@ export default function UnifiedOrientationPage(){
  },[a.file]);
  // Links from home are explicit user actions. A query only initializes an example when asked.
  useEffect(()=>{
-  if(!a.ready)return;
-  if(search.get("example")==="ded"&&j.mode!=="ded-example")a.startDedExample();
- },[a.ready,search,j.mode]);
+  if(!a.ready||initialized.current)return;
+  initialized.current=true;
+  const query=new URLSearchParams(window.location.search);
+  if(query.get("example")==="ded")a.startDedExample();
+  else if(query.get("step")&&STEPS.includes(query.get("step") as JourneyStep))a.setJourneyStep(query.get("step") as JourneyStep);
+ },[a.ready]);
  const isDed=dedExample(j);
  const isLPBF=allowsGeometryRanking(j);
  const verified=completedPart(j,a.file,a.settings.unitScale);
