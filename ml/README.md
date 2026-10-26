@@ -22,3 +22,19 @@ The JSON is portable into the Next.js application. No pickle is loaded by the de
 - Hard safety and qualification constraints must be checked independently of ML.
 - ML predictions do not establish strength, inspectability, structural acceptability, build success or part certification.
 - Do not upload proprietary or export-controlled Boeing CAD, inspection or manufacturing records to unapproved external services.
+
+## Melt-pool reproducibility and evaluation audit
+
+Run the pinned research environment and checksum-locked evaluation:
+
+```sh
+python -m pip install -r ml/requirements-reproduction.txt
+python -m unittest discover -s ml/tests -v
+python ml/reproduce_meltpoolnet.py --expected-sha256 197b111bcb3c531d38c8dd7ea0d4e1f78c8b6b03e0fd900a5505c2b18414a4f6 --out /tmp/orientai-ml-evaluation.json
+```
+
+The report retains the original 178/49 study split, adds per-study MAE/RMSE, leave-one-development-study-out checks with fold-local scaling, row-level split identity, model/split hashes, training feature ranges and data-filter counts. Cross-study duplicate feature/target records block evaluation pending provenance review. Duplicates within the filtered data are counted, not silently removed or treated as independent experiments.
+
+GitHub Actions runs the tests and full public-data reproduction and retains the JSON as the `orientai-ml-evaluation` artifact. It does not silently replace the app's checked-in historical report or deploy a model. The exact recorded KNN baseline is checked in the pinned environment; a future discrepancy fails CI for investigation rather than adjusting the expected result.
+
+These metrics use source target units that remain unverified. The holdout is from the same compiled dataset, not external validation. Feature min/max checks are not a validated applicability domain. Melt-pool and tensile pipelines leave inference and release eligibility disabled. Beating a mean baseline is recorded separately and never grants release approval.
