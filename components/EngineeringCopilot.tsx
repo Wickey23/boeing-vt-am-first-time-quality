@@ -7,6 +7,8 @@ import {usePartInspection} from "@/components/PartInspection";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import {completedPart,allowsGeometryRanking} from "@/lib/engineering-journey";
 import {activeServiceCase} from "@/lib/service-plan";
+import {END_FACES,type EndFace} from "@/lib/service-load";
+import type {ProcessKind} from "@/lib/engineering-journey";
 import {
  addProjectSource,blankKnowledge,createMessage,findEvidence,localCopilotReply,nextEngineeringQuestion,
  restoreKnowledge,updateSourceNotes,type ProjectKnowledge,type CopilotMessage,type ProjectSource
@@ -99,7 +101,7 @@ export default function EngineeringCopilot(){
   finally{setDocBusy(false);}
  };
  const removeSource=(id:string)=>{docs.current.delete(id);setKnowledge(s=>s?{...s,sources:s.sources.filter(x=>x.id!==id),
-   messages:s.messages.map(m=>({...m,sourceIds:m.sourceIds.filter(x=>x!==id)}))}:s);};
+   messages:[]}:s);};
  const opts={
   partName:a.journey.mode==="ded-example"?"DED teaching wall":a.file?.name??null,
   confirmed:verified,
@@ -151,6 +153,7 @@ export default function EngineeringCopilot(){
   if(!verified||!isLPBF){setError("Confirm an uploaded STL and select LPBF geometric screening first.");return;}
   setError("");a.retry();setNotice("Started local orientation screening. The progress and results below come from the actual geometry worker.");
  };
+ const editService=(next:typeof activeCase.input)=>{setAcknowledgedLoads(false);a.setServiceSetup(next);};
  const saveContext=()=>{
   if(!knowledge)return;
   const body=JSON.stringify({...knowledge,rawPartBytesIncluded:false,documentBytesIncluded:false,
@@ -186,7 +189,12 @@ export default function EngineeringCopilot(){
       {inspect.data?.audit.findings.filter(f=>f.level==="blocker").map(f=><p role="alert" key={f.code}>{f.code}: {f.message}</p>)}
       <button type="button" disabled={!inspect.data||inspect.data.audit.findings.some(f=>f.level==="blocker")} onClick={()=>a.confirmPart()}>Confirm inspected dimensions and units</button>
     </div>}
-    <div className="copilotSummary"><span>Process: <b>{a.journey.process}</b></span><span>Geometry: <b>{stat(verified)}</b></span></div>
+    <div className="copilotSummary"><label style={{margin:0,flex:1}}>Manufacturing process
+      <select aria-label="Copilot manufacturing process" value={a.journey.process} onChange={e=>a.setJourneyProcess(e.target.value as ProcessKind)}>
+      <option value="PBF_LB_METAL">Laser powder bed fusion (LPBF)</option>
+      <option value="DED_LB_WIRE">Laser wire DED (arbitrary-part pathing unsupported)</option>
+      <option value="DED_LB_POWDER">Laser powder DED (arbitrary-part pathing unsupported)</option>
+      </select></label><span>Geometry: <b>{stat(verified)}</b></span></div>
     <div className="copilotDocs">
       <h3>Assembly documentation</h3>
       <p>Attach drawings, requirements and assembly documentation. Plain-text formats are read locally. PDF/Office content is not automatically interpreted as verified engineering data.</p>
@@ -196,7 +204,7 @@ export default function EngineeringCopilot(){
       {sourceList.map(s=><details key={s.id} className="copilotDocItem">
         <summary><span><strong>{s.id} · {s.name}</strong><small>{s.extraction==="local_text"?"Text extracted locally":s.extraction==="engineer_excerpt"?"Engineer excerpt only":"Content not extracted"}</small></span></summary>
         <p>{s.extraction==="local_text"?"The text is available for local retrieval and optional AI questions.":"PDF/Office attachment recorded. Paste relevant passages with page numbers. An explicitly authorized PDF can also be passed to AI when supported."}</p>
-        <label>Relevant excerpt or engineer notes<textarea aria-label={"Notes for "+s.name} rows={3} value={s.engineerNotes} onChange={e=>setKnowledge(k=>k?{...k,sources:updateSourceNotes(k.sources,s.id,e.target.value)}:k)}/></label>
+        <label>Relevant excerpt or engineer notes<textarea aria-label={"Notes for "+s.name} rows={3} value={s.engineerNotes} onChange={e=>setKnowledge(k=>k?{...k,sources:updateSourceNotes(k.sources,s.id,e.target.value),messages:[]}:k)}/></label>
         {s.extractedText&&<details><summary>View extracted text</summary><pre>{s.extractedText.slice(0,2500)}</pre></details>}
         <button className="copilotSmall" type="button" onClick={()=>removeSource(s.id)}>Remove reference</button>
       </details>)}
@@ -208,6 +216,20 @@ export default function EngineeringCopilot(){
       <label>Larger assembly / interfaces<textarea aria-label="Assembly context" placeholder="Where the part sits; what connects to it; relevant part IDs" rows={3} value={knowledge.assemblyContext} onChange={e=>update("assemblyContext",e.target.value)}/></label>
       <label>Mounting / force locations<textarea aria-label="Attachment context" placeholder="Documented fixture and load locations; state uncertainties" rows={2} value={knowledge.attachmentNotes} onChange={e=>update("attachmentNotes",e.target.value)}/></label>
       <label>Confirmed requirements<textarea aria-label="Reviewed requirements" placeholder="Loads, tolerances, material specifications, source references" rows={3} value={knowledge.reviewedRequirements} onChange={e=>update("reviewedRequirements",e.target.value)}/></label>
+      {a.file&&verified&&<details className="copilotDocItem">
+       <summary>Review numerical service-load boundary conditions</summary>
+       <p>Only an idealized entire end-face clamp and total opposite-face load are currently modeled. Choose verified values; the defaults are research examples, not part requirements.</p>
+       <label>Fixed end face (original STL axes)
+       <select aria-label="Copilot fixed end face" value={activeCase.input.fixedFace??"z-min"} onChange={e=>editService({...activeCase.input,fixedFace:e.target.value as EndFace})}>
+       {END_FACES.map(face=><option key={face} value={face}>{face}</option>)}</select></label>
+       {([["forceXN","Force X (N)"],["forceYN","Force Y (N)"],["forceZN","Force Z (N)"]] as const).map(([key,label])=>
+       <label key={key}>{label}<input aria-label={"Copilot "+label} type="number" value={activeCase.input[key]??0}
+        onChange={e=>editService({...activeCase.input,[key]:Number(e.target.value)})}/></label>)}
+       <label>Young's modulus (MPa, engineer-supplied)
+         <input aria-label="Copilot Young modulus" type="number" value={activeCase.input.youngModulusMPa} onChange={e=>editService({...activeCase.input,youngModulusMPa:Number(e.target.value)})}/>
+       </label><label>Poisson ratio<input aria-label="Copilot Poisson ratio" type="number" step="any" value={activeCase.input.poissonRatio} onChange={e=>editService({...activeCase.input,poissonRatio:Number(e.target.value)})}/></label>
+       <Link href="/orientation?step=requirements">Edit multiple load cases in guided workspace</Link>
+      </details>}
       <label className="copilotCheck"><input type="checkbox" checked={acknowledgedLoads} onChange={e=>setAcknowledgedLoads(e.target.checked)}/> I reviewed the actual load cases and material assumptions; default forces are not confirmed design requirements.</label>
       <button type="button" className="copilotSmall" onClick={saveContext}>Export context and cited notes (JSON)</button>
     </div>
