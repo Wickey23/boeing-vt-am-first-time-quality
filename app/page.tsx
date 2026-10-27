@@ -17,13 +17,13 @@ import {
 
 const entryPoints = [
   {
-    href: "/orientation",
+    href: "/copilot",
     number: "01",
-    label: "PART WORKFLOW",
-    title: "Analyze your part",
+    label: "AI-GUIDED PART WORKFLOW",
+    title: "Discuss and analyze your part",
     description:
-      "Bring in an STL, review its geometry, set engineering requirements, and compare preliminary metal AM build orientations.",
-    action: "Open part workspace",
+      "Upload an STL and assembly references, explain the part to an engineering assistant, then run supported orientation and service studies.",
+    action: "Open engineering copilot",
     icon: Upload,
     className: "entryCardPrimary",
   },
@@ -82,7 +82,7 @@ export default function Home() {
               metal-printing strategies, and the evidence behind each decision.
             </p>
             <div className="homeHeroActions">
-              <Link className="homeButton homeButtonPrimary" href="/orientation">
+              <Link className="homeButton homeButtonPrimary" href="/copilot">
                 Start a part study <ArrowUpRight size={17} />
               </Link>
               <Link className="homeButton homeButtonGhost" href="/how-it-works">

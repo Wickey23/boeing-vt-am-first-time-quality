@@ -1,9 +1,7 @@
 import {test,expect} from "@playwright/test";
 test("new user completes one STL project without switching to unrelated geometry",async({page})=>{
  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
- await page.goto("/");
- await expect(page.getByRole("link",{name:/Open my engineering workspace/})).toBeVisible();
- await page.getByRole("link",{name:/Open my engineering workspace/}).click();
+ await page.goto("/orientation");
  await expect(page.getByRole("heading",{name:"What component are we analyzing?"})).toBeVisible();
  await page.getByLabel("Upload STL").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByText(/10.00 × 10.00 × 10.00/)).toBeVisible();
@@ -34,7 +32,7 @@ test("new user completes one STL project without switching to unrelated geometry
 });
 test("DED teaching project is explicitly synthetic, shows supported stages and exports separately",async({page})=>{
  await page.goto("/");
- await page.getByRole("link",{name:/Start DED example/}).click();
+ await page.getByRole("link",{name:/Launch DED example/}).click();
  await expect(page.getByRole("heading",{name:"DED research example"})).toBeVisible();
  await expect(page.getByText("Synthetic DED teaching wall").first()).toBeVisible();
  await page.getByRole("button",{name:/Continue: Requirements/}).click();

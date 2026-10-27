@@ -1,0 +1,47 @@
+import {test,expect} from "@playwright/test";
+test("the copilot connects STL, assembly documents, citations and real geometry progress",async({page})=>{
+ const pageErrors:string[]=[];page.on("pageerror",error=>pageErrors.push(error.message));
+ const remoteCalls:string[]=[];page.on("request",r=>{if(r.url().includes("/api/engineering-copilot")&&r.method()==="POST")remoteCalls.push(r.url());});
+ await page.goto("/");
+ await page.getByRole("link",{name:/Start a part study/}).click();
+ await expect(page.getByRole("heading",{name:"Understand the whole build. Analyze the right part."})).toBeVisible();
+ await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByText("cube-10mm.stl").first()).toBeVisible();
+ await expect(page.getByRole("button",{name:"Confirm inspected dimensions and units"})).toBeEnabled();
+ await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
+ await expect(page.getByText("Geometry:")).toBeVisible();
+ await page.getByLabel("Add reference documents").setInputFiles({name:"assembly-notes.txt",mimeType:"text/plain",
+  buffer:Buffer.from("Fuselage frame at station 20.\nThe bracket attaches to bulkhead A at station 20.\nA 500 N load is discussed but has NOT been confirmed.")});
+ await expect(page.getByText("D1 · assembly-notes.txt")).toBeVisible();
+ await page.getByLabel("Component role").fill("Frame support bracket");
+ await page.getByLabel("Assembly context").fill("Fuselage at station 20; see [D1]");
+ await page.getByLabel("Attachment context").fill("Bulkhead A, interfaces not yet mapped to physical mesh");
+ await page.getByLabel("Reviewed requirements").fill("Load magnitude unconfirmed; [D1]");
+ await page.getByLabel("Message engineering copilot").fill("What does the assembly document say about station 20?");
+ await page.getByRole("button",{name:"Use local guide"}).click();
+ await expect(page.getByText("Relevant excerpts (not independently verified)",{exact:false})).toBeVisible();
+ await expect(page.getByText("References: D1",{exact:false})).toBeVisible();
+ await expect(page.getByRole("button",{name:"Ask AI about approved context"})).toBeDisabled();
+ expect(remoteCalls).toEqual([]);
+ await page.getByRole("button",{name:"Run supported orientation screening"}).click();
+ await expect(page.getByText("Geometry worker completed:",{exact:false})).toBeVisible();
+ await page.reload();
+ await expect(page.getByLabel("Component role")).toHaveValue("Frame support bracket");
+ await expect(page.getByText("D1 · assembly-notes.txt")).toBeVisible();
+ expect(pageErrors).toEqual([]);
+});
+test("AI sharing requires explicit approval and PDFs are not misrepresented as locally read",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.4 mock")});
+ await expect(page.getByText("Content not extracted")).toBeVisible();
+ await page.getByText("D1 · assembly.pdf").click();
+ await expect(page.getByText(/PDF\/Office attachment recorded/)).toBeVisible();
+ await page.getByLabel("Notes for assembly.pdf").fill("Engineer excerpt p. 2: frame attachment, unverified");
+ await expect(page.getByText("Engineer excerpt only")).toBeVisible();
+ await expect(page.getByLabel("Authorize external AI")).not.toBeChecked();
+ await expect(page.getByRole("button",{name:"Ask AI about approved context"})).toBeDisabled();
+ await page.reload();
+ await expect(page.getByText("Engineer excerpt only")).toBeVisible();
+ await expect(page.getByLabel("Authorize external AI")).not.toBeChecked();
+});
