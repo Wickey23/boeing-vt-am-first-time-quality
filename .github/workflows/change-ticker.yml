@@ -1,0 +1,101 @@
+name: Automatic code change ticker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Serialize ticker updates so rapid pushes do not overwrite one another.
+concurrency:
+  group: change-ticker-main
+  cancel-in-progress: false
+
+jobs:
+  increment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out latest main history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Increment once for each pushed commit containing a code/config change
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.event.after || github.sha }}
+        run: |
+          set -euo pipefail
+
+          ticker_file="CHANGE_TICKER.json"
+          if [[ ! -f "$ticker_file" ]]; then
+            echo "::error::Missing $ticker_file"
+            exit 1
+          fi
+
+          # A manual run is an audit/retry, not a code change, so it must not
+          # increment the counter. Only commits from a push are counted.
+          if [[ "${GITHUB_EVENT_NAME}" != "push" ]]; then
+            echo "Manual run: no pushed code commits to count."
+            exit 0
+          fi
+
+          if [[ -z "$BEFORE_SHA" || "$BEFORE_SHA" =~ ^0+$ ]]; then
+            echo "Initial branch push: no prior commit range available; skipping."
+            exit 0
+          fi
+
+          # Ignore documentation, generated ticker updates, and this workflow.
+          # Any other changed file (including source, tests, dependencies, or
+          # build/configuration files) counts as a code/configuration change.
+          is_code_change() {
+            local path="$1"
+            case "$path" in
+              CHANGE_TICKER.json|.github/workflows/change-ticker.yml) return 1 ;;
+              *.md|*.mdx|*.rst|*.txt|*.png|*.jpg|*.jpeg|*.gif|*.webp|*.svg|*.ico|*.pdf|*.stl|*.step|*.stp|*.csv|*.lock) return 1 ;;
+              *) return 0 ;;
+            esac
+          }
+
+          increment=0
+          while IFS= read -r commit; do
+            [[ -z "$commit" ]] && continue
+            commit_has_code=0
+            while IFS= read -r path; do
+              [[ -z "$path" ]] && continue
+              if is_code_change "$path"; then
+                commit_has_code=1
+                break
+              fi
+            done < <(git diff-tree --no-commit-id --name-only -r "$commit")
+
+            if [[ "$commit_has_code" -eq 1 ]]; then
+              increment=$((increment + 1))
+              echo "Counted code/configuration commit: $commit"
+            fi
+          done < <(git rev-list --reverse --no-merges "$BEFORE_SHA..$AFTER_SHA")
+
+          if [[ "$increment" -eq 0 ]]; then
+            echo "No code/configuration commits in this push; ticker unchanged."
+            exit 0
+          fi
+
+          current=$(jq -er '.count | numbers | floor' "$ticker_file")
+          next=$((current + increment))
+          updated_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          jq --argjson count "$next" --arg updatedAt "$updated_at" --arg commit "$AFTER_SHA" \
+            '.count = $count | .lastUpdated = $updatedAt | .lastCodeCommit = $commit' \
+            "$ticker_file" > "$ticker_file.tmp"
+          mv "$ticker_file.tmp" "$ticker_file"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$ticker_file"
+          git commit -m "CHG-TICKER: increment by $increment to $next"
+          git push origin HEAD:main
+          echo "Change ticker advanced from $current to $next."

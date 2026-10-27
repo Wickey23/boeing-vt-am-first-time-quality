@@ -9,6 +9,12 @@ Virginia Tech Senior Design prototype for AI-assisted metallic additive-manufact
 - Build-readiness workspace
 - Vercel-ready Next.js architecture
 
+## Automatic change ticker
+
+The repository tracks code/configuration changes on `main` in [`CHANGE_TICKER.json`](./CHANGE_TICKER.json). A GitHub Actions workflow increments the counter once for each pushed commit that changes source code, tests, dependencies, or build/configuration files. Documentation-only changes and the ticker's own update do not increment it. The workflow commits the updated counter directly to `main`; no extra branch is created.
+
+The ticker advances after code changes are pushed to GitHub, not while edits remain uncommitted on a developer's computer. Check the Actions tab if an increment has not appeared yet.
+
 ## Run locally
 ```bash
 npm install
