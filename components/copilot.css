@@ -56,3 +56,107 @@
 .copilotLoading{min-height:320px;display:grid;place-items:center;color:#bfd9e8}
 @media(max-width:1080px){.copilotGrid{grid-template-columns:1fr}.copilotFrame{height:320px}}
 @media(max-width:580px){.copilotLeft,.copilotRight{padding:13px}.copilotStages>div{grid-template-columns:23px 1fr}.copilotStages small{grid-column:2;text-align:left}.copilotSummary{display:block}.copilotFrame{height:280px}}
+
+
+/* Copilot contrast/layout repair. This page sits inside a light app shell but
+   intentionally uses dark workspace panels. Generic legacy header/h2 rules
+   must not be allowed to style headings within these panels. */
+.copilotIntro > p:not(.guidedEyebrow){
+  color:#496178;
+  font-size:14px;
+  line-height:1.65;
+  max-width:940px;
+  margin-top:12px;
+}
+.copilotIntro .guidedEyebrow{color:#2564a0;font-weight:800;letter-spacing:.08em}
+.copilotGrid{color:#eaf4fc}
+.copilotLeft,.copilotRight{color:#eaf4fc;box-shadow:0 5px 24px rgba(10,31,52,.10)}
+.copilotHeading{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  grid-template-columns:none;
+  gap:7px;
+  height:auto;
+  min-height:0;
+  padding:0 0 15px;
+  margin:0 0 16px;
+  background:transparent;
+  border:0;
+  border-bottom:1px solid #35556c;
+  text-align:left;
+}
+.copilotHeading h2{
+  color:#f3f8fc;
+  font-size:21px;
+  font-weight:750;
+  letter-spacing:-.01em;
+  line-height:1.3;
+  margin:0;
+}
+.copilotHeading p{
+  color:#c1d5e5;
+  font-size:13px;
+  line-height:1.6;
+  margin:0;
+  max-width:590px;
+}
+.copilotLeft h3,.copilotRight h3,.copilotLeft h4,.copilotRight h4{
+  color:#f3f8fc;
+}
+.copilotBubble{color:#eaf3fa}
+.copilotBubble.assistant,.copilotBubble.user{color:#f0f7fd}
+.copilotBubble b{color:#abddf8}
+.copilotBubble p{color:#e5eff8}
+.copilotPrompt{color:#e7f4ff}
+.copilotDocs p,.copilotFacts p,.copilotProgress>p{color:#c0d2e0}
+.copilotLeft input::placeholder,.copilotLeft textarea::placeholder,
+.copilotRight input::placeholder,.copilotRight textarea::placeholder{
+  color:#a7c0d2;
+  opacity:1;
+}
+.copilotAsk textarea{min-height:100px}
+.copilotChatActions button:disabled{
+  color:#c4d2de;
+  background:#1d3446;
+  border-color:#375368;
+  opacity:.72;
+}
+.copilotDocItem summary,.copilotDocItem strong{color:#e5f2fc}
+.copilotDocItem p{color:#c0d2e0}
+.copilotUnitNotice{
+  margin:10px 0;
+  border:1px solid #b68f4c;
+  background:#342819;
+  color:#fff1cf;
+  border-radius:9px;
+  padding:12px 13px;
+  line-height:1.55;
+  font-size:12px;
+}
+.copilotUnitNotice strong{color:#ffe3a6}
+.copilotUnitNotice p{color:#f5e0c2;margin:5px 0 0}
+.copilotSummary strong,.copilotSummary span{color:#dff0fc}
+.copilotStages small{color:#c0d4e2}
+.copilotRight a,.copilotLeft a{color:#a5dcff}
+@media(max-width:580px){
+  .copilotHeading{padding:0 0 13px;gap:6px}
+  .copilotHeading h2{font-size:19px}
+  .copilotIntro > p:not(.guidedEyebrow){font-size:13px}
+}
+
+.copilotConfirm .copilotUnitHelp{
+  color:#c8dce9;
+  font-size:12px;
+  line-height:1.55;
+  margin:6px 0 12px;
+}
+.copilotConfirm button:focus-visible,
+.copilotChatActions button:focus-visible,
+.copilotLeft input:focus-visible,
+.copilotRight textarea:focus-visible,
+.copilotRight select:focus-visible{
+  outline:3px solid #78d7ff;
+  outline-offset:2px;
+}

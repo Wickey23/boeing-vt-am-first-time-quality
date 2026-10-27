@@ -39,7 +39,12 @@ export default function EngineeringCopilot(){
  const docs=useRef(new Map<string,File>());
  const timeline=useRef<HTMLDivElement|null>(null);
  const inspect=usePartInspection(a.file,a.settings.unitScale);
+
  const verified=completedPart(a.journey,a.file,a.settings.unitScale);
+ // Display only a review warning; this is not a validated machine fit test.
+ const largestPartExtent=inspect.data?Math.max(...Object.values(inspect.data.dimensions)):0;
+ const largestConfiguredAxis=Math.max(a.settings.x,a.settings.y,a.settings.z);
+ const dimensionReview=Boolean(inspect.data&&largestConfiguredAxis>0&&largestPartExtent>1.5*largestConfiguredAxis);
  const isLPBF=allowsGeometryRanking(a.journey);
  const currentCandidate=a.result?.candidates.find(c=>c.id===a.selected);
  const sourceList=knowledge?.sources??[];
@@ -179,13 +184,15 @@ export default function EngineeringCopilot(){
        } fieldLabel={showFields==="stress"?"Stress":showFields==="displacement"?"Displacement":showFields==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary>:
         <div className="copilotEmpty"><strong>{a.journey.mode==="ded-example"?"DED teaching wall selected":"Upload your part STL"}</strong><span>{a.journey.mode==="ded-example"?"This is a synthetic example, not a real part.":"The AI uses your description and engineering documents to understand its role."}</span></div>}
     </div>
-    {a.file&&<div className="copilotSummary"><strong>{a.file.name}</strong><span>{inspect.data?Object.values(inspect.data.dimensions).map(x=>x.toFixed(2)).join(" × ")+" mm":"Inspecting dimensions…"}</span></div>}
+    {a.file&&<div className="copilotSummary"><strong>{a.file.name}</strong><span>{inspect.data?"Scaled bounds: "+Object.values(inspect.data.dimensions).map(x=>x.toFixed(2)).join(" × ")+" mm":"Inspecting dimensions…"}</span></div>}
     <label className="copilotUpload">Upload or replace target STL
      <input type="file" accept=".stl" aria-label="Upload target STL" onChange={e=>{upload(e.target.files?.[0]??null);e.currentTarget.value="";}}/>
     </label>
     {a.file&&!verified&&<div className="copilotConfirm">
       <label>STL units<select aria-label="STL input units" value={a.settings.unitScale} onChange={e=>a.update("unitScale",Number(e.target.value))}>
        <option value={1}>Millimeters</option><option value={25.4}>Inches</option><option value={1000}>Meters</option></select></label>
+      <p className="copilotUnitHelp">STL files do not encode physical units. The dimensions above use the selected scale; confirm them against your actual CAD part.</p>
+      {dimensionReview&&<div className="copilotUnitNotice" role="status"><strong>Review the selected units and machine envelope</strong><p>The part's scaled bounding dimensions are much larger than the largest configured machine axis ({largestConfiguredAxis.toFixed(0)} mm). This could be a units mismatch or a part requiring different equipment. It is not a machine feasibility calculation.</p></div>}
       {inspect.data?.audit.findings.filter(f=>f.level==="blocker").map(f=><p role="alert" key={f.code}>{f.code}: {f.message}</p>)}
       <button type="button" disabled={!inspect.data||inspect.data.audit.findings.some(f=>f.level==="blocker")} onClick={()=>a.confirmPart()}>Confirm inspected dimensions and units</button>
     </div>}
@@ -246,7 +253,7 @@ export default function EngineeringCopilot(){
       </div>)}
     </div>
     <label className="copilotAsk">Ask about the part or its requirements
-      <textarea aria-label="Message engineering copilot" placeholder="This STL represents a fuselage frame. Based on the attached assembly spec, what should I confirm before analyzing it?" rows={3} value={draft} onChange={e=>setDraft(e.target.value)}/>
+      <textarea aria-label="Message engineering copilot" placeholder="What information should I confirm about this part's role, attachments, loads and material before analysis?" rows={3} value={draft} onChange={e=>setDraft(e.target.value)}/>
     </label>
     <div className="copilotChatActions">
       <button type="button" onClick={askLocal} disabled={busy}>Use local guide</button>
