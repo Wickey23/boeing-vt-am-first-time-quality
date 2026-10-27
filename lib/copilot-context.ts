@@ -41,11 +41,12 @@ export async function addProjectSource(sources:ProjectSource[],file:File):Promis
  const isText=localExtensions.has(ext);
  const text=isText?(await file.text()).replace(/\u0000/g,"").slice(0,MAX_SOURCE_CHARS):"";
  const id="D"+String(1+Math.max(0,...sources.map(s=>Number(s.id.replace(/^D/,""))||0)));
- return [...sources,{
+ const created:ProjectSource={
    id,name:file.name,kind:ext==="pdf"?"pdf":isText?"text":"document",
    size:file.size,extractedText:text,engineerNotes:"",
    extraction:isText?"local_text":"not_extracted",addedAt:new Date().toISOString()
- }];
+ };
+ return [...sources,created];
 }
 export function updateSourceNotes(sources:ProjectSource[],id:string,notes:string):ProjectSource[]{
  return sources.map(s=>s.id===id?{...s,engineerNotes:notes.slice(0,MAX_SOURCE_CHARS),
