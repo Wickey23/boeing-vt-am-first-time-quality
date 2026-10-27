@@ -57,7 +57,7 @@ jobs:
             local path="$1"
             case "$path" in
               CHANGE_TICKER.json|.github/workflows/change-ticker.yml) return 1 ;;
-              *.md|*.mdx|*.rst|*.txt|*.png|*.jpg|*.jpeg|*.gif|*.webp|*.svg|*.ico|*.pdf|*.stl|*.step|*.stp|*.csv|*.lock) return 1 ;;
+              *.md|*.mdx|*.rst|*.txt|*.png|*.jpg|*.jpeg|*.gif|*.webp|*.svg|*.ico|*.pdf|*.stl|*.step|*.stp|*.csv) return 1 ;;
               *) return 0 ;;
             esac
           }
