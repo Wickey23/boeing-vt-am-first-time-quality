@@ -62,3 +62,5 @@ For GitHub connector-only sessions, use current GitHub repository/branch/commit/
 At the start: latest `main`, new changes, active PRs, overlap risks, and chosen feature branch.
 
 At the finish: changed files/features, test results, PR link, whether merged, deployed commit/status, and outstanding engineering limitations.
+
+**Note for concurrent work:** GitHub Actions may add a change-ticker commit after a successful merge. Include that bot commit in the fresh main-SHA audit; it is not evidence that another feature has changed until the diff confirms it.
