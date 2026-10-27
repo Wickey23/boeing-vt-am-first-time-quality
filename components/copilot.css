@@ -145,3 +145,18 @@
   .copilotHeading h2{font-size:19px}
   .copilotIntro > p:not(.guidedEyebrow){font-size:13px}
 }
+
+.copilotConfirm .copilotUnitHelp{
+  color:#c8dce9;
+  font-size:12px;
+  line-height:1.55;
+  margin:6px 0 12px;
+}
+.copilotConfirm button:focus-visible,
+.copilotChatActions button:focus-visible,
+.copilotLeft input:focus-visible,
+.copilotRight textarea:focus-visible,
+.copilotRight select:focus-visible{
+  outline:3px solid #78d7ff;
+  outline-offset:2px;
+}
