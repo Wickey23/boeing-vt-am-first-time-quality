@@ -31,6 +31,8 @@ export default function EngineeringCopilot(){
  const [intakeDraft,setIntakeDraft]=useState("");
  const [activeTab,setActiveTab]=useState<"part"|"documents"|"requirements"|"run"|"results">("part");
  const factsRef=useRef<HTMLDetailsElement|null>(null);
+ const docsRef=useRef<HTMLDetailsElement|null>(null);
+ const evidenceRef=useRef<HTMLDetailsElement|null>(null);
  const [busy,setBusy]=useState(false);
  const [docBusy,setDocBusy]=useState(false);
  const [error,setError]=useState("");
@@ -256,7 +258,7 @@ export default function EngineeringCopilot(){
         <div className="copilotEmpty"><strong>{a.journey.mode==="ded-example"?"DED teaching wall selected":"Upload your part STL"}</strong><span>{a.journey.mode==="ded-example"?"This is a synthetic example, not a real part.":"The AI uses your description and engineering documents to understand its role."}</span></div>}
     </div>
     {a.file&&<div className="copilotSummary"><strong>{a.file.name}</strong><span>{inspect.data?"Scaled bounds: "+Object.values(inspect.data.dimensions).map(x=>x.toFixed(2)).join(" × ")+" mm":"Inspecting dimensions…"}</span></div>}
-    <div className="copilotViewerControls"><label className="copilotUpload">Upload or replace target STL
+    <div className="copilotViewerControls" hidden={activeTab!=="part"}><label className="copilotUpload">Upload or replace target STL
      <input type="file" accept=".stl" aria-label="Upload target STL" onChange={e=>{upload(e.target.files?.[0]??null);e.currentTarget.value="";}}/>
     </label>
     {a.file&&!verified&&<div className="copilotConfirm">
@@ -273,7 +275,12 @@ export default function EngineeringCopilot(){
       <option value="DED_LB_WIRE">Laser wire DED (arbitrary-part pathing unsupported)</option>
       <option value="DED_LB_POWDER">Laser powder DED (arbitrary-part pathing unsupported)</option>
       </select></label><span>Geometry: <b>{stat(verified)}</b></span></div>
-</div></section>
+</div>
+{activeTab!=="part"&&<div className="copilotViewerCompact">
+ <span>{a.file?a.file.name:"No STL loaded"} · {verified?"Units confirmed":"Review units"} · {a.journey.process==="PBF_LB_METAL"?"LPBF": "DED (unsupported analysis)"}</span>
+ <button type="button" onClick={()=>setActiveTab("part")}>Edit part setup</button>
+</div>}
+</section>
 <div className="copilotMainPanel" role="region" aria-label="Current engineering stage">
 <section className="copilotStage" aria-label="part workspace" hidden={activeTab!=="part"}>
 <div className="copilotStageTitle"><small>01 · GEOMETRY</small><h2>Inspect and confirm the part</h2><p>Use the 3D viewer to upload an STL. Confirm its actual units and select the manufacturing process before running any calculations.</p></div>
@@ -283,7 +290,8 @@ export default function EngineeringCopilot(){
 </section>
 <section className="copilotStage" aria-label="documents workspace" hidden={activeTab!=="documents"}>
 <div className="copilotStageTitle"><small>02 · SOURCE FILES</small><h2>Understand the larger assembly</h2><p>Upload public, approved engineering references. Review passages and attach provenance to the part without treating unverified text as solver inputs.</p></div>
-<details className="copilotDocs copilotFold">
+<button type="button" className="copilotNextAction" onClick={()=>{if(docsRef.current){docsRef.current.open=true;docsRef.current.querySelector("input[type=file]")?.scrollIntoView({behavior:"smooth",block:"center"});}}}>Add assembly reference files</button>
+<details ref={docsRef} className="copilotDocs copilotFold">
       <summary>Assembly documents <span>{sourceList.length} attached · open to manage</span></summary>
       <div className="copilotFoldBody"><h3>Assembly documentation</h3>
       <p>Attach drawings, requirements and assembly documentation. Plain-text formats are read locally. Text, DOCX, and XLSX can be extracted locally. PDFs and scanned drawings require manually reviewed excerpts; extracted text is not verified engineering evidence.</p>
@@ -299,14 +307,14 @@ export default function EngineeringCopilot(){
       </details>)}
       {!sourceList.length&&<p className="copilotMuted">No assembly references attached yet.</p>}
       </div></details>
-<details className="copilotFold copilotEvidenceFold">
+<details ref={evidenceRef} className="copilotFold copilotEvidenceFold">
      <summary>Review source-backed engineering evidence <span>{validEvidence.length} current references · open to inspect</span></summary>
      <div className="copilotFoldBody">
       <EngineeringEvidenceReview sources={sourceList} reviewed={knowledge.reviewedEvidence}
        onAccept={addReviewedEvidence} onRemove={removeReviewedEvidence}/>
      </div>
     </details>
-<div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("requirements")}>Continue to requirements</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("part")}>Previous step</button></div>
+<div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("requirements")}>Continue to requirements{sourceList.length===0?" (without documents)":""}</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("part")}>Previous step</button></div>
 </section>
 <section className="copilotStage" aria-label="requirements workspace" hidden={activeTab!=="requirements"}>
 <div className="copilotStageTitle"><small>03 · ENGINEERING INTAKE</small><h2>Define loads, interfaces and requirements</h2><p>Answer one focused question at a time. The numerical load and boundary-condition fields are separately reviewed before a service-load study.</p></div>
