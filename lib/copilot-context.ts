@@ -2,11 +2,12 @@
  * Source text is only extracted for plain-text formats. Unsupported PDFs and Word files
  * are metadata until the engineer supplies an excerpt or authorizes external processing.
  */
+import {extractLocalDocument} from "./document-extraction";
 export type SourceKind="text"|"pdf"|"document";
 export type ProjectSource={
  id:string;name:string;kind:SourceKind;size:number;
  extractedText:string;engineerNotes:string;
- extraction:"local_text"|"engineer_excerpt"|"not_extracted";
+ extraction:"local_text"|"local_document"|"engineer_excerpt"|"not_extracted";
  addedAt:string;
 };
 export type CopilotMessage={
@@ -39,18 +40,19 @@ export async function addProjectSource(sources:ProjectSource[],file:File):Promis
  if(sources.some(x=>x.name===file.name&&x.size===file.size))
   throw Error("This file is already in the project. Remove it before replacing.");
  const isText=localExtensions.has(ext);
- const text=isText?(await file.text()).replace(/\u0000/g,"").slice(0,MAX_SOURCE_CHARS):"";
+ const isOffice=ext==="docx"||ext==="xlsx";
+ const text=(isText?(await file.text()).replace(/\u0000/g,""):isOffice?await extractLocalDocument(file):"").slice(0,MAX_SOURCE_CHARS);
  const id="D"+String(1+Math.max(0,...sources.map(s=>Number(s.id.replace(/^D/,""))||0)));
  const created:ProjectSource={
    id,name:file.name,kind:ext==="pdf"?"pdf":isText?"text":"document",
    size:file.size,extractedText:text,engineerNotes:"",
-   extraction:isText?"local_text":"not_extracted",addedAt:new Date().toISOString()
+   extraction:isText?"local_text":isOffice?"local_document":"not_extracted",addedAt:new Date().toISOString()
  };
  return [...sources,created];
 }
 export function updateSourceNotes(sources:ProjectSource[],id:string,notes:string):ProjectSource[]{
  return sources.map(s=>s.id===id?{...s,engineerNotes:notes.slice(0,MAX_SOURCE_CHARS),
-   extraction:notes.trim()?s.extractedText?"local_text":"engineer_excerpt":s.extractedText?"local_text":"not_extracted"}:s);
+   extraction:s.extractedText?(s.kind==="document"?"local_document":"local_text"):notes.trim()?"engineer_excerpt":"not_extracted"}:s);
 }
 const words=(text:string)=>new Set((text.toLowerCase().match(/[a-z0-9]{4,}/g)??[]).filter(w=>!["this","that","with","from","about","have","there","which","would","your","will","part","file","what","where","when"].includes(w)));
 export type EvidenceHit={sourceId:string;fileName:string;line:string;excerpt:string;origin:"source_text"|"engineer_excerpt";score:number};
