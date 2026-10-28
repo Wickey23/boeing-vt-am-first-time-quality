@@ -430,3 +430,23 @@
 .copilotBundleActions input[type=file]{border:1px solid #3b6d8a;border-radius:8px;padding:8px;color:#e7f4ff;background:#061b2b}
 .copilotBundleActions button{min-height:42px;font-weight:750}
 .copilotNotice{color:#c9eedf;background:#14392f;border:1px solid #47826b;padding:10px;border-radius:8px;font-size:12px;line-height:1.5}
+
+/* Evidence readiness is deliberately separate from aerospace qualification. */
+.copilotReadiness{background:#0d2b3e;border:1px solid #416782;border-radius:12px;padding:17px;margin:14px 0 24px;color:#eaf4fe}
+.copilotReadinessTop{display:flex;justify-content:space-between;gap:16px;align-items:start;flex-wrap:wrap;border-bottom:1px solid #32566e;padding-bottom:13px}
+.copilotReadinessTop small{font-size:10px;letter-spacing:.11em;color:#94d9ff;font-weight:800}
+.copilotReadinessTop h3{color:#f6fbff;font-size:17px;margin:5px 0}
+.copilotReadinessTop p,.copilotReadinessItem p,.copilotReadinessNext p{font-size:12px;line-height:1.6;color:#c0d4e3;margin:5px 0}
+.copilotResearchStatus{border:1px solid #7d8263;border-radius:99px;padding:6px 9px;color:#f0dfac;font-size:11px;font-weight:700}
+.copilotReadinessGates{display:grid;gap:10px;margin:15px 0}
+.copilotReadinessItem{display:grid;grid-template-columns:27px minmax(0,1fr);gap:9px}
+.copilotReadinessItem strong{font-size:13px;color:#eef7fc}
+.copilotReadinessDot{display:grid;place-items:center;border-radius:50%;width:24px;height:24px;border:1px solid #a58457;background:#3a2d21;color:#ffe0ac;font-weight:750}
+.copilotReadinessDot.ready{border-color:#3e897b;background:#153a33;color:#b2f3d9}
+.copilotReadinessDot.not-available{border-color:#8f6060;background:#38282b;color:#ffc2c2}
+.copilotReadinessNext{border:1px solid #396d8a;background:#113a52;padding:12px;border-radius:9px}
+.copilotReadinessNext strong{color:#e7f6ff;font-size:13px}
+.copilotReadinessNext button{border:1px solid #5caee0;background:#1a6f9f;color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:750;cursor:pointer;margin-top:6px}
+.copilotReadinessLimit{margin-top:12px}
+.copilotReadinessLimit summary{color:#afddf5;font-size:12px;font-weight:700;cursor:pointer}
+.copilotReadinessLimit p{font-size:11px;line-height:1.6;color:#bfd1e0}
