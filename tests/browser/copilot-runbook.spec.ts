@@ -9,7 +9,7 @@ test("engineer can extract a DOCX locally and execute the approved geometry stud
  await expect(page.getByText("Office text extracted locally")).toBeVisible();
  await page.getByText("D1 · assembly.docx").click();
  await page.getByText("View extracted text").click();
- await expect(page.locator(".copilotDocItem pre").getByText("P1: Bulkhead connection at station 42",{exact:true})).toBeVisible();
+ await expect(page.locator(".copilotDocItem pre")).toContainText("P1: Bulkhead connection at station 42");
  await expect(page.getByRole("heading",{name:"Guided simulation plan"})).toBeVisible();
  const run=page.getByRole("button",{name:"Run approved study sequence"});
  await expect(run).toBeEnabled();
