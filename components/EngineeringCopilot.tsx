@@ -296,7 +296,7 @@ export default function EngineeringCopilot(){
     </div>
     {(error||notice)&&<div className="copilotWarning" role="status">{error||notice}</div>}
     <div className="copilotProgress">
-     <EngineeringRunbook verified={verified} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
+     <EngineeringRunbook verified={verified} partSha256={partKey??undefined} sourceIds={sourceList.map(x=>x.id)} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
      <h3>Individual analysis controls</h3><p>Runs use the existing numerical engines, not model-generated results. You can see which computations finished.</p>
      <div className="copilotStages">
       <div><span>{verified?"✓":"○"}</span><b>Geometry inspection</b><small>{verified?"Units confirmed":"Requires verified units"}</small></div>
