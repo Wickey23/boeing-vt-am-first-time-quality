@@ -10,9 +10,11 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
  await expect(page.getByRole("button",{name:"Confirm inspected dimensions and units"})).toBeEnabled();
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
  await expect(page.getByText("Geometry:")).toBeVisible();
+ await page.locator(".copilotDocs > summary").click();
  await page.getByLabel("Add reference documents").setInputFiles({name:"assembly-notes.txt",mimeType:"text/plain",
   buffer:Buffer.from("Fuselage frame at station 20.\nThe bracket attaches to bulkhead A at station 20.\nA 500 N load is discussed but has NOT been confirmed.")});
  await expect(page.getByText("D1 · assembly-notes.txt")).toBeVisible();
+ await page.locator(".copilotFacts > summary").click();
  await page.getByLabel("Component role").fill("Frame support bracket");
  await page.getByLabel("Assembly context").fill("Fuselage at station 20; see [D1]");
  await page.getByLabel("Attachment context").fill("Bulkhead A, interfaces not yet mapped to physical mesh");
@@ -23,9 +25,12 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
  await expect(page.getByText("References: D1",{exact:false})).toBeVisible();
  await expect(page.getByRole("button",{name:"Ask AI about approved context"})).toBeDisabled();
  expect(remoteCalls).toEqual([]);
+ await page.locator(".copilotAdvanced > summary").first().click();
  await page.getByRole("button",{name:"Run supported orientation screening"}).click();
  await expect(page.getByText("Geometry worker completed:",{exact:false})).toBeVisible();
  await page.reload();
+ await page.locator(".copilotFacts > summary").click();
+ await page.locator(".copilotDocs > summary").click();
  await expect(page.getByLabel("Component role")).toHaveValue("Frame support bracket");
  await expect(page.getByText("D1 · assembly-notes.txt")).toBeVisible();
  expect(pageErrors).toEqual([]);
@@ -42,6 +47,7 @@ test("AI sharing requires explicit approval and PDFs are not misrepresented as l
  await expect(page.getByLabel("Authorize external AI")).not.toBeChecked();
  await expect(page.getByRole("button",{name:"Ask AI about approved context"})).toBeDisabled();
  await page.reload();
+ await page.locator(".copilotDocs > summary").click();
  await expect(page.getByText("Engineer excerpt only")).toBeVisible();
  await expect(page.getByLabel("Authorize external AI")).not.toBeChecked();
 });
