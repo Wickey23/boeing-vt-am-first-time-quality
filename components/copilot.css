@@ -450,3 +450,8 @@
 .copilotReadinessLimit{margin-top:12px}
 .copilotReadinessLimit summary{color:#afddf5;font-size:12px;font-weight:700;cursor:pointer}
 .copilotReadinessLimit p{font-size:11px;line-height:1.6;color:#bfd1e0}
+
+.copilotReviewExport{border:1px solid #416b7d;border-radius:10px;background:#103248;padding:13px;margin:12px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.copilotReviewExport button{flex:0 0 auto}
+.copilotReviewExport span{font-size:11px;line-height:1.55;color:#c0dbe9;flex:1;min-width:180px}
+.copilotReviewExport .copilotWarning{width:100%;margin:4px 0}
