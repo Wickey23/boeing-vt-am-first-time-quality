@@ -57,3 +57,22 @@ test("cancellation and interruptions never create a successful record",()=>{
  const stale=applyJobEvent(running,{type:"stale",detail:"inputs changed"});
  assert.equal(stale.status,"stale");
 });
+
+test("paired independent service and conduction study supports DED without inventing an LPBF orientation run",()=>{
+ for(const process of ["PBF_LB_METAL","DED_LB_WIRE","DED_LB_POWDER"] as const){
+  const direct=createEngineeringJob("direct-"+process,{
+   ...snapshot,process,analysisMode:"service-independent"
+  },["service-structural","steady-conduction"]);
+  assert.deepEqual(direct.steps.map(x=>x.kind),["service-structural","steady-conduction"]);
+  let job=applyJobEvent(direct,{type:"start",kind:"service-structural",detail:"start service study"});
+  job=applyJobEvent(job,{type:"complete",kind:"service-structural",detail:"stress and displacement done",
+   result:{summary:"stress and displacement",warnings:[]}});
+  assert.equal(job.status,"running");
+  job=applyJobEvent(job,{type:"start",kind:"steady-conduction",detail:"thermal start"});
+  job=applyJobEvent(job,{type:"complete",kind:"steady-conduction",detail:"thermal complete",
+   result:{summary:"steady temperature",warnings:["not deposition physics"]}});
+  assert.equal(job.status,"completed");
+ }
+ assert.throws(()=>createEngineeringJob("bad",{...snapshot,process:"DED_LB_WIRE",analysisMode:"service-independent"},
+  ["geometry","service-structural"]));
+});
