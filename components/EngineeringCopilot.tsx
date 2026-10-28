@@ -5,6 +5,7 @@ import Link from "next/link";
 import {useAnalysis} from "@/components/AnalysisProvider";
 import {usePartInspection} from "@/components/PartInspection";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
+import EngineeringRunbook from "@/components/EngineeringRunbook";
 import {completedPart,allowsGeometryRanking} from "@/lib/engineering-journey";
 import {activeServiceCase} from "@/lib/service-plan";
 import {END_FACES,type EndFace} from "@/lib/service-load";
@@ -101,7 +102,7 @@ export default function EngineeringCopilot(){
     docs.current.set(updated[updated.length-1].id,file);
    }
    setKnowledge(s=>s&&s.partKey===knowledge.partKey?{...s,sources:updated}:s);
-   setNotice("References registered. Plain text was extracted locally; PDFs/Office documents require cited excerpts or explicitly approved AI input.");
+   setNotice("References registered. Supported text and DOCX/XLSX documents were extracted locally. PDFs and legacy DOC/XLS still require engineer excerpts or explicit approved processing.");
   }catch(e){setError(e instanceof Error?e.message:"Could not read reference document");}
   finally{setDocBusy(false);}
  };
@@ -209,8 +210,8 @@ export default function EngineeringCopilot(){
         <input aria-label="Add reference documents" type="file" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.md,.csv,.json" disabled={docBusy} onChange={e=>{void uploadDocuments(e.target.files);e.currentTarget.value="";}}/>
       </label>
       {sourceList.map(s=><details key={s.id} className="copilotDocItem">
-        <summary><span><strong>{s.id} · {s.name}</strong><small>{s.extraction==="local_text"?"Text extracted locally":s.extraction==="engineer_excerpt"?"Engineer excerpt only":"Content not extracted"}</small></span></summary>
-        <p>{s.extraction==="local_text"?"The text is available for local retrieval and optional AI questions.":"PDF/Office attachment recorded. Paste relevant passages with page numbers. An explicitly authorized PDF can also be passed to AI when supported."}</p>
+        <summary><span><strong>{s.id} · {s.name}</strong><small>{s.extraction==="local_text"?"Text extracted locally":s.extraction==="local_document"?"Office text extracted locally":s.extraction==="engineer_excerpt"?"Engineer excerpt only":"Content not extracted"}</small></span></summary>
+        <p>{(s.extraction==="local_text"||s.extraction==="local_document")?"The locally extracted text is available for source-backed questions. Confirm engineering applicability before using values.":"PDF/legacy Office attachment recorded. Paste relevant passages with page numbers. An explicitly authorized PDF may be passed to AI when supported."}</p>
         <label>Relevant excerpt or engineer notes<textarea aria-label={"Notes for "+s.name} rows={3} value={s.engineerNotes} onChange={e=>setKnowledge(k=>k?{...k,sources:updateSourceNotes(k.sources,s.id,e.target.value),messages:[]}:k)}/></label>
         {s.extractedText&&<details><summary>View extracted text</summary><pre>{s.extractedText.slice(0,2500)}</pre></details>}
         <button className="copilotSmall" type="button" onClick={()=>removeSource(s.id)}>Remove reference</button>
@@ -266,7 +267,8 @@ export default function EngineeringCopilot(){
     </div>
     {(error||notice)&&<div className="copilotWarning" role="status">{error||notice}</div>}
     <div className="copilotProgress">
-     <h3>Analysis execution</h3><p>Runs use the existing numerical engines, not model-generated results. You can see which computations finished.</p>
+     <EngineeringRunbook verified={verified} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
+     <h3>Individual analysis controls</h3><p>Runs use the existing numerical engines, not model-generated results. You can see which computations finished.</p>
      <div className="copilotStages">
       <div><span>{verified?"✓":"○"}</span><b>Geometry inspection</b><small>{verified?"Units confirmed":"Requires verified units"}</small></div>
       <div><span>{a.busy?"◌":orientationReady?"✓":"○"}</span><b>LPBF orientation search</b><small>{a.busy?Math.round(a.progress*100)+"%":orientationReady?a.result?.candidates.length+" candidates":"Not run"}</small></div>
