@@ -162,8 +162,37 @@ export default function EngineeringCopilot(){
  const editService=(next:typeof activeCase.input)=>{setAcknowledgedLoads(false);a.setServiceSetup(next);};
  const saveContext=()=>{
   if(!knowledge)return;
-  const body=JSON.stringify({...knowledge,rawPartBytesIncluded:false,documentBytesIncluded:false,
-   engineeringReview:"Research context; engineer confirmations and source inspection required."},null,2);
+  const selectedCandidate=a.result?.candidates.find(c=>c.id===a.selected);
+  const structural=a.result?.structural?.candidateId===a.selected?a.result.structural.field:null;
+  const thermal=a.result?.thermal?.candidateId===a.selected?a.result.thermal.field:null;
+  const packageData={
+   schema:"orientai-engineering-evidence-v1",
+   exportedAt:new Date().toISOString(),
+   project:{name:a.projectName,geometryFileName:a.file?.name??null,geometryHashSha256:partKey,
+    manufacturingProcess:a.journey.process,unitsConfirmed:verified,settings:a.settings},
+   engineeringContext:knowledge,
+   serviceCases:a.servicePlan.cases.map(c=>({id:c.id,name:c.name,input:c.input,
+    note:"Engineer must independently verify boundary conditions, material parameters and applicable loads."})),
+   selectedOrientation:selectedCandidate?{
+    id:selectedCandidate.id,buildHeightMm:selectedCandidate.buildHeightMm,
+    supportProxyMm3:selectedCandidate.supportProxyMm3,fitsEnvelope:selectedCandidate.fitsEnvelope
+   }:null,
+   analysis:a.result?{
+    runId:a.result.runId,source:a.result.source,generatedAt:a.result.generatedAt,
+    candidateCount:a.result.candidates.length,
+    structural:structural?{solver:structural.solver,mesh:structural.mesh,assessment:structural.assessment,limitations:structural.limitations}:null,
+    steadyThermal:thermal?{solver:thermal.solver,mesh:thermal.mesh,minC:thermal.min,maxC:thermal.max,limitations:thermal.limitations}:null
+   }:null,
+   dataIncluded:{rawStl:false,documentBinary:false,fullNumericalFields:false},
+   limitations:[
+    "Research calculations only; not first-time quality, structural certification or print approval.",
+    "LPBF geometric support proxy is not generated support geometry or qualified machine feasibility.",
+    "Service FEM uses idealized isotropic elasticity and end-face loading; material, fixture and load sources require engineer review.",
+    "Steady conduction does not simulate metal-AM thermal history, residual stress or print distortion.",
+    "Extracted document text and notes are context, not independently validated requirements."
+   ]
+  };
+  const body=JSON.stringify(packageData,null,2);
   const blob=new Blob([body],{type:"application/json"}),u=URL.createObjectURL(blob);
   const anchor=document.createElement("a");anchor.href=u;anchor.download="orientai-"+(partKey??"context").slice(0,12)+"-context.json";
   document.body.appendChild(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);
@@ -239,7 +268,7 @@ export default function EngineeringCopilot(){
        <Link href="/orientation?step=requirements">Edit multiple load cases in guided workspace</Link>
       </details>}
       <label className="copilotCheck"><input type="checkbox" checked={acknowledgedLoads} onChange={e=>setAcknowledgedLoads(e.target.checked)}/> I reviewed the actual load cases and material assumptions; default forces are not confirmed design requirements.</label>
-      <button type="button" className="copilotSmall" onClick={saveContext}>Export context and cited notes (JSON)</button>
+      <button type="button" className="copilotSmall" onClick={saveContext}>Export engineering context and study review (JSON)</button>
     </div>
   </section>
   <section className="copilotRight">
