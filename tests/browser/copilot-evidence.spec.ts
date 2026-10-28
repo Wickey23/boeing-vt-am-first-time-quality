@@ -43,6 +43,7 @@ test("reviewed source passage enters real study snapshot and survives project re
 test("editing a source invalidates previous review and excludes it from new study records",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotDocs > summary").click();
  await page.getByLabel("Add reference documents").setInputFiles({name:"fixture.txt",mimeType:"text/plain",
   buffer:Buffer.from("The bolt-mounted support is fixed at a bulkhead.")});
