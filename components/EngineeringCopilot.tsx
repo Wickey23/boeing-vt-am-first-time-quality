@@ -409,6 +409,7 @@ export default function EngineeringCopilot(){
       {references.length?references.map((h,i)=><p key={i}><b>[{h.sourceId} {h.line}] {h.fileName}</b> — {h.excerpt.slice(0,260)}{h.origin==="engineer_excerpt"?" (engineer-entered)":""}</p>):
        <p>No extractable reference text matches the current engineering context yet. Enter document excerpts with identifiers before citing them as evidence.</p>}
      </div></details>
+</div>
 <div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("results")}>View results</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("requirements")}>Previous step</button></div>
 </section>
 <section className="copilotStage" aria-label="results workspace" hidden={activeTab!=="results"}>
