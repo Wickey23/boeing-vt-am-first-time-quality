@@ -31,13 +31,13 @@ test("never use freeform input as numerical approval",()=>{
  assert.throws(()=>applyIntakeAnswer(k,units,"mm"),/explicit workflow control/);
  assert.equal(getIntakeStep(k,{...base,process:"DED_LB_WIRE"}).stage,"component");
 });
-test("DED uploaded part stops at explicit capability boundary after reviewed requirements",()=>{
+test("DED uploaded part enables service calculations without implying deposition simulation",()=>{
  let k=blankKnowledge("part-c");
  for(const value of ["Bracket","Fuselage assembly","Bolted at ends","500 N engineer-entered"]){
   const step=getIntakeStep(k,base);
   k=applyIntakeAnswer(k,step,value);
  }
  const stage=getIntakeStep(k,{...base,loadsReviewed:true,process:"DED_LB_POWDER"});
- assert.equal(stage.stage,"unsupported");
- assert.match(stage.hint,/teaching-wall/);
+ assert.equal(stage.stage,"ready");
+ assert.match(stage.hint,/DED deposition/);
 });
