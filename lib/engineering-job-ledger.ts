@@ -4,6 +4,7 @@
  * No confidential CAD or uploaded document bytes are written by this module.
  */
 import type {StudyKind} from "./engineering-runbook";
+import type {ReviewedEvidence} from "./engineering-evidence";
 
 export type JobStatus="queued"|"running"|"completed"|"failed"|"cancelled"|"interrupted"|"stale";
 export type StepStatus="queued"|"running"|"completed"|"failed"|"cancelled";
@@ -16,7 +17,9 @@ export type StudySnapshot={
  machineSettings:Record<string,string|number|boolean>;
  serviceCase?:{id:string;name:string;input:Record<string,string|number|boolean|null>};
  thermalInput?:{conductivityWmK:number;baseTemperatureC:number;topFluxWm2:number;resolution:number};
- approvedAt:string;sourceIds:string[];modelScope:"research-not-qualified";
+ approvedAt:string;sourceIds:string[];
+ reviewedEvidence?:ReviewedEvidence[];
+ modelScope:"research-not-qualified";
 };
 export type EngineeringJob={schema:1;id:string;createdAt:string;updatedAt:string;
  status:JobStatus;snapshot:StudySnapshot;steps:JobStep[];events:JobEvent[]};
@@ -27,6 +30,10 @@ export function createEngineeringJob(id:string,snapshot:StudySnapshot,kinds:Stud
  if(!id.trim()||!isHash(snapshot.partSha256))throw Error("A verified STL fingerprint is required before a study can be scheduled.");
  if(!snapshot.partFileName.toLowerCase().endsWith(".stl")||snapshot.process!=="PBF_LB_METAL")
   throw Error("Only confirmed LPBF STL studies are currently supported.");
+ if(snapshot.reviewedEvidence&&(
+  !Array.isArray(snapshot.reviewedEvidence)||snapshot.reviewedEvidence.length>30||
+  snapshot.reviewedEvidence.some(e=>!snapshot.sourceIds.includes(e.sourceId)||!e.reviewedAt||!e.reviewerNote)
+ ))throw Error("Invalid or unreviewed source references in the study snapshot.");
  if(kinds.length===0||kinds[0]!=="geometry"||new Set(kinds).size!==kinds.length||
   kinds.some(kind=>!["geometry","service-structural","steady-conduction"].includes(kind)))
   throw Error("Invalid solver order.");
