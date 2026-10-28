@@ -36,6 +36,7 @@ export async function exportEngineeringTeamBundle(input:BundleExportInput):Promi
  if(input.knowledge.sources.length>MAX_DOCS)throw Error("Too many reference documents.");
  const portable=await exportPortableProject(input.projectName,input.file,input.settings,input.result,input.selected,input.servicePlan,input.journey);
  const project=JSON.parse(portable) as {fileSha256:string};
+ if(input.knowledge.partKey!==project.fileSha256)throw Error("Document context is linked to a different STL fingerprint.");
  const context=JSON.stringify(input.knowledge);
  if(context.length>MAX_CONTEXT_BYTES||portable.length>MAX_PROJECT_BYTES)throw Error("Project context exceeds safe export limits.");
  const refs:RefEntry[]=[];
