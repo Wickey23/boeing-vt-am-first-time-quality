@@ -23,7 +23,7 @@ export function sourceRevision(source:ProjectSource):string{
 }
 const categories:[EvidenceCategory,RegExp][]=[
  ["load",/\b(load(?:ing)?|force|tension|compression|torque|bending|pressure|stress|strain|[f][xyz]\s*[=:]|newtons?|kilonewtons?)\b/i],
- ["fixture",/\b(fixed|clamp|mount(?:ing|ed)?|bolt(?:ed|ing)?|weld(?:ed|ing)?|attach(?:ed|ment)?|joint|boundary condition|fixture|support point|constraint)\b/i],
+ ["fixture",/\b(fixed|clamp|mount(?:s|ing|ed)?|bolt(?:ed|ing)?|weld(?:ed|ing)?|attach(?:ed|es|ment)?|joint|boundary condition|fixture|support point|constraint)\b/i],
  ["material",/\b(material|alloy|titanium|aluminum|steel|inconel|ti[- ]?6al|young.s modulus|poisson|elastic modulus|yield strength|conductivity)\b/i],
  ["tolerance",/\b(tolerance|diameter|clearance|dimensional|surface finish|flatness|roughness|critical dimension|mm\b|microns?)\b/i],
  ["inspection",/\b(inspection|non[- ]destructive|ct scan|ultrasonic|x[- ]?ray|acceptance|defect|porosity|fatigue life)\b/i],
