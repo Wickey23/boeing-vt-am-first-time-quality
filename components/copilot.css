@@ -282,3 +282,105 @@
 .copilotRunbook .runbookSourceSummary{font-size:11px;color:#c1dce8;background:#0d293a;border:1px solid #3e657b;padding:10px;border-radius:8px}
 .copilotRunbook .runbookSourceSummary strong{color:#e3f6ff}
 @media(max-width:650px){.evidenceReviewHeading{flex-direction:column}.evidenceItemTop{flex-direction:column;align-items:flex-start}}
+
+/* Five-stage engineering workbench — deliberately isolates complex work to its stage.
+ * Panel sizes and controls have readable targets across desktop and mobile. */
+.copilotFocused{
+ display:grid;
+ grid-template-columns:minmax(320px,.92fr) minmax(420px,1.08fr);
+ align-items:start;
+ gap:16px;
+}
+.copilotFocused .copilotJourney{
+ grid-column:1/-1;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:20px;
+ padding:16px 18px;
+}
+.copilotJourneyNav{display:flex;flex:1;justify-content:flex-end;gap:5px;min-width:0;flex-wrap:wrap}
+.copilotStageTab{
+ display:flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:9px;
+ padding:11px 12px;min-height:44px;color:#b9d1e3;background:transparent;cursor:pointer;font:inherit;
+ font-size:12px;font-weight:700;transition:background .15s,border-color .15s;
+}
+.copilotStageTab span{display:grid;place-items:center;border:1px solid #5e7b91;border-radius:50%;height:22px;width:22px;color:#bad4e6;font-size:10px;flex:0 0 auto}
+.copilotStageTab.selected{background:#1b5478;border-color:#4885ae;color:#fff}
+.copilotStageTab.selected span{border-color:#99d9fc;color:#fff}
+.copilotStageTab:hover:not(.selected){background:#17364e;color:#eff9ff}
+.copilotStageTab:focus-visible,.copilotNextAction:focus-visible,.copilotGhostAction:focus-visible{outline:3px solid #80d5ff;outline-offset:3px}
+.copilotFocused .copilotLeft{position:sticky;top:12px;min-width:0;padding:16px}
+.copilotFocused .copilotFrame{height:min(46vh,440px);min-height:260px}
+.copilotFocused .copilotViewerControls{display:flex;flex-direction:column;gap:3px}
+.copilotFocused .copilotViewerControls .copilotUpload{margin:10px 0}
+.copilotFocused .copilotViewerControls .copilotSummary{margin:4px 0}
+.copilotMainPanel{
+ background:linear-gradient(150deg,#10283b,#091d2e);border:1px solid #355972;
+ border-radius:15px;padding:22px;color:#e8f4fc;min-width:0;min-height:410px;
+ box-shadow:0 8px 25px rgba(10,31,52,.08);
+}
+.copilotStage[hidden]{display:none!important}
+.copilotStage{display:block;min-width:0}
+.copilotStageTitle{border-bottom:1px solid #385971;padding-bottom:17px;margin-bottom:19px}
+.copilotStageTitle small{display:block;color:#83d4fa;font-size:11px;letter-spacing:.1em;font-weight:800}
+.copilotStageTitle h2{color:#f1f8ff;font-size:clamp(20px,2vw,26px);line-height:1.2;letter-spacing:-.02em;margin:8px 0}
+.copilotStageTitle p{font-size:13px;line-height:1.6;color:#c4d8e7;margin:6px 0 0;max-width:660px}
+.copilotStageStatus{display:flex;flex-direction:column;gap:8px;border:1px solid #436780;background:#143448;border-radius:10px;padding:16px;margin:14px 0 24px}
+.copilotStageStatus strong{font-size:14px;color:#fff;overflow-wrap:anywhere}
+.copilotStageStatus span{font-size:12px;color:#c6dfed}
+.copilotMainPanel .copilotNextAction,.copilotMainPanel a.copilotNextAction{
+ display:inline-flex;align-items:center;justify-content:center;min-height:45px;text-align:center;
+ padding:11px 17px;border:1px solid #49a6da;border-radius:9px;background:#187fbd;
+ color:#fff;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none;
+}
+.copilotMainPanel .copilotNextAction:disabled{opacity:.5;cursor:not-allowed}
+.copilotStageActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:15px;border-top:1px solid #36566b}
+.copilotMainPanel .copilotGhostAction{
+ display:inline-flex;justify-content:center;align-items:center;padding:11px 15px;
+ min-height:45px;border:1px solid #50748b;border-radius:9px;color:#d5e8f5;
+ background:#153347;font-size:12px;cursor:pointer;
+}
+.copilotMainPanel .copilotDocs,.copilotMainPanel .copilotFacts,.copilotMainPanel .copilotEvidenceFold{
+ margin:14px 0;border:1px solid #3a5d75;padding:0;
+}
+.copilotMainPanel .copilotFoldBody{padding:4px 16px 16px}
+.copilotMainPanel .copilotDocs>summary,.copilotMainPanel .copilotFacts>summary{padding:15px}
+.copilotConversation{
+ border:1px solid #365970;background:#0b2336;border-radius:10px;overflow:hidden;margin:16px 0;
+}
+.copilotConversation>summary{cursor:pointer;display:flex;justify-content:space-between;flex-wrap:wrap;gap:9px;
+ font-size:13px;color:#e4f5ff;padding:15px;font-weight:750}
+.copilotConversation>summary span{font-size:11px;color:#bad4e3;font-weight:400}
+.copilotConversationBody{padding:10px 15px 16px;border-top:1px solid #36566b}
+.copilotConversationBody .copilotTimeline{max-height:260px}
+.copilotStage .copilotPrompt{margin-top:16px}
+.copilotStage .copilotProgress{margin-top:0;border-top:0;padding-top:0}
+.copilotStage .copilotRunbook{margin-top:4px}
+.copilotResultMetrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:19px}
+.copilotResultMetrics div{border:1px solid #3a6078;background:#0c2a3e;border-radius:9px;padding:14px}
+.copilotResultMetrics small{display:block;color:#afd0e3;font-size:11px;line-height:1.45}
+.copilotResultMetrics strong{display:block;color:#f2faff;margin-top:6px;font-size:18px;word-break:break-word}
+.copilotResultSelect{display:flex;flex-direction:column;gap:7px;margin:14px 0;font-size:12px;color:#d8edf9;font-weight:700}
+.copilotResultSelect select{border:1px solid #577a91;border-radius:8px;background:#071b2b;color:#fff;min-height:44px;padding:10px;width:100%}
+.copilotResultCaveat{font-size:12px;line-height:1.6;color:#c7dbe8;border-left:3px solid #5698ba;padding:10px}
+.copilotEmptyResult{border:1px dashed #52758b;padding:22px;border-radius:10px;text-align:left}
+.copilotEmptyResult h3{color:#edf9ff;font-size:17px}
+.copilotEmptyResult p{font-size:13px;color:#bad2e2;line-height:1.6}
+@media(max-width:1160px){
+ .copilotFocused{grid-template-columns:minmax(0,1fr)}
+ .copilotFocused .copilotLeft{position:relative;top:auto}
+ .copilotFocused .copilotJourney{flex-direction:column;align-items:stretch}
+ .copilotJourneyNav{justify-content:flex-start}
+ .copilotFocused .copilotFrame{height:300px;min-height:250px}
+}
+@media(max-width:700px){
+ .copilotFocused .copilotJourney{padding:13px}
+ .copilotJourneyNav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
+ .copilotStageTab{flex-direction:column;gap:5px;padding:8px 3px;font-size:10px;min-width:0}
+ .copilotStageTab span{height:20px;width:20px}
+ .copilotMainPanel{padding:15px;min-height:360px}
+ .copilotResultMetrics{gap:7px}
+ .copilotResultMetrics div{padding:10px}
+ .copilotFocused .copilotFrame{height:265px;min-height:220px}
+}
