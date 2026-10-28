@@ -8,6 +8,7 @@ test("engineer can extract a DOCX locally and execute the approved geometry stud
  await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from(doc)});
  await expect(page.getByText("Office text extracted locally")).toBeVisible();
  await page.getByText("D1 · assembly.docx").click();
+ await page.getByText("View extracted text").click();
  await expect(page.getByText(/P1: Bulkhead connection at station 42/)).toBeVisible();
  await expect(page.getByRole("heading",{name:"Guided simulation plan"})).toBeVisible();
  const run=page.getByRole("button",{name:"Run approved study sequence"});
