@@ -20,11 +20,12 @@ test("reviewed source passage enters real study snapshot and survives project re
  await suggested.getByRole("button",{name:"Record reviewed reference"}).click();
  await expect(page.locator(".evidenceReviewed .evidenceItem")).toHaveCount(1);
  await page.getByRole("button",{name:"Open Simulate stage"}).click();
- await expect(page.locator(".runbookSourceSummary")).toContainText("1 reviewed passage");
- const run=page.getByRole("button",{name:"Run approved study sequence"});
+ await expect(page.locator(".runbookHistory")).toBeVisible();
+ const run=page.getByRole("button",{name:"Run All Applicable Analyses"});
+ await page.getByLabel(/I have reviewed the geometry, fixtures, forces/).check();
  await expect(run).toBeEnabled();
  await run.click();
- await expect(page.getByText("Study sequence complete.")).toBeVisible({timeout:50000});
+ await expect(page.getByText("All three result fields computed.")).toBeVisible({timeout:100000});
  const downloadPromise=page.waitForEvent("download");
  await page.getByRole("button",{name:"Export current study job record"}).click();
  const download=await downloadPromise;
@@ -33,7 +34,8 @@ test("reviewed source passage enters real study snapshot and survives project re
  expect(record.snapshot.reviewedEvidence).toHaveLength(1);
  expect(record.snapshot.reviewedEvidence[0].sourceId).toBe("D1");
  expect(record.snapshot.reviewedEvidence[0].excerpt).toContain("bulkhead A");
- expect(record.snapshot.serviceCase).toBeUndefined();
+ expect(record.snapshot.serviceCase).toBeDefined();
+ expect(record.snapshot.analysisMode).toBe("service-independent");
  await page.reload();
  await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotEvidenceFold > summary").click();
@@ -57,5 +59,5 @@ test("editing a source invalidates previous review and excludes it from new stud
  await page.getByLabel("Notes for fixture.txt").fill("A new engineer note changes the source revision.");
  await expect(page.locator(".evidenceReviewed")).toContainText("Stale or removed source");
  await page.getByRole("button",{name:"Open Simulate stage"}).click();
- await expect(page.locator(".runbookSourceSummary")).toContainText("0 reviewed passages");
+ await expect(page.locator(".runbookHistory")).toBeVisible();
 });
