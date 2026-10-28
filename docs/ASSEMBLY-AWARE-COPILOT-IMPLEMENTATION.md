@@ -11,11 +11,21 @@ Upload **the target STL** and **references describing the surrounding assembly**
 - The user can export a JSON research-context record that **excludes binary STL and uploaded document bytes**. This is separate from the existing full STL project-backup feature.
 
 ## Source upload limitations and honest handling
-- Local extraction currently supports \`.txt\`, \`.md\`, \`.csv\`, \`.json\`, and \`.log\`.
-- PDF, Word and Excel file metadata can be added, but they are **not automatically parsed locally**. Engineers can paste relevant excerpts and page references into the source panel.
+- Local extraction supports `.txt`, `.md`, `.csv`, `.json`, `.log`, `.docx` and the first worksheet of `.xlsx`. DOCX references retain paragraph labels; XLSX references retain row/cell labels.
+- PDFs, legacy DOC/XLS, scanned drawings, and native CAD assemblies are **not** automatically parsed locally. Engineers can paste relevant excerpts and page references into the source panel.
 - At most 12 sources, each up to 3 MB; only up to 30,000 characters of locally extracted text per source are saved.
 - If external AI mode is enabled, the engineer may explicitly opt in to transmit reference excerpts and optionally **reattached** PDFs (at most 2 PDFs up to 2 MB each) to the AI service. Do not claim page-level PDF citation unless the model returns it and engineers verify it. PDF binaries are NOT kept in localStorage and must be reattached after reload.
 - Entire native CAD assemblies / STEP are not parsed. Explicit part-to-assembly coordinate mapping and mesh-face semantic attachments are future engineering work.
+
+
+## Source-to-requirement review (October 2026)
+- The copilot now has a dedicated **Review source-backed engineering evidence** section. It looks for literal passages about loads, mounting, material, tolerances, inspection and assembly relationships from locally available source text. This is keyword classification, **not model inference**.
+- A candidate displays a source identifier, location (text line, DOCX paragraph, XLSX row, or engineer note), the original excerpt and an explicit caution if it contains uncertainty language.
+- An engineer must open the candidate and enter a short rationale before the passage is recorded as reviewed. This validates the engineer's stated relevance, **not the factual correctness, source authenticity, material property, or solver applicability**.
+- Each reviewed reference records a local source-content revision. Changing its source text or engineer notes, or removing the source, marks the old review **stale**. Stale citations are displayed for correction but excluded from new job snapshots.
+- A new simulation job freezes exact current reviewed passages, their reviewer notes and location labels alongside the approved numerical input snapshot. It does **not** automatically set forces, fixture boundaries, elastic constants, thermal conditions or acceptance criteria from document text.
+- Previous `schema:1` browser project-context records restore with an empty reviewed-evidence list (no data migration required).
+- All extracted document data, reviewed snippets and study records remain **local browser data**, not a secure shared engineering database. Avoid importing restricted or proprietary drawings without approved handling.
 
 ## Engineering chat modes
 ### Local engineering guide — runs without a model
