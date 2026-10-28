@@ -36,7 +36,7 @@ test("AI sharing requires explicit approval and PDFs are not misrepresented as l
  await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.4 mock")});
  await expect(page.getByText("Content not extracted")).toBeVisible();
  await page.getByText("D1 · assembly.pdf").click();
- await expect(page.getByText(/PDF\/Office attachment recorded/)).toBeVisible();
+ await expect(page.getByText(/PDF\/legacy Office attachment recorded/)).toBeVisible();
  await page.getByLabel("Notes for assembly.pdf").fill("Engineer excerpt p. 2: frame attachment, unverified");
  await expect(page.getByText("Engineer excerpt only")).toBeVisible();
  await expect(page.getByLabel("Authorize external AI")).not.toBeChecked();
