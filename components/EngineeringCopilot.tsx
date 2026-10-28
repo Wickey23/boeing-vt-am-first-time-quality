@@ -235,7 +235,8 @@ export default function EngineeringCopilot(){
  const references=useMemo(()=>findEvidence(sourceList,knowledge?.reviewedRequirements||knowledge?.componentName||"",4),[sourceList,knowledge?.reviewedRequirements,knowledge?.componentName]);
  const verifiedStructural=Boolean(a.result?.structural&&isLPBF);
  const verifiedThermal=Boolean(a.result?.thermal&&isLPBF);
- if(!a.ready||!knowledge)return <div className="copilotLoading" roreturn <div className="copilotGrid copilotFocused">
+ if(!a.ready||!knowledge)return <div className="copilotLoading" role="status">Restoring the part and engineering context…</div>;
+  return <div className="copilotGrid copilotFocused">
 <div className="copilotJourney" aria-label="Engineering workflow progress"><div><span className="copilotJourneyEyebrow">ACTIVE ENGINEERING STUDY</span><strong>{a.projectName}</strong><small>{verified?"Geometry reviewed":"Geometry review required"} · {sourceList.length} references · {validEvidence.length} reviewed passages</small></div>
 <nav className="copilotJourneyNav" aria-label="Engineering workflow">{([
  ["part","1","Part"],["documents","2","Documents"],["requirements","3","Requirements"],["run","4","Simulate"],["results","5","Results"]
