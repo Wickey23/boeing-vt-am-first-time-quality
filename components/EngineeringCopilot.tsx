@@ -5,7 +5,7 @@ import Link from "next/link";
 import {useAnalysis} from "@/components/AnalysisProvider";
 import {usePartInspection} from "@/components/PartInspection";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
-import EngineeringRunbook from "@/components/EngineeringRunbook";
+import UnifiedServiceStudy,{type ServiceStudyResults} from "@/components/UnifiedServiceStudy";
 import EngineeringEvidenceReview from "@/components/EngineeringEvidenceReview";
 import {currentReviewedEvidence,evidenceIsCurrent,MAX_REVIEWED_EVIDENCE,type ReviewedEvidence} from "@/lib/engineering-evidence";
 import {completedPart,allowsGeometryRanking} from "@/lib/engineering-journey";
@@ -45,6 +45,7 @@ export default function EngineeringCopilot(){
  const [thermalOpen,setThermalOpen]=useState(false);
  const [url,setUrl]=useState<string>();
  const [showFields,setShowFields]=useState<"geometry"|"stress"|"displacement"|"thermal">("geometry");
+ const [serviceStudy,setServiceStudy]=useState<ServiceStudyResults|null>(null);
  const docs=useRef(new Map<string,File>());
  const timeline=useRef<HTMLDivElement|null>(null);
  const inspect=usePartInspection(a.file,a.settings.unitScale);
@@ -59,6 +60,8 @@ export default function EngineeringCopilot(){
  const sourceList=knowledge?.sources??[];
  const validEvidence=useMemo(()=>currentReviewedEvidence(knowledge?.reviewedEvidence??[],sourceList),[knowledge?.reviewedEvidence,sourceList]);
  const orientationReady=Boolean(a.result&&isLPBF&&currentCandidate);
+ const studyCurrent=Boolean(serviceStudy&&partKey===serviceStudy.partSha256&&
+  serviceStudy.unitScale===a.settings.unitScale&&serviceStudy.process===a.journey.process);
  const activeCase=activeServiceCase(a.servicePlan);
  useEffect(()=>{
   fetch("/api/engineering-copilot",{cache:"no-store"}).then(r=>r.json()).then(r=>setAiEnabled(r.enabled===true)).catch(()=>setAiEnabled(false));
@@ -249,8 +252,11 @@ export default function EngineeringCopilot(){
     <header className="copilotHeading"><h2>Part workspace</h2><p>The uploaded geometry stays linked to its requirements and study results.</p></header>
     <div className="copilotFrame">
       {url&&a.file?<ViewerErrorBoundary><Viewer url={url} unitScale={a.settings.unitScale}
-        rotation={orientationReady?currentCandidate?.rotation:undefined} overhangDeg={a.settings.overhangDeg}
-        showOverhangs={orientationReady} field={
+        rotation={studyCurrent?undefined:orientationReady?currentCandidate?.rotation:undefined} overhangDeg={a.settings.overhangDeg}
+        showOverhangs={orientationReady&&!studyCurrent} field={
+        studyCurrent&&showFields==="stress"?serviceStudy?.structural?.stress:
+        studyCurrent&&showFields==="displacement"?serviceStudy?.structural?.displacement:
+        studyCurrent&&showFields==="thermal"?serviceStudy?.thermal:
         showFields==="stress"&&isLPBF?a.result?.structural?.field.stress:
         showFields==="displacement"&&isLPBF?a.result?.structural?.field.displacement:
         showFields==="thermal"&&isLPBF&&a.result?.thermal?.candidateId===a.selected?a.result.thermal.field:undefined
@@ -380,9 +386,14 @@ export default function EngineeringCopilot(){
 <div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("run")}>Review simulation plan</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("documents")}>Previous step</button></div>
 </section>
 <section className="copilotStage" aria-label="run workspace" hidden={activeTab!=="run"}>
-<div className="copilotStageTitle"><small>04 · SOLVE</small><h2>Run only supported analyses</h2><p>The software checks the geometry, process and reviewed inputs before executing the real workers. Model outputs remain research approximations.</p></div>
+<div className="copilotStageTitle"><small>04 · SOLVE</small><h2>Run stress, displacement and temperature together</h2><p>Confirm physical assumptions once, then run the structural and thermal workers automatically for this STL. LPBF and DED service studies use the same independent calculation path.</p></div>
 <div className="copilotProgress">
-     <EngineeringRunbook verified={verified} partSha256={partKey??undefined} sourceIds={[...new Set(validEvidence.map(x=>x.sourceId))]} reviewedEvidence={validEvidence} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
+     <UnifiedServiceStudy verified={verified} partSha256={partKey??undefined} sourceIds={[...new Set(validEvidence.map(x=>x.sourceId))]}
+      reviewedEvidence={validEvidence} onResults={next=>{
+       setServiceStudy(next);
+       if(next?.structural)setShowFields("stress");
+       else if(!next)setShowFields("geometry");
+      }} onOpenResults={()=>setActiveTab("results")}/>
      <details className="copilotAdvanced"><summary>Advanced: individual simulation controls and result fields</summary>
       <p>Use these only if you need to run a solver separately. The Guided simulation plan above is the primary workflow.</p>
      <div className="copilotStages">
@@ -421,14 +432,31 @@ export default function EngineeringCopilot(){
 <div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("results")}>View results</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("requirements")}>Previous step</button></div>
 </section>
 <section className="copilotStage" aria-label="results workspace" hidden={activeTab!=="results"}>
-<div className="copilotStageTitle"><small>05 · INSPECT</small><h2>Inspect actual results</h2><p>Compare geometric candidates and any completed numerical fields. No manufacturing qualification or distortion prediction is implied.</p></div>
-{a.result&&currentCandidate?<>
+<div className="copilotStageTitle"><small>05 · INSPECT</small><h2>Inspect actual results</h2><p>Switch between the calculated stress, displacement and steady-temperature fields on the uploaded part. These are service-model approximations, not printing-process validation.</p></div>
+{studyCurrent&&serviceStudy?.structural?<div className="copilotServiceResults" data-testid="service-results">
+ <div className="copilotResultMetrics">
+  <div><small>Maximum von Mises stress</small><strong>{serviceStudy.structural.solver.maxVonMisesMPa.toPrecision(5)} MPa</strong></div>
+  <div><small>Maximum displacement</small><strong>{serviceStudy.structural.solver.maxDisplacementMm.toPrecision(5)} mm</strong></div>
+  <div><small>Steady temperature range</small><strong>{serviceStudy.thermal?serviceStudy.thermal.min.toFixed(2)+"–"+serviceStudy.thermal.max.toFixed(2)+" °C":"Not completed"}</strong></div>
+ </div>
+ <div className="copilotFieldTabs" aria-label="Numerical field overlays">
+  <button type="button" aria-pressed={showFields==="stress"} onClick={()=>setShowFields("stress")}>Service stress</button>
+  <button type="button" aria-pressed={showFields==="displacement"} onClick={()=>setShowFields("displacement")}>Displacement</button>
+  <button type="button" aria-pressed={showFields==="thermal"} disabled={!serviceStudy.thermal} onClick={()=>setShowFields("thermal")}>Steady temperature</button>
+  <button type="button" aria-pressed={showFields==="geometry"} onClick={()=>setShowFields("geometry")}>Geometry</button>
+ </div>
+ <p className="copilotResultCaveat">Displayed on the original STL coordinate frame. Stress and displacement come from one isotropic linear-elastic solve; temperature from a separate steady-conduction solve. No DED or LPBF transient printing model has been executed.</p>
+ <div className="copilotStageActions">
+  <button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("run")}>Review or rerun analysis</button>
+  <button type="button" className="copilotGhostAction" onClick={saveContext}>Export engineering context</button>
+ </div>
+ </div>:a.result&&currentCandidate?<>
 <div className="copilotResultMetrics"><div><small>Orientation samples</small><strong>{a.result.candidates.length}</strong></div><div><small>Selected candidate</small><strong>{currentCandidate.id}</strong></div><div><small>Build height</small><strong>{currentCandidate.buildHeightMm.toFixed(1)} mm</strong></div><div><small>Geometric support proxy</small><strong>{currentCandidate.supportProxyMm3.toFixed(1)} mm³</strong></div></div>
 <label className="copilotResultSelect">Orientation to inspect<select aria-label="Results candidate" value={a.selected??""} onChange={e=>a.select(e.target.value)}>{a.result.candidates.map(c=><option key={c.id} value={c.id}>{c.id} · {c.buildHeightMm.toFixed(1)} mm · {c.feasible?"Geometrically eligible":"Outside nominal geometric constraints"}</option>)}</select></label>
 <label className="copilotResultSelect">3D result overlay<select aria-label="Results field" value={showFields} onChange={e=>setShowFields(e.target.value as typeof showFields)}><option value="geometry">Geometry</option><option value="stress" disabled={!verifiedStructural}>Service stress (if calculated)</option><option value="displacement" disabled={!verifiedStructural}>Displacement (if calculated)</option><option value="thermal" disabled={!verifiedThermal}>Steady temperature (if calculated)</option></select></label>
 <p className="copilotResultCaveat">Envelope: {currentCandidate.fitsEnvelope?"Nominal bounding box fits":"Nominal bounding box does not fit"}. Geometric support estimates are not sliced supports.</p>
 <div className="copilotStageActions"><Link href="/report" className="copilotNextAction">Open engineering report</Link><button type="button" className="copilotGhostAction" onClick={saveContext}>Export evidence package (JSON)</button></div>
-</>:<div className="copilotEmptyResult"><h3>No numerical result yet</h3><p>Complete the geometry pre-check and run the supported LPBF study. No result will be invented from your document text.</p><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("run")}>Go to simulation plan</button></div>}
+</>:<div className="copilotEmptyResult"><h3>No numerical result yet</h3><p>Confirm the STL and launch the coordinated structural and thermal study. LPBF orientation screening remains a separate optional analysis.</p><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("run")}>Go to simulation plan</button></div>}
 </section>
 </div>
 </div>;
