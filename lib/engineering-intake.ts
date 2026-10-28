@@ -26,13 +26,13 @@ export function applyIntakeAnswer(state:ProjectKnowledge,step:IntakeStep,answer:
  return {...state,[step.field]:text.slice(0,step.field==="componentName"?160:4000)};
 }
 export function intakeProgress(state:ProjectKnowledge,opts:{
- partName:string|null;confirmed:boolean;loadsReviewed:boolean;process:string;
+ partName:string|null;confirmed:boolean;loadsReviewed:boolean;process:string;hasOrientation?:boolean;
 }){
  const labels=[
   {key:"geometry",label:"Part",done:!!opts.partName&&opts.confirmed},
   {key:"identity",label:"Assembly",done:!!state.componentName.trim()&&!!state.assemblyContext.trim()},
   {key:"requirements",label:"Requirements",done:!!state.attachmentNotes.trim()&&!!state.reviewedRequirements.trim()&&opts.loadsReviewed},
-  {key:"analysis",label:"Analysis",done:false}
+  {key:"analysis",label:"Analysis",done:opts.hasOrientation===true}
  ];
  return labels;
 }
