@@ -5,6 +5,7 @@ test("reviewed source passage enters real study snapshot and survives project re
  await page.goto("/copilot");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
+ await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotDocs > summary").click();
  await page.getByLabel("Add reference documents").setInputFiles({
   name:"public-assembly-notes.txt",mimeType:"text/plain",
@@ -18,6 +19,7 @@ test("reviewed source passage enters real study snapshot and survives project re
  await suggested.getByLabel(/Review rationale/).fill("Relevant to this public example; attachment faces are not mapped to the mesh.");
  await suggested.getByRole("button",{name:"Record reviewed reference"}).click();
  await expect(page.locator(".evidenceReviewed .evidenceItem")).toHaveCount(1);
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
  await expect(page.locator(".runbookSourceSummary")).toContainText("1 reviewed passage");
  const run=page.getByRole("button",{name:"Run approved study sequence"});
  await expect(run).toBeEnabled();
@@ -33,6 +35,7 @@ test("reviewed source passage enters real study snapshot and survives project re
  expect(record.snapshot.reviewedEvidence[0].excerpt).toContain("bulkhead A");
  expect(record.snapshot.serviceCase).toBeUndefined();
  await page.reload();
+ await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotEvidenceFold > summary").click();
  await expect(page.locator(".evidenceReviewed .evidenceItem")).toHaveCount(1);
 });
@@ -52,5 +55,6 @@ test("editing a source invalidates previous review and excludes it from new stud
  await page.getByText("D1 · fixture.txt").click();
  await page.getByLabel("Notes for fixture.txt").fill("A new engineer note changes the source revision.");
  await expect(page.locator(".evidenceReviewed")).toContainText("Stale or removed source");
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
  await expect(page.locator(".runbookSourceSummary")).toContainText("0 reviewed passages");
 });
