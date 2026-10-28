@@ -255,3 +255,30 @@
 .copilotAdvanced>progress{width:calc(100% - 24px);margin:12px}
 @media(max-width:1120px){.copilotGrid{grid-template-columns:1fr}.copilotFrame{height:330px}}
 @media(max-width:650px){.copilotJourney{flex-direction:column;align-items:flex-start}.copilotJourney ol{gap:9px}.copilotFrame{height:275px}.copilotFold>summary{align-items:flex-start;flex-wrap:wrap}.copilotQuestionMeta{font-size:9px}.copilotPrompt>p{font-size:15px}}
+
+/* Source-to-engineering-evidence review. Candidates remain untrusted until reviewed. */
+.copilotEvidenceFold{margin:17px 0}
+.copilotEvidenceReview{color:#e6f3fc;padding:8px 0 12px}
+.evidenceReviewHeading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;border-bottom:1px solid #365b70;padding-bottom:13px}
+.evidenceReviewHeading h3{color:#f0f8ff;font-size:15px;margin:0 0 5px}
+.evidenceReviewHeading p,.evidenceEmpty{font-size:12px;line-height:1.6;color:#bfdaeb;margin:6px 0 0}
+.evidenceCount{color:#b3e5ff;font-size:11px;white-space:nowrap}
+.evidenceSuggested,.evidenceReviewed{margin-top:16px}
+.evidenceSuggested h4,.evidenceReviewed h4{font-size:13px;margin:0 0 9px;color:#eaf6ff}
+.evidenceItem{background:#071d2e;border:1px solid #3d5c73;border-radius:9px;padding:12px;margin:9px 0}
+.evidenceItemTop{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#c6e8fd}
+.evidenceItemTop strong{color:#e9f8ff}
+.evidenceItemTop span{color:#accadd;font-size:11px}
+.evidenceItem p{font-size:12px;line-height:1.6;color:#dceaf6;overflow-wrap:anywhere}
+.evidenceItem small{display:block;color:#aec7d9;font-size:11px;line-height:1.55;margin:7px 0}
+.evidenceItem .evidenceWarning{font-size:11px;color:#ffe3b6}
+.evidenceItem.evidenceStale{border-color:#a77a48;background:#2d281e}
+.evidenceReviewForm{background:#102e40;border:1px solid #46748e;border-radius:9px;margin-top:11px;padding:11px}
+.evidenceReviewForm label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700}
+.evidenceReviewForm textarea{width:100%;min-height:75px;color:#f3faff;background:#071a29;border:1px solid #5b849d;border-radius:8px;padding:10px;resize:vertical}
+.evidenceActions{display:flex;flex-wrap:wrap;gap:9px}
+.evidenceActions button:first-child{border-radius:8px;border:1px solid #3c9bc4;background:#195a83;color:white;padding:10px 12px;font-weight:700;cursor:pointer}
+.evidenceActions button:disabled{opacity:.5;cursor:not-allowed}
+.copilotRunbook .runbookSourceSummary{font-size:11px;color:#c1dce8;background:#0d293a;border:1px solid #3e657b;padding:10px;border-radius:8px}
+.copilotRunbook .runbookSourceSummary strong{color:#e3f6ff}
+@media(max-width:650px){.evidenceReviewHeading{flex-direction:column}.evidenceItemTop{flex-direction:column;align-items:flex-start}}
