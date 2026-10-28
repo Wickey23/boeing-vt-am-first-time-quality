@@ -18,6 +18,8 @@ import {
 } from "@/lib/copilot-context";
 import {applyIntakeAnswer,getIntakeStep,intakeProgress} from "@/lib/engineering-intake";
 import {exportEngineeringTeamBundle,importEngineeringTeamBundle} from "@/lib/engineering-team-bundle";
+import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
+import EngineeringReadinessPanel from "@/components/EngineeringReadinessPanel";
 import "./copilot.css";
 const Viewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 const Structural=dynamic(()=>import("@/components/PartStructuralPanel"),{ssr:false});
@@ -66,6 +68,15 @@ export default function EngineeringCopilot(){
  const studyCurrent=Boolean(serviceStudy&&partKey===serviceStudy.partSha256&&
   serviceStudy.unitScale===a.settings.unitScale&&serviceStudy.process===a.journey.process);
  const activeCase=activeServiceCase(a.servicePlan);
+ const readiness=assessEngineeringReadiness({
+  fileName:a.file?.name??null,unitsConfirmed:verified,process:a.journey.process,
+  componentName:knowledge?.componentName??"",assemblyContext:knowledge?.assemblyContext??"",
+  attachmentNotes:knowledge?.attachmentNotes??"",requirements:knowledge?.reviewedRequirements??"",
+  documentCount:sourceList.length,reviewedEvidenceCount:validEvidence.length,
+  hasNumericalServiceStudy:studyCurrent&&Boolean(serviceStudy?.structural),
+  hasSteadyThermalStudy:studyCurrent&&Boolean(serviceStudy?.thermal),
+  hasLpbfGeometryCandidates:orientationReady
+ });
  useEffect(()=>{
   fetch("/api/engineering-copilot",{cache:"no-store"}).then(r=>r.json()).then(r=>setAiEnabled(r.enabled===true)).catch(()=>setAiEnabled(false));
  },[]);
@@ -256,6 +267,7 @@ export default function EngineeringCopilot(){
     id:selectedCandidate.id,buildHeightMm:selectedCandidate.buildHeightMm,
     supportProxyMm3:selectedCandidate.supportProxyMm3,fitsEnvelope:selectedCandidate.fitsEnvelope
    }:null,
+   readiness,
    analysis:a.result?{
     runId:a.result.runId,source:a.result.source,generatedAt:a.result.generatedAt,
     candidateCount:a.result.candidates.length,
@@ -488,6 +500,7 @@ export default function EngineeringCopilot(){
 </section>
 <section className="copilotStage" aria-label="results workspace" hidden={activeTab!=="results"}>
 <div className="copilotStageTitle"><small>05 · INSPECT</small><h2>Inspect actual results</h2><p>Switch between the calculated stress, displacement and steady-temperature fields on the uploaded part. These are service-model approximations, not printing-process validation.</p></div>
+<EngineeringReadinessPanel report={readiness} onGoTo={step=>setActiveTab(step)}/>
 {studyCurrent&&serviceStudy?.structural?<div className="copilotServiceResults" data-testid="service-results">
  <div className="copilotResultMetrics">
   <div><small>Maximum von Mises stress</small><strong>{serviceStudy.structural.solver.maxVonMisesMPa.toPrecision(5)} MPa</strong></div>
