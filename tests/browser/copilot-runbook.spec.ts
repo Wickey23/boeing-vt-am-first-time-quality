@@ -1,53 +1,69 @@
 import {test,expect} from "@playwright/test";
-import {zipSync,strToU8} from "fflate";
-test("engineer can extract a DOCX locally and execute the approved geometry study",async({page})=>{
+import {readFile} from "node:fs/promises";
+async function uploadAndConfirm(page:import("@playwright/test").Page){
  await page.goto("/copilot");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
- const doc=zipSync({"word/document.xml":strToU8('<w:document><w:body><w:p><w:r><w:t>Bulkhead connection at station 42</w:t></w:r></w:p></w:body></w:document>')});
- await page.getByRole("button",{name:"Open Documents stage"}).click();
- await page.locator(".copilotDocs > summary").click();
- await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from(doc)});
- await expect(page.getByText("Office text extracted locally")).toBeVisible();
- await page.getByText("D1 · assembly.docx").click();
- await page.getByText("View extracted text").click();
- await expect(page.locator(".copilotDocItem pre")).toContainText("P1: Bulkhead connection at station 42");
+}
+test("one approved action calculates stress displacement and steady temperature on a real STL",async({page})=>{
+ await uploadAndConfirm(page);
  await page.getByRole("button",{name:"Open Simulate stage"}).click();
- await expect(page.getByRole("heading",{name:"Guided simulation plan"})).toBeVisible();
- const run=page.getByRole("button",{name:"Run approved study sequence"});
- await expect(run).toBeEnabled();
- await page.getByLabel("Include idealized service-load FEM").check();
+ await expect(page.getByRole("heading",{name:/Service analysis · one coordinated run/})).toBeVisible();
+ const run=page.getByRole("button",{name:"Run All Applicable Analyses"});
  await expect(run).toBeDisabled();
- await page.getByLabel("Include idealized service-load FEM").uncheck();
+ await page.getByLabel(/I have reviewed the geometry, fixtures, forces/).check();
+ await expect(run).toBeEnabled();
  await run.click();
- await expect(page.getByText("Study sequence complete.")).toBeVisible({timeout:45000});
- await expect(page.getByText("Geometry complete")).toBeVisible();
- await expect(page.getByText("No print qualification was established.")).toBeVisible();
- await expect(page.getByRole("heading",{name:"Study job history"})).toBeVisible();
+ await expect(page.getByText("All three result fields computed.")).toBeVisible({timeout:100000});
+ await page.getByRole("button",{name:"Inspect stress, displacement and temperature in 3D"}).click();
+ await expect(page.locator("[data-testid=service-results]")).toBeVisible();
+ for(const label of ["Service stress","Displacement","Steady temperature"]){
+  const button=page.locator(".copilotFieldTabs").getByRole("button",{name:label});
+  await expect(button).toBeEnabled();
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed","true");
+ }
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
  await expect(page.locator(".runbookHistory").getByText("COMPLETED",{exact:true})).toBeVisible();
- const recordDownload=page.waitForEvent("download");
+ const d=page.waitForEvent("download");
  await page.getByRole("button",{name:"Export current study job record"}).click();
- const file=await recordDownload;
- const content=JSON.parse(await (await import("node:fs/promises")).readFile((await file.path())!,"utf8"));
- expect(content.status).toBe("completed");
- expect(content.steps[0].kind).toBe("geometry");
- expect(content.steps[0].status).toBe("completed");
- expect(content.dataIncluded.rawStl).toBe(false);
- expect(content.snapshot.partSha256).toMatch(/^[a-f0-9]{64}$/);
+ const downloaded=await d;
+ const record=JSON.parse(await readFile((await downloaded.path())!,"utf8"));
+ expect(record.status).toBe("completed");
+ expect(record.snapshot.analysisMode).toBe("service-independent");
+ expect(record.steps.map((s:{kind:string;status:string})=>[s.kind,s.status])).toEqual([
+  ["service-structural","completed"],["steady-conduction","completed"]
+ ]);
+ expect(record.snapshot.partSha256).toMatch(/^[a-f0-9]{64}$/);
  await page.reload();
  await page.getByRole("button",{name:"Open Simulate stage"}).click();
  await expect(page.locator(".runbookHistory").getByText("COMPLETED",{exact:true})).toBeVisible();
 });
-test("unreviewed thermal assumptions block coordinated worker execution",async({page})=>{
- await page.goto("/copilot");
- await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
- await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
+test("DED process does not block generic service stress displacement or steady conduction",async({page})=>{
+ await uploadAndConfirm(page);
+ await page.getByLabel("Copilot manufacturing process").selectOption("DED_LB_WIRE");
  await page.getByRole("button",{name:"Open Simulate stage"}).click();
- await page.getByLabel("Include steady solid conduction (not printing thermal history)").check();
- const run=page.getByRole("button",{name:"Run approved study sequence"});
- await expect(run).toBeDisabled();
- await page.getByLabel("I reviewed the thermal values and accept their illustrative boundary conditions.").check();
+ await expect(page.getByText(/DED selection: these are generic service-load/)).toBeVisible();
+ await page.getByLabel(/I have reviewed the geometry, fixtures, forces/).check();
+ await page.getByRole("button",{name:"Run All Applicable Analyses"}).click();
+ await expect(page.getByText("All three result fields computed.")).toBeVisible({timeout:100000});
+ await page.getByRole("button",{name:"Inspect stress, displacement and temperature in 3D"}).click();
+ await expect(page.locator("[data-testid=service-results]")).toBeVisible();
+});
+test("editing boundary conditions clears approval and blocks stale reruns",async({page})=>{
+ await uploadAndConfirm(page);
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
+ const approval=page.getByLabel(/I have reviewed the geometry, fixtures, forces/);
+ const run=page.getByRole("button",{name:"Run All Applicable Analyses"});
+ await approval.check();
  await expect(run).toBeEnabled();
- await page.getByLabel("Conductivity (W/m·K)").fill("-5");
+ await page.getByLabel("Conductivity (W/m·K)").fill("-3");
+ await expect(approval).not.toBeChecked();
+ await expect(run).toBeDisabled();
+ await page.getByLabel("Conductivity (W/m·K)").fill("6.7");
+ await approval.check();
+ await expect(run).toBeEnabled();
+ await page.getByLabel("X force (N)").fill("0");
+ await page.getByLabel("Z force (N)").fill("0");
  await expect(run).toBeDisabled();
 });
