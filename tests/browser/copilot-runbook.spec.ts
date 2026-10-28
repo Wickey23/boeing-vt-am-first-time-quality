@@ -5,6 +5,7 @@ test("engineer can extract a DOCX locally and execute the approved geometry stud
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
  const doc=zipSync({"word/document.xml":strToU8('<w:document><w:body><w:p><w:r><w:t>Bulkhead connection at station 42</w:t></w:r></w:p></w:body></w:document>')});
+ await page.locator(".copilotDocs > summary").click();
  await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from(doc)});
  await expect(page.getByText("Office text extracted locally")).toBeVisible();
  await page.getByText("D1 · assembly.docx").click();
