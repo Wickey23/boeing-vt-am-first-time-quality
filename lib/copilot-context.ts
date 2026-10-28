@@ -91,6 +91,7 @@ export function nextEngineeringQuestion(state:ProjectKnowledge,opts:{
  if(!state.assemblyContext.trim())return "Which larger assembly does it belong to, and which surrounding components connect to it? You can attach references or describe the interfaces.";
  if(!state.attachmentNotes.trim())return "Which locations are actually fixed or joined, and where are service forces applied? We need verified boundary conditions before structural results are meaningful.";
  if(!state.reviewedRequirements.trim()||!opts.loadsReviewed)return "Which load magnitudes, directions, critical tolerances and material allowables have been confirmed by an engineer? Enter the verified load case in Requirements.";
+ if(opts.process!=="PBF_LB_METAL")return "The uploaded STL is set to DED. Arbitrary-part DED pathing and physical simulation are unavailable; use the separate teaching model or choose LPBF for supported screening.";
  if(!opts.hasOrientation&&opts.process==="PBF_LB_METAL")return "The project is ready for LPBF geometric orientation screening. Would you like to run the supported local orientation solver?";
  return "The current supported analyses are ready to review. Do you want to compare orientations, run the reviewed service-load model, or prepare an engineering evidence report?";
 }
@@ -101,7 +102,7 @@ export function localCopilotReply(state:ProjectKnowledge,question:string,opts:{
  const sources=matches.length?("\n\nRelevant excerpts (not independently verified):\n"+matches.map(h=>"["+h.sourceId+" "+h.line+"] "+h.excerpt).join("\n")):"";
  const next=nextEngineeringQuestion(state,opts);
  const text=question.trim().length?
-  "I can organize the references and show supported engineering calculations. I will not infer loads, connections, properties, or quality from a filename. "+(sources?"I found the following possible evidence. Confirm applicability before using it.":"No matching extracted passage was found. PDFs/Word documents need an engineer-supplied excerpt or explicitly authorized AI processing.")+sources+"\n\nNext question: "+next:
+  "I can organize the references and show supported engineering calculations. I will not infer loads, connections, properties, or quality from a filename. "+(sources?"I found the following possible evidence. Confirm applicability before using it.":"No matching extracted passage was found. PDFs or scanned drawings need an engineer-supplied excerpt or explicitly authorized processing; DOCX and XLSX text can be extracted locally.")+sources+"\n\nNext question: "+next:
   next;
  return {text,sourceIds:matches.map(h=>h.sourceId)};
 }
