@@ -33,15 +33,18 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
  await page.getByRole("button",{name:"Run supported orientation screening"}).click();
  await expect(page.getByText("Geometry worker completed:",{exact:false})).toBeVisible();
  await page.reload();
+ await page.getByRole("button",{name:"Open Requirements stage"}).click();
  await page.locator(".copilotFacts > summary").click();
- await page.locator(".copilotDocs > summary").click();
  await expect(page.getByLabel("Component role")).toHaveValue("Frame support bracket");
+ await page.getByRole("button",{name:"Open Documents stage"}).click();
+ await page.locator(".copilotDocs > summary").click();
  await expect(page.getByText("D1 · assembly-notes.txt")).toBeVisible();
  expect(pageErrors).toEqual([]);
 });
 test("AI sharing requires explicit approval and PDFs are not misrepresented as locally read",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotDocs > summary").click();
 await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.4 mock")});
  await expect(page.getByText("Content not extracted")).toBeVisible();
