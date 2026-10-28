@@ -20,8 +20,8 @@ test("engineering copilot dark surfaces have readable text and vertically stacke
  const intro=page.locator(".copilotIntro > p:not(.guidedEyebrow)");
  expect(contrast(await intro.evaluate(el=>getComputedStyle(el).color),"#f5f7fb")).toBeGreaterThanOrEqual(4.5);
  const headings=page.locator(".copilotHeading");
- await expect(headings).toHaveCount(2);
- for(let i=0;i<2;i++){
+ await expect(headings).toHaveCount(1);
+ for(let i=0;i<1;i++){
   const h=headings.nth(i);
   await expect(h.locator("h2")).toBeVisible();
   await expect(h.locator("p")).toBeVisible();
@@ -38,6 +38,8 @@ test("engineering copilot dark surfaces have readable text and vertically stacke
   expect(contrast(layout.headingColor,"#10283a")).toBeGreaterThanOrEqual(4.5);
   expect(contrast(layout.descriptionColor,"#10283a")).toBeGreaterThanOrEqual(4.5);
  }
+ await page.getByRole("button",{name:"Open Requirements stage"}).click();
+ await page.locator(".copilotConversation > summary").click();
  const message=page.locator(".copilotBubble.assistant p").first();
  await expect(message).toBeVisible();
  expect(contrast(await message.evaluate(el=>getComputedStyle(el).color),"#18384d")).toBeGreaterThanOrEqual(4.5);
