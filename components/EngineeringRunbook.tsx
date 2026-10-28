@@ -6,11 +6,12 @@ import {activeServiceCase,serviceInputKey} from "@/lib/service-plan";
 import {buildEngineeringRunbook,type StudyKind} from "@/lib/engineering-runbook";
 import type {StructuralField} from "@/lib/voxel-structural";
 import type {ThermalField,ThermalInput} from "@/lib/voxel-thermal";
+import type {ReviewedEvidence} from "@/lib/engineering-evidence";
 import {createEngineeringJob,applyJobEvent,saveEngineeringJob,loadEngineeringJobs,summarizeJobForExport,type EngineeringJob,type JobStep} from "@/lib/engineering-job-ledger";
 type Phase="idle"|"screening"|"structural"|"thermal"|"completed"|"failed"|"cancelled";
 type HistoryItem={stage:string;detail:string};
 const defaultThermal:ThermalInput={conductivityWmK:6.7,baseTemperatureC:20,topFluxWm2:1000,resolution:12};
-export default function EngineeringRunbook({verified,loadsReviewed,requirementsDocumented,partSha256,sourceIds}:{verified:boolean;loadsReviewed:boolean;requirementsDocumented:boolean;partSha256?:string;sourceIds?:string[]}){
+export default function EngineeringRunbook({verified,loadsReviewed,requirementsDocumented,partSha256,sourceIds,reviewedEvidence=[]}:{verified:boolean;loadsReviewed:boolean;requirementsDocumented:boolean;partSha256?:string;sourceIds?:string[];reviewedEvidence?:ReviewedEvidence[]}){
  const a=useAnalysis(),service=activeServiceCase(a.servicePlan);
  const [includeStructural,setIncludeStructural]=useState(false),[includeThermal,setIncludeThermal]=useState(false);
  const [thermal,setThermal]=useState<ThermalInput>(defaultThermal),[thermalReviewed,setThermalReviewed]=useState(false);
@@ -112,6 +113,7 @@ export default function EngineeringRunbook({verified,loadsReviewed,requirementsD
       input:JSON.parse(JSON.stringify(service.input)) as Record<string,string|number|boolean|null>}}:{}),
     ...(includeThermal?{thermalInput:{...thermal}}:{}),
     approvedAt:new Date().toISOString(),sourceIds:[...new Set(sourceIds??[])].slice(0,12),
+    reviewedEvidence:reviewedEvidence.map(e=>({...e})).slice(0,30),
     modelScope:"research-not-qualified" as const
    };
    const kinds:StudyKind[]=["geometry",...(includeStructural?["service-structural" as const]:[]),...(includeThermal?["steady-conduction" as const]:[])];
@@ -148,6 +150,7 @@ export default function EngineeringRunbook({verified,loadsReviewed,requirementsD
  return <section className="copilotRunbook" aria-label="Guided simulation plan">
   <h3>Guided simulation plan</h3>
   <p>Select supported analyses. The workflow checks prerequisites and executes real numerical workers after explicit approval. AI chat cannot change loads or trigger execution.</p>
+  <p className="runbookSourceSummary">Evidence attached to new study records: <strong>{reviewedEvidence.length} reviewed passage{reviewedEvidence.length===1?"":"s"}</strong>. Extracted text is not automatically approved as a material, load or boundary condition.</p>
   <label className="runbookChoice"><input type="checkbox" checked={includeStructural} disabled={active} onChange={e=>setIncludeStructural(e.target.checked)}/> Include idealized service-load FEM</label>
   <label className="runbookChoice"><input type="checkbox" checked={includeThermal} disabled={active} onChange={e=>setIncludeThermal(e.target.checked)}/> Include steady solid conduction (not printing thermal history)</label>
   {includeThermal&&<div className="runbookThermal">
