@@ -34,7 +34,7 @@ export function extractDocx(bytes:Uint8Array):string{
  return lines.join("\n").slice(0,30000);
 }
 function attr(xml:string,name:string):string|undefined{
- const found=xml.match(new RegExp("(?:^|\\\\s)"+name+"=[\\\"']([^\\\"']+)[\\\"']"));return found?.[1];
+ return xml.match(new RegExp(name+'="([^"]+)"'))?.[1];
 }
 export function extractXlsx(bytes:Uint8Array):string{
  const files=safelyReadArchive(bytes,["xl/sharedStrings.xml","xl/worksheets/sheet1.xml"]);
