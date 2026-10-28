@@ -13,7 +13,8 @@ export type JobStep={kind:StudyKind;status:StepStatus;startedAt?:string;finished
 }};
 export type JobEvent={at:string;stage:string;status:JobStatus;detail:string};
 export type StudySnapshot={
- partSha256:string;partFileName:string;projectName:string;process:"PBF_LB_METAL";
+ partSha256:string;partFileName:string;projectName:string;process:"PBF_LB_METAL"|"DED_LB_WIRE"|"DED_LB_POWDER";
+ analysisMode?:"service-independent";
  machineSettings:Record<string,string|number|boolean>;
  serviceCase?:{id:string;name:string;input:Record<string,string|number|boolean|null>};
  thermalInput?:{conductivityWmK:number;baseTemperatureC:number;topFluxWm2:number;resolution:number};
@@ -28,20 +29,27 @@ const isHash=(value:string)=>/^[0-9a-f]{64}$/i.test(value);
 const stamp=(date?:string)=>date??new Date().toISOString();
 export function createEngineeringJob(id:string,snapshot:StudySnapshot,kinds:StudyKind[],at?:string):EngineeringJob{
  if(!id.trim()||!isHash(snapshot.partSha256))throw Error("A verified STL fingerprint is required before a study can be scheduled.");
- if(!snapshot.partFileName.toLowerCase().endsWith(".stl")||snapshot.process!=="PBF_LB_METAL")
-  throw Error("Only confirmed LPBF STL studies are currently supported.");
+ if(!snapshot.partFileName.toLowerCase().endsWith(".stl")||
+  !["PBF_LB_METAL","DED_LB_WIRE","DED_LB_POWDER"].includes(snapshot.process))
+  throw Error("Only confirmed metal AM STL studies are currently supported.");
+ if(snapshot.process!=="PBF_LB_METAL"&&snapshot.analysisMode!=="service-independent")
+  throw Error("DED uploaded-part deposition and orientation planning are unsupported.");
  if(snapshot.reviewedEvidence&&(
   !Array.isArray(snapshot.reviewedEvidence)||snapshot.reviewedEvidence.length>30||
   snapshot.reviewedEvidence.some(e=>!snapshot.sourceIds.includes(e.sourceId)||!e.reviewedAt||!e.reviewerNote)
  ))throw Error("Invalid or unreviewed source references in the study snapshot.");
- if(kinds.length===0||kinds[0]!=="geometry"||new Set(kinds).size!==kinds.length||
+ if(kinds.length===0||(
+    snapshot.analysisMode==="service-independent"?
+      kinds.join(",")!=="service-structural,steady-conduction":
+      kinds[0]!=="geometry"
+   )||new Set(kinds).size!==kinds.length||
   kinds.some(kind=>!["geometry","service-structural","steady-conduction"].includes(kind)))
   throw Error("Invalid solver order.");
  const when=stamp(at);
  return {schema:1,id,createdAt:when,updatedAt:when,status:"queued",
   snapshot:JSON.parse(JSON.stringify(snapshot)) as StudySnapshot,
   steps:kinds.map(kind=>({kind,status:"queued"})),
-  events:[{at:when,stage:"Approval",status:"queued",detail:"Engineer approved the frozen study inputs."}]};
+  events:[{at:when,stage:"Approval",status:"queued",detail:"Engineer reviewed the frozen research-model inputs and limitations."}]};
 }
 export function applyJobEvent(job:EngineeringJob,event:{
  type:"start"|"complete"|"fail"|"cancel"|"interrupt"|"stale";kind?:StudyKind;detail:string;
