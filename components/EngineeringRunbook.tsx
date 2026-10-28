@@ -73,10 +73,10 @@ export default function EngineeringRunbook({verified,loadsReviewed,requirementsD
      new Worker(new URL("../workers/thermal.worker.ts",import.meta.url));
    worker.current=w;
    timeout.current=setTimeout(()=>{if(seq===generation.current)fail("Numerical worker exceeded 120 seconds.");},120000);
-   w.onmessage=(event:MessageEvent<{ok:boolean;field?:StructuralField|ThermalField;error?:string}>)=>{
+   w.onmessage=(message:MessageEvent<{ok:boolean;field?:StructuralField|ThermalField;error?:string}>)=>{
     if(seq!==generation.current)return;
     release();
-    const output=event.data;
+    const output=message.data;
     if(!output.ok||!output.field){fail(output.error||"Solver returned no valid field.");return;}
     if(kind==="service-structural"){
      a.attachStructural(runId,candidateId,output.field as StructuralField,service.id,serviceInputKey(service.input));
