@@ -14,6 +14,7 @@ import {
  addProjectSource,blankKnowledge,createMessage,findEvidence,localCopilotReply,nextEngineeringQuestion,
  restoreKnowledge,updateSourceNotes,type ProjectKnowledge,type CopilotMessage,type ProjectSource
 } from "@/lib/copilot-context";
+import {applyIntakeAnswer,getIntakeStep,intakeProgress} from "@/lib/engineering-intake";
 import "./copilot.css";
 const Viewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 const Structural=dynamic(()=>import("@/components/PartStructuralPanel"),{ssr:false});
@@ -25,6 +26,8 @@ export default function EngineeringCopilot(){
  const [partKey,setPartKey]=useState<string|null>(null);
  const [knowledge,setKnowledge]=useState<ProjectKnowledge|null>(null);
  const [draft,setDraft]=useState("");
+ const [intakeDraft,setIntakeDraft]=useState("");
+ const factsRef=useRef<HTMLDetailsElement|null>(null);
  const [busy,setBusy]=useState(false);
  const [docBusy,setDocBusy]=useState(false);
  const [error,setError]=useState("");
@@ -116,6 +119,26 @@ export default function EngineeringCopilot(){
   process:a.journey.process
  };
  const append=(items:CopilotMessage[])=>setKnowledge(s=>s?{...s,messages:[...s.messages,...items].slice(-45)}:s);
+ const intakeStep=knowledge?getIntakeStep(knowledge,{partName:opts.partName,confirmed:verified,
+  loadsReviewed:opts.loadsReviewed,process:opts.process}):null;
+ const progressSteps=knowledge?intakeProgress(knowledge,{partName:opts.partName,confirmed:verified,
+  loadsReviewed:opts.loadsReviewed,process:opts.process}):[];
+ const saveGuidedAnswer=()=>{
+  if(!knowledge||!intakeStep?.field||!intakeDraft.trim())return;
+  try{
+   const next=applyIntakeAnswer(knowledge,intakeStep,intakeDraft);
+   const answer=intakeDraft.trim();
+   const following=getIntakeStep(next,{partName:opts.partName,confirmed:verified,
+     loadsReviewed:opts.loadsReviewed,process:opts.process});
+   setKnowledge({...next,messages:[...next.messages,
+    createMessage("user",answer,"user"),
+    createMessage("assistant","Recorded as engineer-supplied context, not a verified design requirement. Next: "+following.question,"local_guide")].slice(-45)});
+   setIntakeDraft("");
+  }catch(e){setError(e instanceof Error?e.message:"Answer could not be saved.");}
+ };
+ const openFacts=()=>{
+  if(factsRef.current){factsRef.current.open=true;factsRef.current.scrollIntoView({behavior:"smooth",block:"start"});}
+ };
  const askLocal=()=>{
   if(!knowledge)return;
   const question=draft.trim();
@@ -202,8 +225,14 @@ export default function EngineeringCopilot(){
  const verifiedThermal=Boolean(a.result?.thermal&&isLPBF);
  if(!a.ready||!knowledge)return <div className="copilotLoading" role="status">Restoring the part and engineering context…</div>;
  return <div className="copilotGrid">
+  <div className="copilotJourney" aria-label="Engineering workflow progress">
+   <div><span className="copilotJourneyEyebrow">ACTIVE PROJECT</span><strong>{a.projectName}</strong><small>{verified?"STL dimensions confirmed":"Geometry review required"} · {sourceList.length} reference{sourceList.length===1?"":"s"}</small></div>
+   <ol>{progressSteps.map(step=><li key={step.key} className={step.done?"done":"pending"}>
+    <span aria-hidden="true">{step.done?"✓":"○"}</span><span>{step.label}</span>
+   </li>)}</ol>
+  </div>
   <section className="copilotLeft">
-    <header className="copilotHeading"><h2>Part and assembly context</h2><p>One source of truth for the selected geometry, project references, and evidence.</p></header>
+    <header className="copilotHeading"><h2>Part workspace</h2><p>The uploaded geometry stays linked to its requirements and study results.</p></header>
     <div className="copilotFrame">
       {url&&a.file?<ViewerErrorBoundary><Viewer url={url} unitScale={a.settings.unitScale}
         rotation={orientationReady?currentCandidate?.rotation:undefined} overhangDeg={a.settings.overhangDeg}
@@ -232,9 +261,10 @@ export default function EngineeringCopilot(){
       <option value="DED_LB_WIRE">Laser wire DED (arbitrary-part pathing unsupported)</option>
       <option value="DED_LB_POWDER">Laser powder DED (arbitrary-part pathing unsupported)</option>
       </select></label><span>Geometry: <b>{stat(verified)}</b></span></div>
-    <div className="copilotDocs">
-      <h3>Assembly documentation</h3>
-      <p>Attach drawings, requirements and assembly documentation. Plain-text formats are read locally. PDF/Office content is not automatically interpreted as verified engineering data.</p>
+    <details className="copilotDocs copilotFold">
+      <summary>Assembly documents <span>{sourceList.length} attached · open to manage</span></summary>
+      <div className="copilotFoldBody"><h3>Assembly documentation</h3>
+      <p>Attach drawings, requirements and assembly documentation. Plain-text formats are read locally. Text, DOCX, and XLSX can be extracted locally. PDFs and scanned drawings require manually reviewed excerpts; extracted text is not verified engineering evidence.</p>
       <label>Reference documents
         <input aria-label="Add reference documents" type="file" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.md,.csv,.json" disabled={docBusy} onChange={e=>{void uploadDocuments(e.target.files);e.currentTarget.value="";}}/>
       </label>
@@ -246,9 +276,10 @@ export default function EngineeringCopilot(){
         <button className="copilotSmall" type="button" onClick={()=>removeSource(s.id)}>Remove reference</button>
       </details>)}
       {!sourceList.length&&<p className="copilotMuted">No assembly references attached yet.</p>}
-    </div>
-    <div className="copilotFacts">
-      <h3>Reviewed engineering facts</h3>
+      </div></details>
+    <details ref={factsRef} className="copilotFacts copilotFold">
+      <summary>Engineering facts and boundary conditions <span>{knowledge.componentName?"In progress":"Needs context"} · open to edit</span></summary>
+      <div className="copilotFoldBody"><h3>Reviewed engineering facts</h3>
       <label>Component identity / role<input aria-label="Component role" placeholder="e.g. Frame support bracket, not inferred from STL" value={knowledge.componentName} onChange={e=>update("componentName",e.target.value)}/></label>
       <label>Larger assembly / interfaces<textarea aria-label="Assembly context" placeholder="Where the part sits; what connects to it; relevant part IDs" rows={3} value={knowledge.assemblyContext} onChange={e=>update("assemblyContext",e.target.value)}/></label>
       <label>Mounting / force locations<textarea aria-label="Attachment context" placeholder="Documented fixture and load locations; state uncertainties" rows={2} value={knowledge.attachmentNotes} onChange={e=>update("attachmentNotes",e.target.value)}/></label>
@@ -269,13 +300,24 @@ export default function EngineeringCopilot(){
       </details>}
       <label className="copilotCheck"><input type="checkbox" checked={acknowledgedLoads} onChange={e=>setAcknowledgedLoads(e.target.checked)}/> I reviewed the actual load cases and material assumptions; default forces are not confirmed design requirements.</label>
       <button type="button" className="copilotSmall" onClick={saveContext}>Export engineering context and study review (JSON)</button>
-    </div>
+      </div></details>
   </section>
   <section className="copilotRight">
-    <header className="copilotHeading"><h2>Engineering copilot</h2><p>Ask what matters about your part, then run supported calculations with traceable evidence.</p></header>
-    <div className="copilotPrompt"><strong>Current next question</strong><p>{nextEngineeringQuestion(knowledge,opts)}</p></div>
+    <header className="copilotHeading"><h2>Engineering guide <span className="copilotMode">{aiEnabled?"Local + optional AI":"Local guided mode"}</span></h2><p>Describe the part, confirm engineering assumptions, then execute supported numerical tools.</p></header>
+    <div className="copilotPrompt">
+     <div className="copilotQuestionMeta">NEXT ENGINEERING DECISION <span>{intakeStep?.title}</span></div>
+     <p>{intakeStep?.question}</p>
+     <small>{intakeStep?.hint}</small>
+     {intakeStep?.field?<div className="copilotGuidedInput">
+       <textarea rows={3} aria-label="Answer current engineering question" value={intakeDraft}
+        onChange={e=>setIntakeDraft(e.target.value)} placeholder="Describe the part using known engineering facts. Include document IDs where possible."/>
+       <button type="button" onClick={saveGuidedAnswer} disabled={!intakeDraft.trim()}>Save answer and continue</button>
+      </div>:intakeStep?.stage==="review"?<button type="button" className="copilotNextAction" onClick={openFacts}>Review load and material inputs</button>:
+       intakeStep?.stage==="unsupported"?<div className="copilotUnsupported">DED planning for this STL is not implemented. Change the process to LPBF for supported screening, or use <Link href="/orientation?example=ded">the synthetic DED example</Link>.</div>:
+       intakeStep?.stage==="ready"?<div className="copilotNextHint">Review the guided simulation plan below and run only the applicable analyses.</div>:null}
+    </div>
     <div className="copilotTimeline" ref={timeline} aria-label="Engineering conversation" role="log">
-      {!knowledge.messages.length&&<div className="copilotBubble assistant"><b>Local engineering guide</b><p>Upload the target STL and relevant assembly context. I'll help identify missing information and match your case to the supported solver. No simulation has been run yet.</p></div>}
+      {!knowledge.messages.length&&<div className="copilotBubble assistant"><b>Guided engineering intake</b><p>Start with the current question above. Your answers are recorded as engineer-provided context. The assistant does not assume loads, material allowables, or that a simulation has run.</p></div>}
       {knowledge.messages.map(m=><div key={m.id} className={"copilotBubble "+m.role}>
        <b>{m.role==="user"?"Engineer":m.origin==="model"?"AI engineering assistant":"Local engineering guide"}</b>
        <p>{m.text}</p>
@@ -297,7 +339,8 @@ export default function EngineeringCopilot(){
     {(error||notice)&&<div className="copilotWarning" role="status">{error||notice}</div>}
     <div className="copilotProgress">
      <EngineeringRunbook verified={verified} partSha256={partKey??undefined} sourceIds={sourceList.map(x=>x.id)} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
-     <h3>Individual analysis controls</h3><p>Runs use the existing numerical engines, not model-generated results. You can see which computations finished.</p>
+     <details className="copilotAdvanced"><summary>Advanced: individual simulation controls and result fields</summary>
+      <p>Use these only if you need to run a solver separately. The Guided simulation plan above is the primary workflow.</p>
      <div className="copilotStages">
       <div><span>{verified?"✓":"○"}</span><b>Geometry inspection</b><small>{verified?"Units confirmed":"Requires verified units"}</small></div>
       <div><span>{a.busy?"◌":orientationReady?"✓":"○"}</span><b>LPBF orientation search</b><small>{a.busy?Math.round(a.progress*100)+"%":orientationReady?a.result?.candidates.length+" candidates":"Not run"}</small></div>
@@ -324,10 +367,12 @@ export default function EngineeringCopilot(){
        {thermalOpen&&<div className="copilotSolver"><Thermal/></div>}
        <Link href="/orientation?step=decision">Compare candidates in engineering workspace</Link>
       </div>}
+     </details>
+     <details className="copilotAdvanced"><summary>Document evidence preview</summary>
      <div className="copilotEvidence"><strong>Context retrieval preview</strong>
       {references.length?references.map((h,i)=><p key={i}><b>[{h.sourceId} {h.line}] {h.fileName}</b> — {h.excerpt.slice(0,260)}{h.origin==="engineer_excerpt"?" (engineer-entered)":""}</p>):
        <p>No extractable reference text matches the current engineering context yet. Enter document excerpts with identifiers before citing them as evidence.</p>}
-     </div>
+     </div></details>
     </div>
   </section>
  </div>;
