@@ -38,7 +38,8 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
 test("AI sharing requires explicit approval and PDFs are not misrepresented as locally read",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
- await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.4 mock")});
+ await page.locator(".copilotDocs > summary").click();
+await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.4 mock")});
  await expect(page.getByText("Content not extracted")).toBeVisible();
  await page.getByText("D1 · assembly.pdf").click();
  await expect(page.getByText(/PDF\/legacy Office attachment recorded/)).toBeVisible();
