@@ -29,6 +29,7 @@ export default function EngineeringCopilot(){
  const [knowledge,setKnowledge]=useState<ProjectKnowledge|null>(null);
  const [draft,setDraft]=useState("");
  const [intakeDraft,setIntakeDraft]=useState("");
+ const [activeTab,setActiveTab]=useState<"part"|"documents"|"requirements"|"run"|"results">("part");
  const factsRef=useRef<HTMLDetailsElement|null>(null);
  const [busy,setBusy]=useState(false);
  const [docBusy,setDocBusy]=useState(false);
@@ -147,7 +148,8 @@ export default function EngineeringCopilot(){
   }catch(e){setError(e instanceof Error?e.message:"Answer could not be saved.");}
  };
  const openFacts=()=>{
-  if(factsRef.current){factsRef.current.open=true;factsRef.current.scrollIntoView({behavior:"smooth",block:"start"});}
+  setActiveTab("requirements");
+  if(factsRef.current)factsRef.current.open=true;
  };
  const askLocal=()=>{
   if(!knowledge)return;
@@ -233,15 +235,14 @@ export default function EngineeringCopilot(){
  const references=useMemo(()=>findEvidence(sourceList,knowledge?.reviewedRequirements||knowledge?.componentName||"",4),[sourceList,knowledge?.reviewedRequirements,knowledge?.componentName]);
  const verifiedStructural=Boolean(a.result?.structural&&isLPBF);
  const verifiedThermal=Boolean(a.result?.thermal&&isLPBF);
- if(!a.ready||!knowledge)return <div className="copilotLoading" role="status">Restoring the part and engineering context…</div>;
- return <div className="copilotGrid">
-  <div className="copilotJourney" aria-label="Engineering workflow progress">
-   <div><span className="copilotJourneyEyebrow">ACTIVE PROJECT</span><strong>{a.projectName}</strong><small>{verified?"STL dimensions confirmed":"Geometry review required"} · {sourceList.length} reference{sourceList.length===1?"":"s"}</small></div>
-   <ol>{progressSteps.map(step=><li key={step.key} className={step.done?"done":"pending"}>
-    <span aria-hidden="true">{step.done?"✓":"○"}</span><span>{step.label}</span>
-   </li>)}</ol>
-  </div>
-  <section className="copilotLeft">
+ if(!a.ready||!knowledge)return <div className="copilotLoading" roreturn <div className="copilotGrid copilotFocused">
+<div className="copilotJourney" aria-label="Engineering workflow progress"><div><span className="copilotJourneyEyebrow">ACTIVE ENGINEERING STUDY</span><strong>{a.projectName}</strong><small>{verified?"Geometry reviewed":"Geometry review required"} · {sourceList.length} references · {validEvidence.length} reviewed passages</small></div>
+<nav className="copilotJourneyNav" aria-label="Engineering workflow">{([
+ ["part","1","Part"],["documents","2","Documents"],["requirements","3","Requirements"],["run","4","Simulate"],["results","5","Results"]
+] as const).map(([key,number,label])=><button type="button" key={key} aria-label={"Open "+label+" stage"} aria-current={activeTab===key?"step":undefined}
+ className={"copilotStageTab "+(activeTab===key?"selected":"")} onClick={()=>setActiveTab(key)}>
+ <span>{number}</span><strong>{label}</strong></button>)}</nav></div>
+<section className="copilotLeft" aria-label="Persistent 3D part viewer">
     <header className="copilotHeading"><h2>Part workspace</h2><p>The uploaded geometry stays linked to its requirements and study results.</p></header>
     <div className="copilotFrame">
       {url&&a.file?<ViewerErrorBoundary><Viewer url={url} unitScale={a.settings.unitScale}
@@ -254,7 +255,7 @@ export default function EngineeringCopilot(){
         <div className="copilotEmpty"><strong>{a.journey.mode==="ded-example"?"DED teaching wall selected":"Upload your part STL"}</strong><span>{a.journey.mode==="ded-example"?"This is a synthetic example, not a real part.":"The AI uses your description and engineering documents to understand its role."}</span></div>}
     </div>
     {a.file&&<div className="copilotSummary"><strong>{a.file.name}</strong><span>{inspect.data?"Scaled bounds: "+Object.values(inspect.data.dimensions).map(x=>x.toFixed(2)).join(" × ")+" mm":"Inspecting dimensions…"}</span></div>}
-    <label className="copilotUpload">Upload or replace target STL
+    <div className="copilotViewerControls"><label className="copilotUpload">Upload or replace target STL
      <input type="file" accept=".stl" aria-label="Upload target STL" onChange={e=>{upload(e.target.files?.[0]??null);e.currentTarget.value="";}}/>
     </label>
     {a.file&&!verified&&<div className="copilotConfirm">
@@ -271,7 +272,17 @@ export default function EngineeringCopilot(){
       <option value="DED_LB_WIRE">Laser wire DED (arbitrary-part pathing unsupported)</option>
       <option value="DED_LB_POWDER">Laser powder DED (arbitrary-part pathing unsupported)</option>
       </select></label><span>Geometry: <b>{stat(verified)}</b></span></div>
-    <details className="copilotDocs copilotFold">
+</div></section>
+<div className="copilotMainPanel" role="region" aria-label="Current engineering stage">
+<section className="copilotStage" aria-label="part workspace" hidden={activeTab!=="part"}>
+<div className="copilotStageTitle"><small>01 · GEOMETRY</small><h2>Inspect and confirm the part</h2><p>Use the 3D viewer to upload an STL. Confirm its actual units and select the manufacturing process before running any calculations.</p></div>
+<div className="copilotStageStatus"><strong>{a.file?a.file.name:"No STL uploaded yet"}</strong><span>{verified?"Units and dimensions confirmed":"Geometry confirmation required"}</span></div>
+{a.journey.process!=="PBF_LB_METAL"&&<p className="copilotUnsupported">DED analysis of an arbitrary uploaded STL is not implemented. You may document it, but the current numerical orientation worker supports LPBF only.</p>}
+<button type="button" className="copilotNextAction" disabled={!verified} onClick={()=>setActiveTab("documents")}>Continue to assembly documents</button>
+</section>
+<section className="copilotStage" aria-label="documents workspace" hidden={activeTab!=="documents"}>
+<div className="copilotStageTitle"><small>02 · SOURCE FILES</small><h2>Understand the larger assembly</h2><p>Upload public, approved engineering references. Review passages and attach provenance to the part without treating unverified text as solver inputs.</p></div>
+<details className="copilotDocs copilotFold">
       <summary>Assembly documents <span>{sourceList.length} attached · open to manage</span></summary>
       <div className="copilotFoldBody"><h3>Assembly documentation</h3>
       <p>Attach drawings, requirements and assembly documentation. Plain-text formats are read locally. Text, DOCX, and XLSX can be extracted locally. PDFs and scanned drawings require manually reviewed excerpts; extracted text is not verified engineering evidence.</p>
@@ -287,7 +298,53 @@ export default function EngineeringCopilot(){
       </details>)}
       {!sourceList.length&&<p className="copilotMuted">No assembly references attached yet.</p>}
       </div></details>
-    <details ref={factsRef} className="copilotFacts copilotFold">
+<details className="copilotFold copilotEvidenceFold">
+     <summary>Review source-backed engineering evidence <span>{validEvidence.length} current references · open to inspect</span></summary>
+     <div className="copilotFoldBody">
+      <EngineeringEvidenceReview sources={sourceList} reviewed={knowledge.reviewedEvidence}
+       onAccept={addReviewedEvidence} onRemove={removeReviewedEvidence}/>
+     </div>
+    </details>
+<div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("requirements")}>Continue to requirements</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("part")}>Previous step</button></div>
+</section>
+<section className="copilotStage" aria-label="requirements workspace" hidden={activeTab!=="requirements"}>
+<div className="copilotStageTitle"><small>03 · ENGINEERING INTAKE</small><h2>Define loads, interfaces and requirements</h2><p>Answer one focused question at a time. The numerical load and boundary-condition fields are separately reviewed before a service-load study.</p></div>
+<div className="copilotPrompt">
+     <div className="copilotQuestionMeta">NEXT ENGINEERING DECISION <span>{intakeStep?.title}</span></div>
+     <p>{intakeStep?.question}</p>
+     <small>{intakeStep?.hint}</small>
+     {intakeStep?.field?<div className="copilotGuidedInput">
+       <textarea rows={3} aria-label="Answer current engineering question" value={intakeDraft}
+        onChange={e=>setIntakeDraft(e.target.value)} placeholder="Describe the part using known engineering facts. Include document IDs where possible."/>
+       <button type="button" onClick={saveGuidedAnswer} disabled={!intakeDraft.trim()}>Save answer and continue</button>
+      </div>:intakeStep?.stage==="review"?<button type="button" className="copilotNextAction" onClick={openFacts}>Review load and material inputs</button>:
+       intakeStep?.stage==="unsupported"?<div className="copilotUnsupported">DED planning for this STL is not implemented. Change the process to LPBF for supported screening, or use <Link href="/orientation?example=ded">the synthetic DED example</Link>.</div>:
+       intakeStep?.stage==="ready"?<div className="copilotNextHint">Review the guided simulation plan below and run only the applicable analyses.</div>:null}
+    </div>
+<details className="copilotConversation"><summary>Conversation and reference lookup <span>{knowledge.messages.length} messages</span></summary><div className="copilotConversationBody">
+<div className="copilotTimeline" ref={timeline} aria-label="Engineering conversation" role="log">
+      {!knowledge.messages.length&&<div className="copilotBubble assistant"><b>Guided engineering intake</b><p>Start with the current question above. Your answers are recorded as engineer-provided context. The assistant does not assume loads, material allowables, or that a simulation has run.</p></div>}
+      {knowledge.messages.map(m=><div key={m.id} className={"copilotBubble "+m.role}>
+       <b>{m.role==="user"?"Engineer":m.origin==="model"?"AI engineering assistant":"Local engineering guide"}</b>
+       <p>{m.text}</p>
+       {m.sourceIds.length>0&&<small>References: {m.sourceIds.join(", ")} · verify the actual source before using for FEA</small>}
+      </div>)}
+    </div>
+    <label className="copilotAsk">Ask about the part or its requirements
+      <textarea aria-label="Message engineering copilot" placeholder="What information should I confirm about this part's role, attachments, loads and material before analysis?" rows={3} value={draft} onChange={e=>setDraft(e.target.value)}/>
+    </label>
+    <div className="copilotChatActions">
+      <button type="button" onClick={askLocal} disabled={busy}>Use local guide</button>
+      <button type="button" onClick={()=>void askAI()} disabled={busy||!aiEnabled||!privacyConsent||!draft.trim()}>{busy?"Consulting model…":"Ask AI about approved context"}</button>
+    </div>
+    <div className="copilotPrivacy">
+     <label className="copilotCheck"><input aria-label="Authorize external AI" type="checkbox" checked={privacyConsent} onChange={e=>setPrivacyConsent(e.target.checked)}/> I confirm this information is approved for sharing with an external AI model. Do not use controlled Boeing/project data without written authorization.</label>
+     {sourceList.some(s=>s.kind==="pdf")&&<label className="copilotCheck"><input type="checkbox" checked={includePdfs} onChange={e=>setIncludePdfs(e.target.checked)}/> Also transmit reattached PDFs (up to two, 2 MB each) to AI for this question</label>}
+     <p>{aiEnabled?"External AI is available only when explicitly authorized. The STL itself is never transmitted.":"External AI is not enabled or configured on this deployment. The local engineering guide and simulation controls still work."}</p>
+    </div>
+    {(error||notice)&&<div className="copilotWarning" role="status">{error||notice}</div>}
+</div></details>
+<details ref={factsRef} className="copilotFacts copilotFold">
       <summary>Engineering facts and boundary conditions <span>{knowledge.componentName?"In progress":"Needs context"} · open to edit</span></summary>
       <div className="copilotFoldBody"><h3>Reviewed engineering facts</h3>
       <label>Component identity / role<input aria-label="Component role" placeholder="e.g. Frame support bracket, not inferred from STL" value={knowledge.componentName} onChange={e=>update("componentName",e.target.value)}/></label>
@@ -311,50 +368,11 @@ export default function EngineeringCopilot(){
       <label className="copilotCheck"><input type="checkbox" checked={acknowledgedLoads} onChange={e=>setAcknowledgedLoads(e.target.checked)}/> I reviewed the actual load cases and material assumptions; default forces are not confirmed design requirements.</label>
       <button type="button" className="copilotSmall" onClick={saveContext}>Export engineering context and study review (JSON)</button>
       </div></details>
-  </section>
-  <section className="copilotRight">
-    <header className="copilotHeading"><h2>Engineering guide <span className="copilotMode">{aiEnabled?"Local + optional AI":"Local guided mode"}</span></h2><p>Describe the part, confirm engineering assumptions, then execute supported numerical tools.</p></header>
-    <div className="copilotPrompt">
-     <div className="copilotQuestionMeta">NEXT ENGINEERING DECISION <span>{intakeStep?.title}</span></div>
-     <p>{intakeStep?.question}</p>
-     <small>{intakeStep?.hint}</small>
-     {intakeStep?.field?<div className="copilotGuidedInput">
-       <textarea rows={3} aria-label="Answer current engineering question" value={intakeDraft}
-        onChange={e=>setIntakeDraft(e.target.value)} placeholder="Describe the part using known engineering facts. Include document IDs where possible."/>
-       <button type="button" onClick={saveGuidedAnswer} disabled={!intakeDraft.trim()}>Save answer and continue</button>
-      </div>:intakeStep?.stage==="review"?<button type="button" className="copilotNextAction" onClick={openFacts}>Review load and material inputs</button>:
-       intakeStep?.stage==="unsupported"?<div className="copilotUnsupported">DED planning for this STL is not implemented. Change the process to LPBF for supported screening, or use <Link href="/orientation?example=ded">the synthetic DED example</Link>.</div>:
-       intakeStep?.stage==="ready"?<div className="copilotNextHint">Review the guided simulation plan below and run only the applicable analyses.</div>:null}
-    </div>
-    <div className="copilotTimeline" ref={timeline} aria-label="Engineering conversation" role="log">
-      {!knowledge.messages.length&&<div className="copilotBubble assistant"><b>Guided engineering intake</b><p>Start with the current question above. Your answers are recorded as engineer-provided context. The assistant does not assume loads, material allowables, or that a simulation has run.</p></div>}
-      {knowledge.messages.map(m=><div key={m.id} className={"copilotBubble "+m.role}>
-       <b>{m.role==="user"?"Engineer":m.origin==="model"?"AI engineering assistant":"Local engineering guide"}</b>
-       <p>{m.text}</p>
-       {m.sourceIds.length>0&&<small>References: {m.sourceIds.join(", ")} · verify the actual source before using for FEA</small>}
-      </div>)}
-    </div>
-    <label className="copilotAsk">Ask about the part or its requirements
-      <textarea aria-label="Message engineering copilot" placeholder="What information should I confirm about this part's role, attachments, loads and material before analysis?" rows={3} value={draft} onChange={e=>setDraft(e.target.value)}/>
-    </label>
-    <div className="copilotChatActions">
-      <button type="button" onClick={askLocal} disabled={busy}>Use local guide</button>
-      <button type="button" onClick={()=>void askAI()} disabled={busy||!aiEnabled||!privacyConsent||!draft.trim()}>{busy?"Consulting model…":"Ask AI about approved context"}</button>
-    </div>
-    <div className="copilotPrivacy">
-     <label className="copilotCheck"><input aria-label="Authorize external AI" type="checkbox" checked={privacyConsent} onChange={e=>setPrivacyConsent(e.target.checked)}/> I confirm this information is approved for sharing with an external AI model. Do not use controlled Boeing/project data without written authorization.</label>
-     {sourceList.some(s=>s.kind==="pdf")&&<label className="copilotCheck"><input type="checkbox" checked={includePdfs} onChange={e=>setIncludePdfs(e.target.checked)}/> Also transmit reattached PDFs (up to two, 2 MB each) to AI for this question</label>}
-     <p>{aiEnabled?"External AI is available only when explicitly authorized. The STL itself is never transmitted.":"External AI is not enabled or configured on this deployment. The local engineering guide and simulation controls still work."}</p>
-    </div>
-    {(error||notice)&&<div className="copilotWarning" role="status">{error||notice}</div>}
-    <details className="copilotFold copilotEvidenceFold">
-     <summary>Review source-backed engineering evidence <span>{validEvidence.length} current references · open to inspect</span></summary>
-     <div className="copilotFoldBody">
-      <EngineeringEvidenceReview sources={sourceList} reviewed={knowledge.reviewedEvidence}
-       onAccept={addReviewedEvidence} onRemove={removeReviewedEvidence}/>
-     </div>
-    </details>
-    <div className="copilotProgress">
+<div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("run")}>Review simulation plan</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("documents")}>Previous step</button></div>
+</section>
+<section className="copilotStage" aria-label="run workspace" hidden={activeTab!=="run"}>
+<div className="copilotStageTitle"><small>04 · SOLVE</small><h2>Run only supported analyses</h2><p>The software checks the geometry, process and reviewed inputs before executing the real workers. Model outputs remain research approximations.</p></div>
+<div className="copilotProgress">
      <EngineeringRunbook verified={verified} partSha256={partKey??undefined} sourceIds={[...new Set(validEvidence.map(x=>x.sourceId))]} reviewedEvidence={validEvidence} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
      <details className="copilotAdvanced"><summary>Advanced: individual simulation controls and result fields</summary>
       <p>Use these only if you need to run a solver separately. The Guided simulation plan above is the primary workflow.</p>
@@ -390,7 +408,18 @@ export default function EngineeringCopilot(){
       {references.length?references.map((h,i)=><p key={i}><b>[{h.sourceId} {h.line}] {h.fileName}</b> — {h.excerpt.slice(0,260)}{h.origin==="engineer_excerpt"?" (engineer-entered)":""}</p>):
        <p>No extractable reference text matches the current engineering context yet. Enter document excerpts with identifiers before citing them as evidence.</p>}
      </div></details>
-    </div>
-  </section>
- </div>;
+<div className="copilotStageActions"><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("results")}>View results</button><button type="button" className="copilotGhostAction" onClick={()=>setActiveTab("requirements")}>Previous step</button></div>
+</section>
+<section className="copilotStage" aria-label="results workspace" hidden={activeTab!=="results"}>
+<div className="copilotStageTitle"><small>05 · INSPECT</small><h2>Inspect actual results</h2><p>Compare geometric candidates and any completed numerical fields. No manufacturing qualification or distortion prediction is implied.</p></div>
+{a.result&&currentCandidate?<>
+<div className="copilotResultMetrics"><div><small>Orientation samples</small><strong>{a.result.candidates.length}</strong></div><div><small>Selected candidate</small><strong>{currentCandidate.id}</strong></div><div><small>Build height</small><strong>{currentCandidate.buildHeightMm.toFixed(1)} mm</strong></div><div><small>Geometric support proxy</small><strong>{currentCandidate.supportProxyMm3.toFixed(1)} mm³</strong></div></div>
+<label className="copilotResultSelect">Orientation to inspect<select aria-label="Results candidate" value={a.selected??""} onChange={e=>a.select(e.target.value)}>{a.result.candidates.map(c=><option key={c.id} value={c.id}>{c.id} · {c.buildHeightMm.toFixed(1)} mm · {c.feasible?"Geometrically eligible":"Outside nominal geometric constraints"}</option>)}</select></label>
+<label className="copilotResultSelect">3D result overlay<select aria-label="Results field" value={showFields} onChange={e=>setShowFields(e.target.value as typeof showFields)}><option value="geometry">Geometry</option><option value="stress" disabled={!verifiedStructural}>Service stress (if calculated)</option><option value="displacement" disabled={!verifiedStructural}>Displacement (if calculated)</option><option value="thermal" disabled={!verifiedThermal}>Steady temperature (if calculated)</option></select></label>
+<p className="copilotResultCaveat">Envelope: {currentCandidate.fitsEnvelope?"Nominal bounding box fits":"Nominal bounding box does not fit"}. Geometric support estimates are not sliced supports.</p>
+<div className="copilotStageActions"><Link href="/report" className="copilotNextAction">Open engineering report</Link><button type="button" className="copilotGhostAction" onClick={saveContext}>Export evidence package (JSON)</button></div>
+</>:<div className="copilotEmptyResult"><h3>No numerical result yet</h3><p>Complete the geometry pre-check and run the supported LPBF study. No result will be invented from your document text.</p><button type="button" className="copilotNextAction" onClick={()=>setActiveTab("run")}>Go to simulation plan</button></div>}
+</section>
+</div>
+</div>;
 }
