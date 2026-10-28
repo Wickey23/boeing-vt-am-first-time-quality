@@ -6,10 +6,11 @@ import {extractDocx,extractXlsx} from "../lib/document-extraction";
 import {buildEngineeringRunbook} from "../lib/engineering-runbook";
 import {DEFAULT_SERVICE_SETUP} from "../lib/service-load";
 const zipped=(parts:Record<string,string>)=>zipSync(Object.fromEntries(Object.entries(parts).map(([k,v])=>[k,strToU8(v)])));
+const asFile=(bytes:Uint8Array,name:string)=>{const buf=new ArrayBuffer(bytes.byteLength);new Uint8Array(buf).set(bytes);return new File([buf],name);};
 test("local DOCX extraction cites individual numbered paragraphs",async()=>{
  const bytes=zipped({"word/document.xml":'<w:document xmlns:w="word"><w:body><w:p><w:r><w:t>Fuselage frame</w:t></w:r><w:r><w:t> at station 42</w:t></w:r></w:p><w:p><w:r><w:t>Nominal 500 N is unverified</w:t></w:r></w:p></w:body></w:document>'});
  assert.match(extractDocx(bytes),/P1: Fuselage frame at station 42/);
- const sources=await addProjectSource([],new File([new Uint8Array(bytes)],"assembly.docx"));
+ const sources=await addProjectSource([],asFile(bytes,"assembly.docx"));
  assert.equal(sources[0].extraction,"local_document");
  assert.ok(findEvidence(sources,"station 42",2).some(x=>x.sourceId==="D1"));
 });
@@ -19,13 +20,13 @@ test("local spreadsheet parsing includes cell references and only first workshee
   "xl/worksheets/sheet1.xml":'<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>unverified</t></is></c></row></sheetData></worksheet>'
  });
  assert.match(extractXlsx(bytes),/Row 1: A1=Station 42 \| B1=500 N candidate load/);
- const sources=await addProjectSource([],new File([new Uint8Array(bytes)],"load-cases.xlsx"));
+ const sources=await addProjectSource([],asFile(bytes,"load-cases.xlsx"));
  assert.equal(sources[0].extraction,"local_document");
  assert.match(sources[0].extractedText,/unverified/);
 });
 test("corrupt Office references fail rather than pretend content was understood",async()=>{
  await assert.rejects(addProjectSource([],new File(["not a zip"],"invalid.docx")));
- await assert.rejects(addProjectSource([],new File([zipped({"some-file.txt":"hello"})],"not-a-document.docx")));
+ await assert.rejects(addProjectSource([],asFile(zipped({"some-file.txt":"hello"}),"not-a-document.docx")));
 });
 const state={
  filePresent:true,geometryConfirmed:true,process:"PBF_LB_METAL",runStructural:true,runThermal:false,
