@@ -3,6 +3,7 @@
  * are metadata until the engineer supplies an excerpt or authorizes external processing.
  */
 import {extractLocalDocument} from "./document-extraction";
+import {restoreReviewedEvidence,type ReviewedEvidence} from "./engineering-evidence";
 export type SourceKind="text"|"pdf"|"document";
 export type ProjectSource={
  id:string;name:string;kind:SourceKind;size:number;
@@ -17,12 +18,12 @@ export type CopilotMessage={
 export type ProjectKnowledge={
  schema:1;partKey:string;componentName:string;assemblyContext:string;
  attachmentNotes:string;reviewedRequirements:string;
- sources:ProjectSource[];messages:CopilotMessage[];
+ sources:ProjectSource[];messages:CopilotMessage[];reviewedEvidence:ReviewedEvidence[];
 };
 export const MAX_SOURCES=12, MAX_SOURCE_BYTES=3*1024*1024,MAX_SOURCE_CHARS=30000;
 const localExtensions=new Set(["txt","md","csv","json","log"]);
 export function blankKnowledge(partKey:string):ProjectKnowledge{
- return {schema:1,partKey,componentName:"",assemblyContext:"",attachmentNotes:"",reviewedRequirements:"",sources:[],messages:[]};
+ return {schema:1,partKey,componentName:"",assemblyContext:"",attachmentNotes:"",reviewedRequirements:"",sources:[],messages:[],reviewedEvidence:[]};
 }
 export function extension(name:string){return name.toLowerCase().split(".").pop()??"";}
 export function validateSource(file:{name:string;size:number}){
@@ -119,6 +120,7 @@ export function restoreKnowledge(value:unknown,partKey:string):ProjectKnowledge{
    ...s,extractedText:s.extractedText.slice(0,MAX_SOURCE_CHARS),
    engineerNotes:s.engineerNotes.slice(0,MAX_SOURCE_CHARS)
   })),
+  reviewedEvidence:restoreReviewedEvidence(v.reviewedEvidence),
   messages:v.messages.filter(m=>m&&typeof m.text==="string"&&(m.role==="assistant"||m.role==="user")).slice(-45).map(m=>({...m,text:m.text.slice(0,5000),sourceIds:Array.isArray(m.sourceIds)?m.sourceIds.filter(x=>typeof x==="string"):[]}))
  };
 }
