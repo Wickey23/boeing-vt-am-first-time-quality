@@ -194,3 +194,12 @@
 .copilotRunbook progress{width:100%;accent-color:#36b6e5}
 .copilotRunbook a{color:#c1edff;text-decoration:underline}
 @media(max-width:520px){.copilotRunbook{padding:12px}.runbookFields{grid-template-columns:1fr}.runbookActions{flex-wrap:wrap}.runbookActions .copilotPrimary{flex-basis:100%}}
+
+/* Traceable study history for the selected part. */
+.runbookHistory{margin-top:17px;border-top:1px solid #45677b;padding-top:15px}
+.runbookHistory h4{margin:0 0 6px;color:#f2f9ff;font-size:14px}
+.runbookHistory ol{padding-left:17px;display:flex;flex-direction:column;gap:9px}
+.runbookHistory li{color:#dcecf9;font-size:12px;line-height:1.5}
+.runbookHistory li b{color:#b7e5ff}
+.runbookHistory li small{display:block;color:#bdd6e4;margin-top:4px}
+.runbookHistory .copilotSmall{margin-top:8px}
