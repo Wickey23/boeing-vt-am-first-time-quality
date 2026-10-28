@@ -20,6 +20,19 @@ test("engineer can extract a DOCX locally and execute the approved geometry stud
  await expect(page.getByText("Study sequence complete.")).toBeVisible({timeout:45000});
  await expect(page.getByText("Geometry complete")).toBeVisible();
  await expect(page.getByText("No print qualification was established.")).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Study job history"})).toBeVisible();
+ await expect(page.locator(".runbookHistory").getByText("COMPLETED",{exact:true})).toBeVisible();
+ const recordDownload=page.waitForEvent("download");
+ await page.getByRole("button",{name:"Export current study job record"}).click();
+ const file=await recordDownload;
+ const content=JSON.parse(await (await import("node:fs/promises")).readFile((await file.path())!,"utf8"));
+ expect(content.status).toBe("completed");
+ expect(content.steps[0].kind).toBe("geometry");
+ expect(content.steps[0].status).toBe("completed");
+ expect(content.dataIncluded.rawStl).toBe(false);
+ expect(content.snapshot.partSha256).toMatch(/^[a-f0-9]{64}$/);
+ await page.reload();
+ await expect(page.locator(".runbookHistory").getByText("COMPLETED",{exact:true})).toBeVisible();
 });
 test("unreviewed thermal assumptions block coordinated worker execution",async({page})=>{
  await page.goto("/copilot");
