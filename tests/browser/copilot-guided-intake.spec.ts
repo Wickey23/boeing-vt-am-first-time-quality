@@ -21,10 +21,11 @@ test("visible engineering interview saves context step-by-step without AI upload
  await expect(page.getByRole("button",{name:"Review load and material inputs"})).toBeVisible();
  await page.getByRole("button",{name:"Review load and material inputs"}).click();
  await expect(page.getByLabel("Component role")).toHaveValue("Mounting lug");
- await expect(page.getByLabel("Assembly context")).toContainText("station 12");
- await expect(page.getByLabel("Reviewed requirements")).toContainText("Load magnitude pending");
+ await expect(page.getByLabel("Assembly context")).toHaveValue(/station 12/);
+ await expect(page.getByLabel("Reviewed requirements")).toHaveValue(/Load magnitude pending/);
  expect(calls).toEqual([]);
  await page.reload();
  await expect(page.getByRole("button",{name:"Review load and material inputs"})).toBeVisible();
- await expect(page.locator(".copilotJourney")).toContainText("Mounting lug");
+ await page.locator(".copilotFacts > summary").click();
+ await expect(page.getByLabel("Component role")).toHaveValue("Mounting lug");
 });
