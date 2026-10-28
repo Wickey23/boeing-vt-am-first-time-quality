@@ -384,3 +384,14 @@
  .copilotResultMetrics div{padding:10px}
  .copilotFocused .copilotFrame{height:265px;min-height:220px}
 }
+
+/* Stage-specific model controls: keep the CAD model persistent, not the long setup form. */
+.copilotFocused .copilotViewerControls[hidden]{display:none!important}
+.copilotViewerCompact{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid #355a72;background:#0d293c;border-radius:9px;padding:12px;margin-top:11px}
+.copilotViewerCompact span{color:#c6dfed;font-size:11px;line-height:1.6;overflow-wrap:anywhere}
+.copilotViewerCompact button{min-height:40px;padding:9px 12px;border:1px solid #4f85aa;border-radius:8px;background:#185071;color:#e6f7ff;font-size:12px;cursor:pointer}
+.copilotViewerCompact button:focus-visible{outline:3px solid #80d5ff;outline-offset:2px}
+.copilotFocused .copilotStage .copilotNextAction{margin-top:9px}
+.copilotFocused .copilotMainPanel{min-height:0}
+.copilotFocused .copilotStageTitle{margin-bottom:16px}
+@media(max-width:1160px){.copilotFocused .copilotViewerCompact{margin-top:7px}}
