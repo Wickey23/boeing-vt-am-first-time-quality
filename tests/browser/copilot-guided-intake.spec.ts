@@ -4,6 +4,7 @@ test("visible engineering interview saves context step-by-step without AI upload
  await page.goto("/copilot");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
+ await page.getByRole("button",{name:"Open Requirements stage"}).click();
  const field=page.getByLabel("Answer current engineering question");
  const save=page.getByRole("button",{name:"Save answer and continue"});
  await expect(page.locator(".copilotPrompt > p")).toHaveText("What is this part, and what is its purpose?");
@@ -25,6 +26,7 @@ test("visible engineering interview saves context step-by-step without AI upload
  await expect(page.getByLabel("Reviewed requirements")).toHaveValue(/Load magnitude pending/);
  expect(calls).toEqual([]);
  await page.reload();
+ await page.getByRole("button",{name:"Open Requirements stage"}).click();
  await expect(page.getByRole("button",{name:"Review load and material inputs"})).toBeVisible();
  await page.locator(".copilotFacts > summary").click();
  await expect(page.getByLabel("Component role")).toHaveValue("Mounting lug");
