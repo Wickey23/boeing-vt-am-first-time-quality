@@ -5,12 +5,14 @@ test("engineer can extract a DOCX locally and execute the approved geometry stud
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
  const doc=zipSync({"word/document.xml":strToU8('<w:document><w:body><w:p><w:r><w:t>Bulkhead connection at station 42</w:t></w:r></w:p></w:body></w:document>')});
+ await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotDocs > summary").click();
  await page.getByLabel("Add reference documents").setInputFiles({name:"assembly.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from(doc)});
  await expect(page.getByText("Office text extracted locally")).toBeVisible();
  await page.getByText("D1 · assembly.docx").click();
  await page.getByText("View extracted text").click();
  await expect(page.locator(".copilotDocItem pre")).toContainText("P1: Bulkhead connection at station 42");
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
  await expect(page.getByRole("heading",{name:"Guided simulation plan"})).toBeVisible();
  const run=page.getByRole("button",{name:"Run approved study sequence"});
  await expect(run).toBeEnabled();
@@ -33,12 +35,14 @@ test("engineer can extract a DOCX locally and execute the approved geometry stud
  expect(content.dataIncluded.rawStl).toBe(false);
  expect(content.snapshot.partSha256).toMatch(/^[a-f0-9]{64}$/);
  await page.reload();
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
  await expect(page.locator(".runbookHistory").getByText("COMPLETED",{exact:true})).toBeVisible();
 });
 test("unreviewed thermal assumptions block coordinated worker execution",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
  await page.getByLabel("Include steady solid conduction (not printing thermal history)").check();
  const run=page.getByRole("button",{name:"Run approved study sequence"});
  await expect(run).toBeDisabled();
