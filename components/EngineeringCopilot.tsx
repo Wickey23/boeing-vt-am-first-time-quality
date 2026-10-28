@@ -17,6 +17,7 @@ import {
  restoreKnowledge,updateSourceNotes,type ProjectKnowledge,type CopilotMessage,type ProjectSource
 } from "@/lib/copilot-context";
 import {applyIntakeAnswer,getIntakeStep,intakeProgress} from "@/lib/engineering-intake";
+import {exportEngineeringTeamBundle,importEngineeringTeamBundle} from "@/lib/engineering-team-bundle";
 import "./copilot.css";
 const Viewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 const Structural=dynamic(()=>import("@/components/PartStructuralPanel"),{ssr:false});
@@ -47,6 +48,8 @@ export default function EngineeringCopilot(){
  const [showFields,setShowFields]=useState<"geometry"|"stress"|"displacement"|"thermal">("geometry");
  const [serviceStudy,setServiceStudy]=useState<ServiceStudyResults|null>(null);
  const docs=useRef(new Map<string,File>());
+ const importedDocuments=useRef<{hash:string;files:Map<string,File>}|null>(null);
+ const [bundleBusy,setBundleBusy]=useState(false);
  const timeline=useRef<HTMLDivElement|null>(null);
  const inspect=usePartInspection(a.file,a.settings.unitScale);
 
@@ -86,6 +89,10 @@ export default function EngineeringCopilot(){
  },[a.ready,a.file,a.journey.mode]);
  useEffect(()=>{
   if(!partKey)return;
+  if(importedDocuments.current?.hash===partKey){
+   docs.current=new Map(importedDocuments.current.files);
+   importedDocuments.current=null;
+  }
   try{
    const saved=localStorage.getItem(storagePrefix+partKey);
    setKnowledge(saved?restoreKnowledge(JSON.parse(saved),partKey):blankKnowledge(partKey));
@@ -200,6 +207,38 @@ export default function EngineeringCopilot(){
   setError("");a.retry();setNotice("Started local orientation screening. The progress and results below come from the actual geometry worker.");
  };
  const editService=(next:typeof activeCase.input)=>{setAcknowledgedLoads(false);a.setServiceSetup(next);};
+ const exportTeamProject=async()=>{
+  if(!a.file||!knowledge||!verified){setError("Confirm an STL before exporting the project.");return;}
+  setBundleBusy(true);setError("");setNotice("");
+  try{
+   const bundle=await exportEngineeringTeamBundle({projectName:a.projectName,file:a.file,
+    settings:a.settings,result:a.result,selected:a.selected,servicePlan:a.servicePlan,journey:a.journey,
+    knowledge,attachments:docs.current});
+   const object=URL.createObjectURL(new Blob([bundle.bytes],{type:"application/zip"}));
+   const link=document.createElement("a");link.href=object;
+   link.download=(a.projectName||"orientai-project").replace(/[^a-z0-9_-]+/gi,"-").slice(0,50)+".orientai.zip";
+   document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(object),3000);
+   setNotice("Project bundle exported: STL, saved analysis, context, "+bundle.included+" original reference file(s); "+bundle.notesOnly+" excerpt-only reference(s). Share only with authorized team members.");
+  }catch(e){setError(e instanceof Error?e.message:"Project bundle could not be created.");}
+  finally{setBundleBusy(false);}
+ };
+ const importTeamProject=async(file:File|null)=>{
+  if(!file)return;
+  setBundleBusy(true);setError("");setNotice("");
+  try{
+   const loaded=await importEngineeringTeamBundle(file);
+   const partHash=loaded.manifest.partSha256.toLowerCase();
+   localStorage.setItem(storagePrefix+partHash,JSON.stringify(loaded.context));
+   importedDocuments.current={hash:partHash,files:loaded.attachments};
+   setPrivacyConsent(false);setAcknowledgedLoads(false);setShowFields("geometry");setServiceStudy(null);
+   a.restoreProject({journey:loaded.project.journey,servicePlan:loaded.project.servicePlan,
+    projectName:loaded.project.name,file:loaded.project.file,settings:loaded.project.settings,
+    result:loaded.project.result,selected:loaded.project.selected});
+   setActiveTab("part");
+   setNotice("Imported verified project bundle with "+loaded.context.sources.length+" reference records and "+loaded.attachments.size+" original document file(s). Review the engineering assumptions before running simulations.");
+  }catch(e){setError(e instanceof Error?e.message:"Could not import ORIENTAI bundle.");}
+  finally{setBundleBusy(false);}
+ };
  const saveContext=()=>{
   if(!knowledge)return;
   const selectedCandidate=a.result?.candidates.find(c=>c.id===a.selected);
@@ -291,6 +330,22 @@ export default function EngineeringCopilot(){
 <section className="copilotStage" aria-label="part workspace" hidden={activeTab!=="part"}>
 <div className="copilotStageTitle"><small>01 · GEOMETRY</small><h2>Inspect and confirm the part</h2><p>Use the 3D viewer to upload an STL. Confirm its actual units and select the manufacturing process before running any calculations.</p></div>
 <div className="copilotStageStatus"><strong>{a.file?a.file.name:"No STL uploaded yet"}</strong><span>{verified?"Units and dimensions confirmed":"Geometry confirmation required"}</span></div>
+<div className="copilotBundleCard">
+ <h3>Team project handoff</h3>
+ <p>Save or restore this entire engineering project locally, including the STL, reviewed requirements, studies, and the reference documents still attached in this browser. Archived PDF/DOCX/XLSX files are never sent to an AI service by this action.</p>
+ <div className="copilotBundleActions">
+  <button type="button" className="copilotSmall" disabled={bundleBusy||!verified||!a.file} onClick={()=>void exportTeamProject()}>
+   {bundleBusy?"Processing…":"Export complete project ZIP"}
+  </button>
+  <label>Import ORIENTAI project ZIP
+   <input aria-label="Import ORIENTAI project ZIP" type="file" accept=".zip" disabled={bundleBusy}
+    onChange={e=>{void importTeamProject(e.target.files?.[0]??null);e.currentTarget.value="";}}/>
+  </label>
+ </div>
+ <small>For authorized, non-controlled engineering examples only. Shared ZIPs are not an authenticated cloud vault. If a source file was not retained in this browser, its extracted text/notes remain in the bundle but the original binary is marked missing.</small>
+ {error&&<p role="alert" className="copilotWarning">{error}</p>}
+ {notice&&<p role="status" className="copilotNotice">{notice}</p>}
+</div>
 {a.journey.process!=="PBF_LB_METAL"&&<p className="copilotUnsupported">DED analysis of an arbitrary uploaded STL is not implemented. You may document it, but the current numerical orientation worker supports LPBF only.</p>}
 <button type="button" className="copilotNextAction" disabled={!verified} onClick={()=>setActiveTab("documents")}>Continue to assembly documents</button>
 </section>
