@@ -6,6 +6,8 @@ import {useAnalysis} from "@/components/AnalysisProvider";
 import {usePartInspection} from "@/components/PartInspection";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import EngineeringRunbook from "@/components/EngineeringRunbook";
+import EngineeringEvidenceReview from "@/components/EngineeringEvidenceReview";
+import {currentReviewedEvidence,evidenceIsCurrent,MAX_REVIEWED_EVIDENCE,type ReviewedEvidence} from "@/lib/engineering-evidence";
 import {completedPart,allowsGeometryRanking} from "@/lib/engineering-journey";
 import {activeServiceCase} from "@/lib/service-plan";
 import {END_FACES,type EndFace} from "@/lib/service-load";
@@ -52,6 +54,7 @@ export default function EngineeringCopilot(){
  const isLPBF=allowsGeometryRanking(a.journey);
  const currentCandidate=a.result?.candidates.find(c=>c.id===a.selected);
  const sourceList=knowledge?.sources??[];
+ const validEvidence=useMemo(()=>currentReviewedEvidence(knowledge?.reviewedEvidence??[],sourceList),[knowledge?.reviewedEvidence,sourceList]);
  const orientationReady=Boolean(a.result&&isLPBF&&currentCandidate);
  const activeCase=activeServiceCase(a.servicePlan);
  useEffect(()=>{
@@ -111,6 +114,13 @@ export default function EngineeringCopilot(){
  };
  const removeSource=(id:string)=>{docs.current.delete(id);setKnowledge(s=>s?{...s,sources:s.sources.filter(x=>x.id!==id),
    messages:[]}:s);};
+ const addReviewedEvidence=(item:ReviewedEvidence)=>setKnowledge(s=>{
+  if(!s||s.reviewedEvidence.length>=MAX_REVIEWED_EVIDENCE||
+   s.reviewedEvidence.some(e=>e.key===item.key)||!evidenceIsCurrent(item,s.sources))return s;
+  return {...s,reviewedEvidence:[...s.reviewedEvidence,item]};
+ });
+ const removeReviewedEvidence=(key:string)=>setKnowledge(s=>s?{...s,
+  reviewedEvidence:s.reviewedEvidence.filter(e=>e.key!==key)}:s);
  const opts={
   partName:a.journey.mode==="ded-example"?"DED teaching wall":a.file?.name??null,
   confirmed:verified,
@@ -337,8 +347,15 @@ export default function EngineeringCopilot(){
      <p>{aiEnabled?"External AI is available only when explicitly authorized. The STL itself is never transmitted.":"External AI is not enabled or configured on this deployment. The local engineering guide and simulation controls still work."}</p>
     </div>
     {(error||notice)&&<div className="copilotWarning" role="status">{error||notice}</div>}
+    <details className="copilotFold copilotEvidenceFold">
+     <summary>Review source-backed engineering evidence <span>{validEvidence.length} current references · open to inspect</span></summary>
+     <div className="copilotFoldBody">
+      <EngineeringEvidenceReview sources={sourceList} reviewed={knowledge.reviewedEvidence}
+       onAccept={addReviewedEvidence} onRemove={removeReviewedEvidence}/>
+     </div>
+    </details>
     <div className="copilotProgress">
-     <EngineeringRunbook verified={verified} partSha256={partKey??undefined} sourceIds={sourceList.map(x=>x.id)} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
+     <EngineeringRunbook verified={verified} partSha256={partKey??undefined} sourceIds={[...new Set(validEvidence.map(x=>x.sourceId))]} reviewedEvidence={validEvidence} loadsReviewed={acknowledgedLoads&&Boolean(knowledge.reviewedRequirements.trim())} requirementsDocumented={Boolean(knowledge.attachmentNotes.trim()&&knowledge.reviewedRequirements.trim())}/>
      <details className="copilotAdvanced"><summary>Advanced: individual simulation controls and result fields</summary>
       <p>Use these only if you need to run a solver separately. The Guided simulation plan above is the primary workflow.</p>
      <div className="copilotStages">
