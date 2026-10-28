@@ -395,3 +395,29 @@
 .copilotFocused .copilotMainPanel{min-height:0}
 .copilotFocused .copilotStageTitle{margin-bottom:16px}
 @media(max-width:1160px){.copilotFocused .copilotViewerCompact{margin-top:7px}}
+
+/* One approved service study yields stress + displacement + steady temperature. */
+.unifiedStudy{border:1px solid #4b7893;background:linear-gradient(155deg,#13364c,#092234);border-radius:12px;padding:18px;color:#eaf7ff}
+.unifiedStudyHead h3{color:#f6fbff;font-size:18px;margin:0 0 9px}
+.unifiedStudyHead p,.unifiedStudyInputs p,.unifiedStudy .runbookHistory p{color:#c1d9e8;font-size:12px;line-height:1.65}
+.unifiedStudyCards,.copilotServiceResults .copilotResultMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:15px 0}
+.unifiedStudyCards>div{border:1px solid #44718d;border-radius:10px;background:#0b2b40;min-width:0;padding:13px}
+.unifiedStudyCards b,.unifiedStudyCards span{display:block;overflow-wrap:anywhere}
+.unifiedStudyCards b{color:#dcf1ff;font-size:12px}
+.unifiedStudyCards span{color:#86d4f8;font-size:11px;margin-top:8px;line-height:1.5}
+.unifiedStudyInputs{margin-top:19px;padding-top:14px;border-top:1px solid #375d75}
+.unifiedStudyInputs h4{margin:8px 0 5px;font-size:14px;color:#f2f9ff}
+.unifiedStudyInputs .runbookFields{margin:12px 0 18px}
+.unifiedStudyInputs select{background:#071b2b;color:#f4fbff;border-radius:8px;border:1px solid #5b8098;padding:10px;min-height:42px}
+.unifiedStudyApproval{display:flex!important;flex-direction:row!important;gap:10px;align-items:flex-start;font-size:12px!important;color:#e2eef6;line-height:1.6;border:1px solid #50768d;padding:12px;border-radius:9px;background:#0d2a3c;cursor:pointer}
+.unifiedStudyApproval input{flex:0 0 19px;width:19px;height:19px;accent-color:#4fbbe5;margin:0}
+.unifiedStudy .runbookActions{margin-top:14px}
+.unifiedStudy .runbookActive{padding:12px;color:#c9edff;background:#0d394f;border-radius:9px}
+.unifiedStudy .runbookBlocker{margin:10px 0;padding:10px;color:#ffe0b3;background:#342818;border:1px solid #926e42;border-radius:8px}
+.unifiedStudy .runbookComplete{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid #4c9d8e;border-radius:9px;background:#123c35;color:#e0fff0;padding:12px}
+.copilotFieldTabs{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0}
+.copilotFieldTabs button{border:1px solid #426980;background:#132f42;border-radius:8px;padding:10px 13px;cursor:pointer;color:#dceeff;font-size:12px}
+.copilotFieldTabs button[aria-pressed="true"]{border-color:#58c3e7;background:#1d678c;color:#fff}
+.copilotFieldTabs button:disabled{opacity:.45;cursor:not-allowed}
+.copilotServiceResults .copilotResultMetrics strong{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:650px){.unifiedStudy{padding:12px}.unifiedStudyCards,.copilotServiceResults .copilotResultMetrics{grid-template-columns:1fr}.unifiedStudy .runbookFields{grid-template-columns:1fr}}
