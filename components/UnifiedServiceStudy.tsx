@@ -59,6 +59,9 @@ export default function UnifiedServiceStudy({partSha256,verified,reviewedEvidenc
  function invalidate(){
   seq.current++;release();
   if(jobRef.current?.status==="running")transition("stale","Inputs or part changed; previous unfinished calculation invalidated.");
+  if(jobRef.current&&jobRef.current.snapshot.partSha256!==partSha256){
+   jobRef.current=null;setJob(null);
+  }
   setLatest(null);onResults(null);setApproved(false);setPhase("idle");
  }
  // Jobs are specific to this exact STL, its units, process label, and service case.
@@ -67,7 +70,8 @@ export default function UnifiedServiceStudy({partSha256,verified,reviewedEvidenc
  },[a.file,a.settings.unitScale,a.journey.process,serviceKey,service.id,partSha256]);
  useEffect(()=>{
   let alive=true;
-  if(!fingerprintReady||!partSha256){setHistory([]);return;}
+  setHistory([]);
+  if(!fingerprintReady||!partSha256)return;
   loadEngineeringJobs(partSha256).then(items=>{if(alive)setHistory(items);})
    .catch(()=>{if(alive)setStorageError("Previous jobs could not be loaded from this browser.");});
   return()=>{alive=false;};
