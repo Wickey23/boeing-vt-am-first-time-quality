@@ -122,7 +122,7 @@ export default function EngineeringCopilot(){
  const intakeStep=knowledge?getIntakeStep(knowledge,{partName:opts.partName,confirmed:verified,
   loadsReviewed:opts.loadsReviewed,process:opts.process}):null;
  const progressSteps=knowledge?intakeProgress(knowledge,{partName:opts.partName,confirmed:verified,
-  loadsReviewed:opts.loadsReviewed,process:opts.process}):[];
+  loadsReviewed:opts.loadsReviewed,process:opts.process,hasOrientation:orientationReady}):[];
  const saveGuidedAnswer=()=>{
   if(!knowledge||!intakeStep?.field||!intakeDraft.trim())return;
   try{
