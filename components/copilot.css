@@ -160,3 +160,37 @@
   outline:3px solid #78d7ff;
   outline-offset:2px;
 }
+
+/* Guided engineering runbook: controls and provenance separate from AI chat. */
+.copilotRunbook{border:1px solid #46718a;background:#102b3f;color:#e9f5ff;border-radius:12px;padding:17px;margin:12px 0 24px}
+.copilotRunbook h3{color:#f2f9ff;font-size:17px;margin:0 0 8px}
+.copilotRunbook p{color:#c1d9e8;font-size:12px;line-height:1.55}
+.copilotRunbook .runbookChoice{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:9px;margin:12px 0!important;color:#e5f3fc;font-size:13px;line-height:1.5;font-weight:550}
+.runbookChoice input[type=checkbox]{width:18px;height:18px;margin:2px 0;accent-color:#43b5e6;flex:0 0 auto}
+.runbookThermal{background:#0b2234;border:1px solid #376078;border-radius:9px;padding:12px;margin:12px 0}
+.runbookFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.copilotRunbook .runbookFields label{display:flex;flex-direction:column;gap:7px;font-size:12px;color:#deecf7}
+.runbookFields input{padding:10px;border-radius:7px;background:#091b2b;border:1px solid #567a8f;color:#fff;max-width:100%;width:100%}
+.runbookChecklist,.runbookLog{list-style:none;margin:14px 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.runbookChecklist li{background:#0a2133;border:1px solid #36556a;border-radius:9px;padding:12px}
+.runbookChecklist li>div{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.runbookChecklist b,.runbookLog b{font-size:13px;color:#e6f5ff}
+.runbookChecklist p{margin:7px 0;color:#c7dbe8}
+.runbookChecklist small{color:#aebfd0;font-size:11px;line-height:1.5}
+.runbookFlag{font-size:11px;border-radius:100px;padding:4px 8px;border:1px solid #56788a;color:#d9ebf8;white-space:nowrap}
+.runbookFlag.ready{border-color:#3e9f9b;color:#b4f2dc}
+.runbookFlag.needs-input{border-color:#a78151;color:#ffe0aa}
+.runbookFlag.not-supported{border-color:#916e70;color:#f6c3c3}
+.runbookActions{display:flex;gap:10px;align-items:center;margin:12px 0}
+.runbookActions .copilotPrimary{flex:1;min-width:0}
+.runbookActions .copilotSmall{flex:0 0 auto}
+.runbookActive,.runbookComplete,.runbookBlocker{padding:10px 12px;border-radius:8px;margin:10px 0!important}
+.copilotRunbook .runbookActive{border:1px solid #437e9b;background:#12394d;color:#d8f2ff}
+.copilotRunbook .runbookComplete{border:1px solid #508d7e;background:#183b35;color:#d9ffef}
+.copilotRunbook .runbookBlocker{border:1px solid #a17b4d;background:#342a1d;color:#ffe6bc}
+.runbookLog li{padding:8px 10px;border-left:2px solid #4b91b4}
+.runbookLog p{margin:5px 0 0}
+.copilotRunbook summary{cursor:pointer;color:#a8e3ff;font-weight:700;font-size:12px}
+.copilotRunbook progress{width:100%;accent-color:#36b6e5}
+.copilotRunbook a{color:#c1edff;text-decoration:underline}
+@media(max-width:520px){.copilotRunbook{padding:12px}.runbookFields{grid-template-columns:1fr}.runbookActions{flex-wrap:wrap}.runbookActions .copilotPrimary{flex-basis:100%}}
