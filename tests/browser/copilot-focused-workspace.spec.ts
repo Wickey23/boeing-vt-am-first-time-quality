@@ -7,7 +7,7 @@ test("focused workspace shows one task at a time with a persistent CAD viewer",a
  await expect(tabs).toHaveCount(5);
  await expect(page.getByRole("heading",{name:"Inspect and confirm the part"})).toBeVisible();
  await expect(page.getByRole("heading",{name:"Understand the larger assembly"})).toBeHidden();
- await expect(page.getByRole("heading",{name:"Run only supported analyses"})).toBeHidden();
+ await expect(page.getByRole("heading",{name:"Run stress, displacement and temperature together"})).toBeHidden();
  await expect(page.getByLabel("Upload target STL")).toBeVisible();
  const viewer=page.locator(".copilotFrame");
  await expect(viewer).toBeVisible();
@@ -20,7 +20,7 @@ test("focused workspace shows one task at a time with a persistent CAD viewer",a
  await expect(page.locator(".copilotConversation")).toBeVisible();
  await expect(page.getByRole("heading",{name:"Run only supported analyses"})).toBeHidden();
  await page.getByRole("button",{name:"Open Simulate stage"}).click();
- await expect(page.getByRole("heading",{name:"Guided simulation plan"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Service analysis · one coordinated run"})).toBeVisible();
  await page.getByRole("button",{name:"Open Results stage"}).click();
  await expect(page.getByRole("heading",{name:"Inspect actual results"})).toBeVisible();
  await expect(page.getByText("No numerical result yet")).toBeVisible();
