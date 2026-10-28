@@ -203,3 +203,55 @@
 .runbookHistory li b{color:#b7e5ff}
 .runbookHistory li small{display:block;color:#bdd6e4;margin-top:4px}
 .runbookHistory .copilotSmall{margin-top:8px}
+
+/* Conversation-first workspace. The project strip and compact panels replace
+   the former all-fields-at-once presentation without removing engineering tools. */
+.copilotGrid{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:16px;align-items:start}
+.copilotJourney{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:24px;border:1px solid #294c65;background:#10283c;border-radius:12px;padding:14px 18px;color:#eaf6ff}
+.copilotJourney>div{display:flex;flex-direction:column;gap:4px;min-width:175px}
+.copilotJourneyEyebrow{font-size:10px;letter-spacing:.13em;color:#8ed7fd;font-weight:800}
+.copilotJourney>div strong{font-size:15px;color:#f2f9ff}
+.copilotJourney>div small{font-size:11px;color:#adc8d9}
+.copilotJourney ol{list-style:none;margin:0;padding:0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.copilotJourney li{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#a9c5d7}
+.copilotJourney li>span:first-child{border:1px solid #58768c;color:#94bdd7;border-radius:50%;width:23px;height:23px;display:grid;place-items:center}
+.copilotJourney li.done{color:#bff5e7}
+.copilotJourney li.done>span:first-child{background:#163d3b;border-color:#3f9d87;color:#bff5e7}
+.copilotLeft,.copilotRight{padding:18px;border-color:#365972}
+.copilotHeading{margin-bottom:14px}
+.copilotMode{display:inline-flex;font-size:10px;font-weight:700;letter-spacing:0;color:#addcf9;background:#173b51;border:1px solid #48738d;border-radius:999px;padding:5px 9px;vertical-align:middle;margin-left:6px}
+.copilotFrame{height:420px}
+.copilotFold{border:1px solid #36566c;background:#0b2235;border-radius:10px;overflow:hidden;margin-top:12px;padding:0}
+.copilotFold>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;font-weight:750;color:#f1f8ff;padding:14px 15px}
+.copilotFold>summary::-webkit-details-marker{display:none}
+.copilotFold>summary::before{content:"+";font-size:19px;color:#9fdefb;margin-right:4px}
+.copilotFold[open]>summary::before{content:"−"}
+.copilotFold>summary span{font-size:11px;font-weight:500;color:#aec8d9}
+.copilotFold[open]>summary{border-bottom:1px solid #34576c}
+.copilotFoldBody{padding:2px 15px 16px}
+.copilotFoldBody h3{font-size:14px}
+.copilotLeft .copilotDocs,.copilotLeft .copilotFacts{padding-top:0;border-top:1px solid #36566c}
+.copilotPrompt{background:linear-gradient(160deg,#143a53,#0f3148);border-left:3px solid #5cc9f7;padding:18px;margin-bottom:14px}
+.copilotQuestionMeta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:10px;letter-spacing:.07em;font-weight:800;color:#81d7ff}
+.copilotQuestionMeta span{color:#c6e2f2;letter-spacing:0}
+.copilotPrompt>p{font-size:17px;line-height:1.55;color:#f1f9ff;margin:12px 0 8px;font-weight:700}
+.copilotPrompt>small{font-size:12px;color:#c1d7e5;line-height:1.55;display:block}
+.copilotGuidedInput{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.copilotGuidedInput textarea{width:100%;background:#061b2b;border:1px solid #5b849e;color:#f2faff;border-radius:9px;padding:12px;font-size:13px;line-height:1.5;resize:vertical}
+.copilotGuidedInput textarea::placeholder{color:#afc5d5}
+.copilotGuidedInput button,.copilotNextAction{align-self:flex-start;border-radius:8px;border:1px solid #55baf0;background:#247bb0;color:white;font-size:12px;font-weight:750;padding:11px 16px;cursor:pointer}
+.copilotGuidedInput button:disabled{opacity:.53;cursor:not-allowed}
+.copilotNextAction{margin-top:14px}
+.copilotNextHint{margin-top:12px;padding:9px 12px;border:1px solid #428f83;color:#c5f1e5;font-size:12px;border-radius:8px}
+.copilotUnsupported{margin-top:12px;color:#ffdbb0;font-size:12px;line-height:1.6;border:1px solid #84613e;background:#38281c;border-radius:8px;padding:12px}
+.copilotUnsupported a{color:#a8e0ff}
+.copilotTimeline{min-height:135px;max-height:255px}
+.copilotProgress{margin-top:17px}
+.copilotAdvanced{background:#0b2234;border:1px solid #36556b;border-radius:9px;margin-top:12px}
+.copilotAdvanced>summary{padding:14px 13px;cursor:pointer;font-size:12px;font-weight:750;color:#b4e1ff}
+.copilotAdvanced>p{padding:0 13px}
+.copilotAdvanced .copilotStages,.copilotAdvanced .copilotResult,.copilotAdvanced .copilotEvidence{margin:12px}
+.copilotAdvanced>.copilotPrimary{margin:12px;width:calc(100% - 24px)}
+.copilotAdvanced>progress{width:calc(100% - 24px);margin:12px}
+@media(max-width:1120px){.copilotGrid{grid-template-columns:1fr}.copilotFrame{height:330px}}
+@media(max-width:650px){.copilotJourney{flex-direction:column;align-items:flex-start}.copilotJourney ol{gap:9px}.copilotFrame{height:275px}.copilotFold>summary{align-items:flex-start;flex-wrap:wrap}.copilotQuestionMeta{font-size:9px}.copilotPrompt>p{font-size:15px}}
