@@ -20,6 +20,7 @@ import {applyIntakeAnswer,getIntakeStep,intakeProgress} from "@/lib/engineering-
 import {exportEngineeringTeamBundle,importEngineeringTeamBundle} from "@/lib/engineering-team-bundle";
 import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
 import EngineeringReadinessPanel from "@/components/EngineeringReadinessPanel";
+import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
 import "./copilot.css";
 const Viewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 const Structural=dynamic(()=>import("@/components/PartStructuralPanel"),{ssr:false});
@@ -52,6 +53,8 @@ export default function EngineeringCopilot(){
  const docs=useRef(new Map<string,File>());
  const importedDocuments=useRef<{hash:string;files:Map<string,File>}|null>(null);
  const [bundleBusy,setBundleBusy]=useState(false);
+ const [reviewExportBusy,setReviewExportBusy]=useState(false);
+ const [reviewExportError,setReviewExportError]=useState("");
  const timeline=useRef<HTMLDivElement|null>(null);
  const inspect=usePartInspection(a.file,a.settings.unitScale);
 
@@ -249,6 +252,25 @@ export default function EngineeringCopilot(){
    setNotice("Imported verified project bundle with "+loaded.context.sources.length+" reference records and "+loaded.attachments.size+" original document file(s). Review the engineering assumptions before running simulations.");
   }catch(e){setError(e instanceof Error?e.message:"Could not import ORIENTAI bundle.");}
   finally{setBundleBusy(false);}
+ };
+ const exportReviewPDF=async()=>{
+  if(!knowledge||!a.file||!partKey||!verified){setReviewExportError("Confirm the STL before exporting the engineering review.");return;}
+  setReviewExportBusy(true);setReviewExportError("");
+  try{
+   const field=studyCurrent?serviceStudy:undefined;
+   const doc=await createCopilotReviewPDF({
+    projectName:a.projectName,partName:a.file.name,partSha256:partKey,
+    process:a.journey.process,unitsConfirmed:verified,createdAt:new Date().toISOString(),
+    knowledge,reviewedEvidence:validEvidence,readiness,
+    study:field?{jobId:field.jobId,
+     stressMPa:field.structural?.solver.maxVonMisesMPa,
+     displacementMm:field.structural?.solver.maxDisplacementMm,
+     temperatureMinC:field.thermal?.min,temperatureMaxC:field.thermal?.max,
+     structuralModel:field.structural?.solver.model,thermalModel:field.thermal?.solver.model}:undefined
+   });
+   doc.save((a.projectName||"orientai").replace(/[^a-z0-9_-]+/gi,"-").slice(0,50)+"-engineering-review.pdf");
+  }catch(e){setReviewExportError(e instanceof Error?e.message:"PDF review could not be exported.");}
+  finally{setReviewExportBusy(false);}
  };
  const saveContext=()=>{
   if(!knowledge)return;
@@ -500,7 +522,13 @@ export default function EngineeringCopilot(){
 </section>
 <section className="copilotStage" aria-label="results workspace" hidden={activeTab!=="results"}>
 <div className="copilotStageTitle"><small>05 · INSPECT</small><h2>Inspect actual results</h2><p>Switch between the calculated stress, displacement and steady-temperature fields on the uploaded part. These are service-model approximations, not printing-process validation.</p></div>
-<EngineeringReadinessPanel report={readiness} onGoTo={step=>setActiveTab(step)}/>
+<div className="copilotReviewExport">
+ <button type="button" className="copilotNextAction" onClick={()=>void exportReviewPDF()}
+  disabled={!verified||reviewExportBusy}>{reviewExportBusy?"Preparing research report…":"Export engineering review PDF"}</button>
+ <span>Includes actual available service outputs, reviewed source excerpts, missing evidence, and limitations. Not a manufacturing approval.</span>
+ {reviewExportError&&<p role="alert" className="copilotWarning">{reviewExportError}</p>}
+ </div>
+ <EngineeringReadinessPanel report={readiness} onGoTo={step=>setActiveTab(step)}/>
 {studyCurrent&&serviceStudy?.structural?<div className="copilotServiceResults" data-testid="service-results">
  <div className="copilotResultMetrics">
   <div><small>Maximum von Mises stress</small><strong>{serviceStudy.structural.solver.maxVonMisesMPa.toPrecision(5)} MPa</strong></div>
