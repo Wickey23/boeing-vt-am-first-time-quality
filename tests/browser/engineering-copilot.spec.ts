@@ -3,8 +3,9 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
  const pageErrors:string[]=[];page.on("pageerror",error=>pageErrors.push(error.message));
  const remoteCalls:string[]=[];page.on("request",r=>{if(r.url().includes("/api/engineering-copilot")&&r.method()==="POST")remoteCalls.push(r.url());});
  await page.goto("/");
- await page.getByRole("link",{name:/Start a part study/}).click();
- await expect(page.getByRole("heading",{name:"Understand the whole build. Analyze the right part."})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"What are we working on today?"})).toBeVisible();
+ await page.getByRole("link",{name:"Current study"}).click();
+ await expect(page.getByLabel("Upload target STL")).toBeVisible();
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByText("cube-10mm.stl").first()).toBeVisible();
  await expect(page.getByRole("button",{name:"Confirm inspected dimensions and units"})).toBeEnabled();
