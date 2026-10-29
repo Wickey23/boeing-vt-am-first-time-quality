@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {copilotProvider} from "@/lib/ai-provider";
 export const runtime="nodejs";
 export const maxDuration=30;
 const MAX_BODY=6_500_000;
@@ -6,13 +7,18 @@ const valid=(s:unknown,n:number)=>typeof s==="string"?s.slice(0,n):"";
 const REQUEST_BUDGET=12;
 const times:number[]=[];
 export async function GET(){
- return NextResponse.json({enabled:process.env.AI_COPILOT_ENABLED==="true"&&Boolean(process.env.AI_GATEWAY_API_KEY||process.env.VERCEL_OIDC_TOKEN),requiresApproval:true});
+ // Return capability only: provider secrets and endpoints stay on the server.
+ let enabled=false;
+ try{enabled=process.env.AI_COPILOT_ENABLED==="true"&&Boolean(copilotProvider(process.env));}catch{}
+ return NextResponse.json({enabled,requiresApproval:true});
 }
 /** Opt-in only. No uploads or chat messages are persisted on the server. */
 export async function POST(request:Request){
  if(process.env.AI_COPILOT_ENABLED!=="true")return NextResponse.json({error:"AI model access is disabled for this deployment. The local engineering guide remains available."},{status:503});
- const key=process.env.AI_GATEWAY_API_KEY||process.env.VERCEL_OIDC_TOKEN;
- if(!key)return NextResponse.json({error:"An AI Gateway key or Vercel OIDC token is required."},{status:503});
+ let provider:ReturnType<typeof copilotProvider>;
+ try{provider=copilotProvider(process.env);}
+ catch{return NextResponse.json({error:"Server-side model provider configuration is invalid."},{status:503});}
+ if(!provider)return NextResponse.json({error:"A server-side VT ARC or AI Gateway API key is required."},{status:503});
  if(Number(request.headers.get("content-length")||0)>MAX_BODY)return NextResponse.json({error:"Request too large."},{status:413});
  if(request.headers.get("content-type")?.split(";")[0]!=="application/json")return NextResponse.json({error:"JSON required."},{status:415});
  try{
@@ -52,6 +58,10 @@ export async function POST(request:Request){
   }).map((m:{role:"user"|"assistant";text:unknown})=>({role:m.role,content:valid(m.text,2000)}));
   const latest=valid(payload.message,3000).trim();
   if(!latest)return NextResponse.json({error:"Ask an engineering question."},{status:400});
+  // ARC chat-completions accepts normal text messages; this adapter does not
+  // assume the hosted ARC models accept Vercel Gateway's PDF file_data shape.
+  if(provider.kind==="arc"&&Array.isArray(payload.pdfs)&&payload.pdfs.length>0)
+   return NextResponse.json({error:"Binary PDF forwarding is not supported by this ARC adapter. Review and attach extracted text instead."},{status:400});
   const pdfInput:Array<{type:"file";file:{filename:string;file_data:string}}|{type:"text";text:string}>=[{type:"text",text:
    "Project facts:\n"+parts.join("\n")+"\nReference excerpts:\n"+sources.map((s:{source:string})=>s.source).join("\n\n")+"\nUser question: "+latest}];
   if(Array.isArray(payload.pdfs)){
@@ -73,17 +83,17 @@ export async function POST(request:Request){
    "You can PROPOSE which supported analysis to run next, but the browser UI/engineer must approve and execute it.",
    "Keep reply concise and practical, preferably under 220 words."
   ].join("\n");
-  const response=await fetch("https://ai-gateway.vercel.sh/v1/chat/completions",{
+  const response=await fetch(provider.endpoint,{
    method:"POST",
-   headers:{"Content-Type":"application/json",Authorization:"Bearer "+key},
-   body:JSON.stringify({model:process.env.AI_GATEWAY_MODEL||"openai/gpt-6-luna",temperature:0.2,max_tokens:550,
-    messages:[{role:"system",content:instruction},...history,{role:"user",content:pdfInput}]}),
+   headers:{"Content-Type":"application/json",Authorization:"Bearer "+provider.key},
+   body:JSON.stringify({model:provider.model,temperature:0.2,max_tokens:550,
+    messages:[{role:"system",content:instruction},...history,{role:"user",content:provider.kind==="arc"?pdfInput[0].text:pdfInput}]}),
    signal:AbortSignal.timeout(23000),
    cache:"no-store"
   });
   if(!response.ok){
    return NextResponse.json({error:response.status===401||response.status===403?
-    "AI Gateway authentication is not authorized.":"AI Gateway request failed (HTTP "+response.status+"). Use the local engineering guide."},{status:502});
+    "AI model authorization failed. Check your server-side provider credentials.":"AI model request failed (HTTP "+response.status+"). Use the local engineering guide."},{status:502});
   }
   const result=await response.json();
   const answer=result?.choices?.[0]?.message?.content;
