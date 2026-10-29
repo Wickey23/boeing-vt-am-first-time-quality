@@ -90,7 +90,7 @@ export default function ChatStudy(){
  const coverage=failureCoverage({hasMeshAudit:Boolean(inspect.data),hasOrientationRun:currentRun,
   hasStructuralStudy:serviceCurrent&&Boolean(serviceStudy?.structural),
   hasSteadyThermalStudy:serviceCurrent&&Boolean(serviceStudy?.thermal),
-  hasLpbfTransient:Boolean(lpbfResult),lpbfMethod:lpbfResult?.engine.includes("raster")?"moving":"uniform",process:a.journey.process});
+  hasLpbfTransient:Boolean(lpbfResult),lpbfMethod:lpbfResult?.engine.includes("imported")?"imported":lpbfResult?.engine.includes("raster")?"moving":"uniform",process:a.journey.process});
  const coverageCounts=coverageSummary(coverage);
  const append=(message:Message)=>setMessages(old=>[...old,message].slice(-70));
  useEffect(()=>{
