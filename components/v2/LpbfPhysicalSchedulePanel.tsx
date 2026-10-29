@@ -2,14 +2,16 @@
 import {useEffect,useRef,useState} from "react";
 import {useAnalysis} from "../AnalysisProvider";
 import type {LpbfResult} from "@/lib/lpbf-transient";
+import type {MovingInputs} from "@/lib/lpbf-moving-source";
+import LpbfPhysicalStackPanel from "./LpbfPhysicalStackPanel";
 import {PHYSICAL_SCAN_HEADER,parsePhysicalScanCsv,type PhysicalScanAudit} from "@/lib/lpbf-physical-schedule";
 
 type AuditMessage=
  |{type:"result";partSha256:string;sourceSha256:string;audit:PhysicalScanAudit}
  |{type:"error";error:string};
 export default function LpbfPhysicalSchedulePanel({
- baseline,partHash
-}:{baseline:LpbfResult;partHash:string}){
+ baseline,partHash,stackInputs
+}:{baseline:LpbfResult;partHash:string;stackInputs?:MovingInputs}){
  const a=useAnalysis();
  const [csv,setCsv]=useState<File|null>(null);
  const [previewCount,setPreviewCount]=useState(0);
@@ -148,6 +150,8 @@ export default function LpbfPhysicalSchedulePanel({
     {audit.warnings.map((v,i)=><p key={i} className="oaSubtle">{v}</p>)}
    </details>
    <button type="button" className="oaSecondaryRun" onClick={exportAudit}>Export physical scan audit JSON</button>
+   {stackInputs&&csv&&<LpbfPhysicalStackPanel key={audit.sourceSha256+"-"+partHash} scan={csv} audit={audit} partHash={partHash} inputs={stackInputs}/>}
+   {!stackInputs&&<p className="oaSubtle">For an independent 1D enthalpy-column research run, use the moving-source or imported-path model with documented latent-heat properties. The uniform solid-state model only supports chronology auditing.</p>}
   </div>}
  </details>;
 }
