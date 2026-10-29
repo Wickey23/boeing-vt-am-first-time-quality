@@ -21,7 +21,7 @@ export type ApprovedParameterBinding={
  independentlyVerified:boolean;
 };
 const num="[+-]?(?:\\d+(?:,\\d{3})*(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?";
-const uncertain=/\b(unverified|unconfirmed|unknown|assumed|approx(?:imately)?|estimat(?:ed|e)|pending|propos(?:ed|al)|candidate|draft|not verified|not confirmed|tbd)\b/i;
+const uncertain=/\b(unverified|unconfirmed|unknown|assumed|approx(?:imately)?|estimat(?:ed|e)|pending|propos(?:ed|al)|candidate|draft|not verified|not confirmed|to be verified|requires? (?:independent )?(?:verification|approval)|subject to verification|tbd)\b/i;
 const forceContext=/\b(force|load|loading|axial|tension|compression|shear|Fx\b|Fy\b|Fz\b)\b/i;
 const isForce=(v:number)=>Number.isFinite(v)&&Math.abs(v)<=1e8;
 export function proposeNumericalParameters(evidence:ReviewedEvidence[],sources:ProjectSource[],limit=35):ParameterCandidate[]{
