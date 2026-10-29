@@ -194,3 +194,13 @@ NIST AMB2022-01 includes 312 physical-layer scan groups in a native HDF5 `/XYPT/
 Source: https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems
 
 **Next fidelity step:** implement physical-layer-by-physical-layer material activation, partial voxel occupancy, beam-scale thermal coupling, powder/solid interfaces, and time-stepped cooling between actual events. Only after numerical mesh/time convergence and experimental correlation should the imported physical chronology become an input to a predictive process-thermal simulation.
+
+## Separate physical-layer 1D enthalpy column (research, not 3D LPBF)
+
+An independent `lib/lpbf-physical-stack.ts` implementation now provides a **through-height 1D layer-averaged enthalpy model** based on the already-audited absolute physical-layer command chronology. The source and uploaded STL are both rehashed inside its worker; the engineer must approve a second, explicit set of research assumptions before execution. The result remains distinct from every previous 3D voxel study and is not drawn on the STL as a 3D temperature field.
+
+The solver activates one *entire nominal physical layer* at the beginning of its first command and applies `absorbedPower = commandedPower × engineerSuppliedEffectiveCoupling` across the entire current layer. Axial finite-volume conduction, an ideal fixed-temperature base, top-face convection and simplified equilibrium latent heat are evolved using bounded explicit time steps. Energy accounting reconciles commanded laser J, absorbed J, stored J, plate exchange and convection exchange. It rejects missing layers, inconsistent source/part identities, misaligned Z heights, major changes in cross-section, and excessive integration steps.
+
+The UI labels this **unvalidated 1D column research**. It displays its own time-versus-temperature curve, layer count, effective laser coupling, peak calculated temperature, energy residual, and source-hashed JSON export. The numerical result cannot be interpreted as an XY laser path simulation, physical beam-scale melting, NIST TAM/SCR comparison, powder-solid interface, thermal stress, distortion, fatigue or a first-time-quality acceptance prediction.
+
+This milestone builds upon the physical-layer audit rather than overwriting existing voxel worker results. Browser regression runs the synthetic 50-layer cube sample end-to-end and checks the exact research engine, layer count, traceability and energy conservation. Machine scan plan files and all material parameters require independent source verification before further physical validation.
