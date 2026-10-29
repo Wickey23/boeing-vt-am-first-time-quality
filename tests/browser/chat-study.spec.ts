@@ -122,6 +122,11 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
  expect(data.summary.relativeEnergyImbalance).toBeLessThan(1e-4);
  await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Experimental moving-raster LPBF enthalpy heat flow");
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await page.getByRole("button",{name:"Restart temperature history"}).click();
+ await expect(page.getByLabel("Thermal snapshot frame")).toHaveValue("0");
+ await page.getByRole("button",{name:"Play temperature history"}).click();
+ await expect.poll(async()=>Number(await page.getByLabel("Thermal snapshot frame").inputValue())).toBeGreaterThan(0);
+ await page.getByRole("button",{name:/Pause temperature history|Play temperature history/}).click();
  await panel.getByLabel("Thermal model").selectOption("uniform");
  await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
  await expect(panel.getByLabel("Approve research thermal assumptions")).not.toBeChecked();
