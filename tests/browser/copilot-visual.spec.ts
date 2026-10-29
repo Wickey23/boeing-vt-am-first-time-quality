@@ -15,7 +15,7 @@ function contrast(css:string,background:string){
 
 test("engineering copilot dark surfaces have readable text and vertically stacked panel headings",async({page})=>{
  await page.setViewportSize({width:1450,height:950});
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await expect(page.locator(".oaModelName")).toContainText("ORIENTAI");
  await expect(page.locator(".oaTopbar")).toBeVisible();
  const headings=page.locator(".copilotHeading");
@@ -44,7 +44,7 @@ test("engineering copilot dark surfaces have readable text and vertically stacke
  expect(contrast(await message.evaluate(el=>getComputedStyle(el).color),"#18384d")).toBeGreaterThanOrEqual(4.5);
 });
 test("STL unit mismatch is made obvious without claiming machine infeasibility",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByLabel("STL input units").selectOption("1000");
  await expect(page.getByText("Review the selected units and machine envelope")).toBeVisible();
