@@ -219,6 +219,24 @@ export default function ChatStudy(){
       {a.journey.process!=="PBF_LB_METAL"&&<p className="oaSubtle">Current uploaded-part process is not LPBF; this geometric orientation screen is unavailable.</p>}
       {showMethods&&<p className="oaSubtle">Inspection uses the STL mesh-audit worker. Orientation screening runs the existing local geometry worker. Estimated down-facing areas, build height and support quantities are geometric proxies, not a time-resolved melt/print simulation.</p>}
      </section>}
+    {a.file&&<section className="oaServiceCard" aria-label="Approved structural and thermal calculations">
+      <div className="oaBuildTitle"><strong>Numerical service studies</strong><span>{serviceCurrent&&serviceStudy?.thermal?"Calculated":"Engineer approval required"}</span></div>
+      <p className="oaSubtle">Run real linear-elastic stress/displacement and steady-conduction calculations for the uploaded part. These are not laser-print, melting or residual-stress predictions.</p>
+      <button type="button" className="oaSecondaryRun" onClick={()=>setShowService(v=>!v)}>{showService?"Close":"Review inputs and run"} numerical studies</button>
+      {showService&&<ChatServiceStudy partHash={partHash} verified={isConfirmed} onResults={next=>{setServiceStudy(next);if(!next)setResultField("geometry");}} onOpenResults={()=>{setResultField("stress");setShowArtifact(true);}}/>}
+      {serviceCurrent&&serviceStudy?.structural&&<div className="oaServiceSummary" aria-label="Calculated service results">
+       <div><small>Maximum stress</small><strong>{serviceStudy.structural.solver.maxVonMisesMPa.toPrecision(4)} MPa</strong></div>
+       <div><small>Maximum displacement</small><strong>{serviceStudy.structural.solver.maxDisplacementMm.toPrecision(4)} mm</strong></div>
+       <div><small>Steady temperature</small><strong>{serviceStudy.thermal?serviceStudy.thermal.min.toFixed(2)+"–"+serviceStudy.thermal.max.toFixed(2)+" °C":"Not yet calculated"}</strong></div>
+       <div className="oaFieldControls" aria-label="Service field overlays">
+        <button type="button" aria-pressed={resultField==="stress"} onClick={()=>{setResultField("stress");setShowArtifact(true);}}>Stress</button>
+        <button type="button" aria-pressed={resultField==="displacement"} onClick={()=>{setResultField("displacement");setShowArtifact(true);}}>Displacement</button>
+        <button type="button" aria-pressed={resultField==="thermal"} disabled={!serviceStudy.thermal} onClick={()=>{setResultField("thermal");setShowArtifact(true);}}>Steady temperature</button>
+        <button type="button" aria-pressed={resultField==="geometry"} onClick={()=>setResultField("geometry")}>Geometry</button>
+       </div>
+       <p className="oaSubtle">Fields are mapped to the original STL. Orientation rotation and geometric layer clipping are disabled while a service result field is selected.</p>
+      </div>}
+     </section>}
     {a.file&&<section className="oaFindingsCard" aria-label="Risk assessment results">
      <header><ShieldAlert size={18}/><strong>Failure-risk assessment</strong><span>{meshFindings.length+findings.length} screening findings</span></header>
      {!inspect.data&&!inspect.error&&<p>Waiting for actual mesh inspection...</p>}
@@ -231,6 +249,14 @@ export default function ChatStudy(){
       <p>Steady heat conduction and idealized service-load FEM are available only as separate, approved studies and do not predict the print's defect formation.</p>
      </details>
     </section>}
+    {a.file&&<section className="oaCoverageCard" aria-label="Failure mode assessment coverage">
+      <div className="oaBuildTitle"><strong>Failure-mode coverage</strong><span>{coverageCounts.screened} screened · {coverageCounts.calculated} calculated · {coverageCounts.notAssessed} unassessed</span></div>
+      <p className="oaSubtle">These statuses show which checks actually ran. Service stress and heat-conduction results do not qualify any print-related failure mechanism as assessed.</p>
+      <div className="oaCoverageRows">{coverage.map(item=><details key={item.id} className="oaCoverageRow">
+       <summary><span className="oaCoverageName">{item.name}</span><span className={"oaCoverageStatus oaState-"+item.state}>{item.state==="screened"?"Screened":item.state==="calculated"?"Calculated":"Not assessed"}</span></summary>
+       <p><strong>Method:</strong> {item.method}</p><p><strong>Limitations:</strong> {item.limitations}</p><p><strong>Next inputs:</strong> {item.nextInput}</p>
+      </details>)}</div>
+     </section>}
     {a.file&&<section className="oaBuildPreview" aria-label="Print buildup visualization">
       <div className="oaBuildTitle"><strong>Layer buildup preview</strong><span>{layer}% of the model height</span></div>
       <div className="oaRunActions"><button className="oaSecondaryRun" type="button" onClick={()=>{if(layer>=100)setLayer(1);setPlaying(v=>!v);}}>{playing?"Pause build preview":"Play build preview"}</button><button className="oaSecondaryRun" type="button" onClick={()=>{setPlaying(false);setLayer(1);}}>Restart</button></div>
