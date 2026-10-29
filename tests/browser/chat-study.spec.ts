@@ -38,3 +38,28 @@ test("conversation persists after reload for the active part and its dimensions 
  await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
  await expect(page.getByRole("button",{name:"Run geometry screening"})).toBeDisabled();
 });
+test("chat only runs numerical service workers after explicit engineering approval and never labels them print physics",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Not assessed");
+ await expect(page.getByText("Print-induced distortion and residual stress")).toBeVisible();
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Review inputs and run numerical studies"}).click();
+ const service=page.getByRole("region",{name:"Engineer-approved numerical studies"});
+ const run=service.getByRole("button",{name:"Run All Applicable Analyses"});
+ await expect(run).toBeDisabled();
+ await service.getByLabel(/I have reviewed the geometry, fixtures, forces/).check();
+ await expect(run).toBeEnabled();
+ await run.click();
+ await expect(page.getByText("All three result fields computed.")).toBeVisible({timeout:100000});
+ await expect(page.getByRole("region",{name:"Calculated service results"})).toContainText("Maximum stress");
+ await expect(page.getByText(/Engineer-approved service study completed on the uploaded STL/)).toBeVisible();
+ await page.getByRole("button",{name:"Stress",exact:true}).click();
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("2 calculated");
+ const printRow=page.getByText("Print-induced distortion and residual stress").locator("..");
+ await expect(printRow).toContainText("Not assessed");
+ await page.getByLabel("STL coordinate units").selectOption("25.4");
+ await expect(page.getByRole("region",{name:"Calculated service results"})).toHaveCount(0);
+ await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("0 calculated");
+});
