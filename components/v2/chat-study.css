@@ -202,3 +202,17 @@
 .oaTraceTable th{font-weight:700;color:var(--oa-text)}
 .oaTraceResults>.oaSecondaryRun{margin-top:12px}
 @media(max-width:750px){.oaTraceMetadata{grid-template-columns:1fr}}
+
+/* Solver-time internal voxel probe, not a thermography measurement. */
+.oaProbePanel{border-top:1px solid var(--oa-border);margin-top:18px;padding-top:18px}
+.oaProbePanel h3{font-size:14px;font-weight:700;margin:0 0 8px}
+.oaProbeFields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0}
+.oaProbeFields label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--oa-muted)}
+.oaProbeFields input{width:100%;min-width:0;padding:9px;background:var(--oa-card);border:1px solid var(--oa-border);color:var(--oa-text);border-radius:9px;font-size:12px}
+.oaProbeResult{margin:13px 0;border:1px solid var(--oa-border);border-radius:12px;padding:12px;overflow:hidden}
+.oaProbeResult>.oaLpbfMetrics{margin:12px 0}
+.oaProbePlot{display:block;width:100%;max-height:250px;border-radius:9px}
+.oaProbeLayerMap{border-top:1px solid var(--oa-border);margin:12px 0;padding-top:10px}
+.oaProbeLayerMap summary{cursor:pointer;font-size:12px;font-weight:600}
+.oaProbeResult>.oaRunActions{margin-top:13px}
+@media(max-width:600px){.oaProbeFields{grid-template-columns:1fr 1fr 1fr}}
