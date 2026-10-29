@@ -125,3 +125,29 @@
  .oaServiceSummary{grid-template-columns:1fr}
  .oaServiceWorkspace .unifiedStudy .runbookFields{grid-template-columns:1fr}
 }
+
+
+/* Bounded LPBF thermal research: controls and genuine worker outputs. */
+.oaLpbfCard{border:1px solid var(--oa-border);border-radius:16px;background:var(--oa-bg);padding:14px 16px;min-width:0}
+.oaLpbfCard>.oaSecondaryRun{margin-top:12px}
+.oaLpbfRunbook{margin:13px 0 0;border:1px solid var(--oa-border);border-radius:12px;padding:15px;min-width:0}
+.oaLpbfRunbook h3{margin:0;font-weight:650;font-size:15px;color:var(--oa-text);line-height:1.5}
+.oaLpbfRunbook h3 small{display:block;font-size:10px;font-weight:400;color:var(--oa-muted)}
+.oaLpbfInputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:15px 0}
+.oaLpbfInputs label{display:flex;flex-direction:column;gap:5px;min-width:0;color:var(--oa-text);font-size:11px}
+.oaLpbfInputs input{width:100%;min-width:0;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:9px;padding:10px;color:var(--oa-text);font-size:12px}
+.oaLpbfApproval{display:flex;align-items:flex-start;gap:10px;margin:15px 0 8px;line-height:1.6;font-size:12px}
+.oaLpbfApproval input{flex:0 0 auto;margin-top:4px;accent-color:#188a78}
+.oaLpbfResult{border-top:1px solid var(--oa-border);margin-top:14px;padding-top:14px}
+.oaLpbfMetrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.oaLpbfMetrics>div{background:var(--oa-card);padding:12px;border-radius:10px}
+.oaLpbfMetrics small{color:var(--oa-muted);font-size:10px;display:block}
+.oaLpbfMetrics strong{display:block;font-size:12px;margin-top:4px;overflow-wrap:anywhere}
+.oaLpbfWarning{display:flex;gap:8px;align-items:start;border:1px solid #bc6a38;border-radius:9px;background:var(--oa-card);padding:10px;font-size:11px;color:var(--oa-text);line-height:1.5}
+.oaLpbfResult>.oaSecondaryRun{margin-top:12px}
+.oaLpbfFrameControls{border-top:1px solid var(--oa-border);margin-top:15px;padding-top:12px}
+.oaLpbfFrameControls label{display:flex;flex-direction:column;gap:8px;font-size:12px}
+.oaLpbfFrameControls input[type=range]{width:100%;accent-color:#188a78}
+.oaLpbfFrameMetrics{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;color:var(--oa-muted);font-size:11px;padding:8px 0}
+.oaLpbfFrameControls>.oaSecondaryRun{margin-top:10px}
+@media(max-width:850px){.oaLpbfInputs,.oaLpbfMetrics{grid-template-columns:1fr}}
