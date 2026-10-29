@@ -37,6 +37,9 @@ test("Scan path requires complete virtual slabs and stays inside part X/Y coordi
  assert.equal(validateScanPlan(p,6,{minX:-1,maxX:1,minY:-1,maxY:1}).segmentCount,12);
  assert.throws(()=>validateScanPlan(p,7,{minX:-1,maxX:1,minY:-1,maxY:1}),/every virtual/);
  assert.throws(()=>validateScanPlan(p,6,{minX:-.5,maxX:.5,minY:-1,maxY:1}),/outside uploaded STL/);
+ const discontinuous=parseScanCsv(sample(6));
+ discontinuous.segments[1]={...discontinuous.segments[1],x0Mm:.2};
+ assert.throws(()=>validateScanPlan(discontinuous,6,{minX:-1,maxX:1,minY:-1,maxY:1}),/discontinuous travel/);
  const midpoint=positionOnScanSegment(p.segments[0],.5);
  assert.ok(Math.abs(midpoint.x)<1e-10);
 });
