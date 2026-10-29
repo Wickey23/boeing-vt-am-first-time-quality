@@ -49,6 +49,7 @@ export default function ChatStudy(){
  const [showLpbf,setShowLpbf]=useState(false);
  const [lpbfSession,setLpbfSession]=useState<{hash:string;scale:number;result:LpbfResult}|null>(null);
  const [lpbfFrameIndex,setLpbfFrameIndex]=useState(0);
+ const [playingThermal,setPlayingThermal]=useState(false);
  const [serviceStudy,setServiceStudy]=useState<ServiceStudyResults|null>(null);
  const [resultField,setResultField]=useState<"geometry"|"stress"|"displacement"|"thermal"|"lpbf">("geometry");
  useEffect(()=>{
@@ -74,6 +75,14 @@ export default function ChatStudy(){
   a.journey.process==="PBF_LB_METAL"&&isConfirmed);
  const lpbfResult=lpbfValid?lpbfSession?.result:null;
  const lpbfFrame=lpbfResult?.frames[Math.min(lpbfFrameIndex,lpbfResult.frames.length-1)];
+ useEffect(()=>{
+  if(!playingThermal||!lpbfResult)return;
+  const id=setInterval(()=>setLpbfFrameIndex(i=>Math.min(i+1,lpbfResult.frames.length-1)),600);
+  return()=>clearInterval(id);
+ },[playingThermal,lpbfResult]);
+ useEffect(()=>{
+  if(playingThermal&&lpbfResult&&lpbfFrameIndex>=lpbfResult.frames.length-1)setPlayingThermal(false);
+ },[playingThermal,lpbfFrameIndex,lpbfResult]);
  const serviceField=lpbfFrame&&resultField==="lpbf"?lpbfFrame.field:
   serviceCurrent&&resultField==="stress"?serviceStudy?.structural?.stress:
   serviceCurrent&&resultField==="displacement"?serviceStudy?.structural?.displacement:
@@ -108,7 +117,7 @@ export default function ChatStudy(){
   setHistoryKey(key);
   pendingRun.current=null;
   setServiceStudy(null);setResultField("geometry");setShowService(false);
-  setLpbfSession(null);setShowLpbf(false);setLpbfFrameIndex(0);
+  setLpbfSession(null);setShowLpbf(false);setLpbfFrameIndex(0);setPlayingThermal(false);
  },[partHash,a.ready]);
  useEffect(()=>{if(historyKey&&historyKey===keyPrefix+partHash){
   try{localStorage.setItem(historyKey,JSON.stringify(messages.slice(-70)))}catch{}
@@ -240,14 +249,21 @@ export default function ChatStudy(){
       <button type="button" className="oaSecondaryRun" onClick={()=>setShowLpbf(v=>!v)}>{showLpbf?"Hide":"Review"} process thermal inputs</button>
       <div className="oaChatServiceVisibility" hidden={!showLpbf}>
        <ChatLpbfStudy partHash={partHash} confirmed={isConfirmed}
-        onResult={result=>{setLpbfSession(result&&partHash?{hash:partHash,scale:a.settings.unitScale,result}:null);if(!result)setResultField("geometry");}}
+        onResult={result=>{setPlayingThermal(false);setLpbfSession(result&&partHash?{hash:partHash,scale:a.settings.unitScale,result}:null);if(!result)setResultField("geometry");}}
         onFocus={index=>{setLpbfFrameIndex(index);setResultField("lpbf");setShowArtifact(true);}}/>
       </div>
       {lpbfResult&&lpbfFrame&&<div className="oaLpbfFrameControls" aria-label="LPBF temperature history">
        <label>Thermal snapshot {Math.min(lpbfFrameIndex+1,lpbfResult.frames.length)} of {lpbfResult.frames.length}
         <input type="range" aria-label="Thermal snapshot frame" min={0} max={lpbfResult.frames.length-1}
-          value={lpbfFrameIndex} onChange={e=>{setLpbfFrameIndex(Number(e.target.value));setResultField("lpbf");setShowArtifact(true);}}/>
+          value={lpbfFrameIndex} onChange={e=>{setPlayingThermal(false);setLpbfFrameIndex(Number(e.target.value));setResultField("lpbf");setShowArtifact(true);}}/>
        </label>
+       <div className="oaRunActions">
+        <button type="button" className="oaSecondaryRun" onClick={()=>{
+         if(lpbfFrameIndex>=lpbfResult.frames.length-1)setLpbfFrameIndex(0);
+         setResultField("lpbf");setShowArtifact(true);setPlayingThermal(v=>!v);
+        }}>{playingThermal?"Pause temperature history":"Play temperature history"}</button>
+        <button type="button" className="oaSecondaryRun" onClick={()=>{setPlayingThermal(false);setLpbfFrameIndex(0);}}>Restart temperature history</button>
+       </div>
        <div className="oaLpbfFrameMetrics">
         <span>Elapsed {(lpbfFrame.timeSeconds/60).toFixed(2)} min</span>
         <span>Build height {(lpbfFrame.fraction*100).toFixed(0)}%</span>
