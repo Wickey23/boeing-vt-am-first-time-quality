@@ -98,3 +98,31 @@ test("LPBF solid-state thermal prototype requires approval and displays bounded 
  await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
  await expect(page.locator(".oaLpbfFrameControls")).toHaveCount(0);
 });
+
+test("Moving Gaussian enthalpy mode requires new approval and exports a real distinct model run",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Review process thermal inputs"}).click();
+ const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
+ await panel.getByLabel("Thermal model").selectOption("moving");
+ await expect(panel.getByText(/Moving Gaussian raster \+ latent heat/)).toBeVisible();
+ const run=panel.getByRole("button",{name:"Run research thermal worker"});
+ await expect(run).toBeDisabled();
+ await expect(panel.getByLabel("Gaussian beam radius (mm)")).toHaveValue("0.08");
+ await panel.getByLabel("Approve research thermal assumptions").check();
+ await expect(run).toBeEnabled();
+ await run.click();
+ await expect(panel.getByLabel("Research thermal result")).toBeVisible({timeout:100000});
+ const download=page.waitForEvent("download");
+ await panel.getByRole("button",{name:"Export research run JSON"}).click();
+ const data=JSON.parse(await readFile((await (await download).path())!,"utf8"));
+ expect(data.model).toBe("lpbf-raster-enthalpy-0.1");
+ expect(data.inputs.latentHeatJKg).toBeGreaterThan(0);
+ expect(data.summary.relativeEnergyImbalance).toBeLessThan(1e-4);
+ await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Experimental moving-raster LPBF enthalpy heat flow");
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await panel.getByLabel("Thermal model").selectOption("uniform");
+ await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
+ await expect(panel.getByLabel("Approve research thermal assumptions")).not.toBeChecked();
+});
