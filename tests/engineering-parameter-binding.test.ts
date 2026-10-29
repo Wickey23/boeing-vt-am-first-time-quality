@@ -29,11 +29,11 @@ test("converts a reviewed kN load into N but never chooses a missing direction",
  assert.equal(activeParameterBindings([binding],updateSourceNotes(sources,"D1","changed"),[reviewed],{...service,input:setup}).length,0);
 });
 test("explicit Fx direction, elastic modulus and ratio are recognized only as candidates",async()=>{
- const sources=await addProjectSource([],new File([
+ const sources=await addProjectSource([],new File([[
   "Fx = -2 kN actual service load",
   "Young's modulus: 110 GPa material input",
   "Poisson ratio: 0.33 assumed material"
- ],"engineering.txt"));
+ ].join("\n")],"engineering.txt"));
  const reviewed=suggestEngineeringEvidence(sources).map(x=>acceptEngineeringEvidence(x,"Requires engineering confirmation before use."));
  const hits=proposeNumericalParameters(reviewed,sources);
  assert.equal(hits.length,3,JSON.stringify({reviewed:reviewed.map(e=>({category:e.category,excerpt:e.excerpt})),hits}));
@@ -53,12 +53,12 @@ test("explicit Fx direction, elastic modulus and ratio are recognized only as ca
   reviewedEvidence:reviewed,sources,rationale:"Invalid conversion into a force target.",independentlyVerified:true,direction:1}),/target/);
 });
 test("ambiguity, incorrect units and unsupported torque never become force proposals",async()=>{
- const sources=await addProjectSource([],new File([
+ const sources=await addProjectSource([],new File([[
   "Station 20 dimensional clearance 500 mm, not a force.",
   "Applied torque 500 N m at joint.",
   "Engineering drawing allows 500 N force but UNVERIFIED.",
   "Poisson ratio: 1.5 invalid material ratio."
- ],"mixed.txt"));
+ ].join("\n")],"mixed.txt"));
  const reviewed=suggestEngineeringEvidence(sources).map(x=>acceptEngineeringEvidence(x,"Public lab sample; applicability must be checked."));
  const hits=proposeNumericalParameters(reviewed,sources);
  assert.equal(hits.length,1,JSON.stringify({reviewed:reviewed.map(e=>({category:e.category,excerpt:e.excerpt})),hits}));
