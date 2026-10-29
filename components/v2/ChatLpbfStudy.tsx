@@ -5,6 +5,7 @@ import {useAnalysis} from "@/components/AnalysisProvider";
 import {MOVING_DEMO_INPUTS,MOVING_SOURCE_VERSION,validateMovingInputs} from "@/lib/lpbf-moving-source";
 import {parseScanCsv,SCAN_CSV_HEADER,type ScanPlan} from "@/lib/lpbf-scan-plan";
 import LpbfScanPreview from "./LpbfScanPreview";
+import LpbfSensitivityPanel from "./LpbfSensitivityPanel";
 import {Play,Square,AlertTriangle} from "lucide-react";
 const labels:Partial<Record<keyof LpbfInputs,string>>={
  laserPowerW:"Laser power (W)",scanSpeedMmS:"Scan speed (mm/s)",hatchSpacingMm:"Hatch spacing (mm)",
@@ -157,6 +158,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    <p className="oaSubtle">Total assumed coupled laser energy: {result.summary.absorbedEnergyJ.toFixed(1)} J. {result.engine==="lpbf-imported-enthalpy-0.1"?"Heat source follows supplied CSV segments, which are not machine-verified and cannot resolve beam-scale temperatures.":result.engine===MOVING_SOURCE_VERSION?"Heat source follows an invented serpentine raster on coarse slabs; actual scan paths and beam-scale temperatures are not resolved.":"Mean-field history is represented by coarse slabs, not physical scan tracks."}</p>
    <button className="oaSecondaryRun" type="button" onClick={()=>onFocus(result.frames.length-1)}>Inspect transient temperature in 3D</button>
    <button className="oaSecondaryRun" type="button" onClick={exportSummary}>Export research run JSON</button>
+   {mode!=="uniform"&&<LpbfSensitivityPanel key={result.engine+"-"+result.summary.timeSteps+"-"+a.settings.unitScale+"-"+(scanPlan?.sha256??"generated")} baseline={result} inputs={{...inputs,...movingExtra}} scanPlan={mode==="imported"?scanPlan??undefined:undefined} partHash={partHash??""}/> }
   </div>}
  </section>;
 }
