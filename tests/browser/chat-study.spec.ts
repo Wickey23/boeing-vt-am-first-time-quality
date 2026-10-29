@@ -170,6 +170,30 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
  expect(exported.scanPlan.segmentCount).toBe(12);
  expect(exported.scanPlan.sha256).toMatch(/^[a-f0-9]{64}$/);
  expect(exported.summary.absorbedEnergyJ).toBeGreaterThan(0);
+ const tracePanel=panel.getByRole("region",{name:"Exploratory thermal measurement comparison"});
+ const traceHeader="time_s,temperature_c,uncertainty_c,x_mm,y_mm,z_mm";
+ const syntheticRows=exported.snapshots.slice(0,4).map((frame:{timeSeconds:number})=>
+  [frame.timeSeconds,25,2,-5,-5,-5].join(","));
+ await tracePanel.getByLabel("Import thermal measurement CSV").setInputFiles({
+  name:"synthetic-bottom-corner-trace.csv",mimeType:"text/csv",
+  buffer:Buffer.from([traceHeader,...syntheticRows].join("\n"),"utf8")
+ });
+ await expect(tracePanel.getByText(/Loaded 4 records/)).toBeVisible();
+ const compareButton=tracePanel.getByRole("button",{name:"Compare overlapping samples"});
+ await expect(compareButton).toBeDisabled();
+ await tracePanel.getByLabel("Thermal trace provenance").fill("Synthetic trace fixture generated from four baseline timestamps");
+ await tracePanel.getByLabel("Confirm thermal trace clock and location").check();
+ await compareButton.click();
+ const compared=tracePanel.getByRole("region",{name:"Exploratory thermal comparison results"});
+ await expect(compared).toContainText("Not validated.");
+ await expect(compared).toContainText("Mean absolute difference");
+ const measuredDownload=page.waitForEvent("download");
+ await tracePanel.getByRole("button",{name:"Export exploratory comparison JSON"}).click();
+ const measuredExport=JSON.parse(await readFile((await (await measuredDownload).path())!,"utf8"));
+ expect(measuredExport.schema).toBe("orientai.lpbf-exploratory-trace-comparison.v1");
+ expect(measuredExport.trace.comparedCount).toBe(4);
+ expect(measuredExport.trace.dataClassification).toBe("synthetic");
+ expect(measuredExport.trace.sourceSha256).toMatch(/^[a-f0-9]{64}$/);
  const sensitivity=panel.getByRole("region",{name:"LPBF numerical sensitivity review"});
  await expect(sensitivity.getByRole("button",{name:"Run numerical sensitivity checks"})).toBeEnabled();
  await sensitivity.getByRole("button",{name:"Run numerical sensitivity checks"}).click();
