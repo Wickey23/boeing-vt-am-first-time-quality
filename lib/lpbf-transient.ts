@@ -33,7 +33,7 @@ export type LpbfFrame={
  aboveSolidus:boolean;field:{values:number[];min:number;max:number;units:"degC"};
 };
 export type LpbfResult={
- engine:string;inputs:LpbfInputs;scanPlan?:{sourceName:string;sha256:string;segmentCount:number;version:string};mesh:{cells:number;cellSizeMm:number;virtualSlabs:number;nominalLayers:number;voxelVolumeMm3:number};
+ engine:string;inputs:LpbfInputs;scanPlan?:{sourceName:string;sha256:string;segmentCount:number;version:string};numerics?:{stepScale:number;maxDtSeconds:number};mesh:{cells:number;cellSizeMm:number;virtualSlabs:number;nominalLayers:number;voxelVolumeMm3:number};
  frames:LpbfFrame[];summary:{
   elapsedSeconds:number;absorbedEnergyJ:number;storedEnergyJ:number;
   plateEnergyJ:number;convectiveEnergyJ:number;relativeEnergyImbalance:number;
