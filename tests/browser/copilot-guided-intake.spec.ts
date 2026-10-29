@@ -1,7 +1,7 @@
 import {test,expect} from "@playwright/test";
 test("visible engineering interview saves context step-by-step without AI upload",async({page})=>{
  const calls:string[]=[];page.on("request",r=>{if(r.method()==="POST"&&r.url().includes("/api/engineering-copilot"))calls.push(r.url());});
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
  await page.getByRole("button",{name:"Open Requirements stage"}).click();
