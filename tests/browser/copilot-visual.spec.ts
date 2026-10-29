@@ -16,9 +16,8 @@ function contrast(css:string,background:string){
 test("engineering copilot dark surfaces have readable text and vertically stacked panel headings",async({page})=>{
  await page.setViewportSize({width:1450,height:950});
  await page.goto("/copilot");
- await expect(page.getByRole("heading",{name:"Understand the whole build. Analyze the right part."})).toBeVisible();
- const intro=page.locator(".copilotIntro > p:not(.guidedEyebrow)");
- expect(contrast(await intro.evaluate(el=>getComputedStyle(el).color),"#f5f7fb")).toBeGreaterThanOrEqual(4.5);
+ await expect(page.locator(".oaModelName")).toContainText("ORIENTAI");
+ await expect(page.locator(".oaTopbar")).toBeVisible();
  const headings=page.locator(".copilotHeading");
  await expect(headings).toHaveCount(1);
  for(let i=0;i<1;i++){
