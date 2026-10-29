@@ -102,6 +102,7 @@ export default function LpbfPhysicalSchedulePanel({
   <label className="oaTraceFile">Physical-layer command CSV
    <input aria-label="Import physical-layer scan CSV" type="file" accept=".csv,text/csv"
     disabled={status==="running"} onChange={e=>void upload(e.target.files?.[0])}/></label>
+  <p className="oaSubtle"><a href="/verification/cube-10mm-physical-scan.csv" download>Download synthetic 50-layer example CSV</a> (for the public cube STL only; never a production machine recipe).</p>
   <p className="oaSubtle">Exact header: <code>{PHYSICAL_SCAN_HEADER}</code>. Times are absolute seconds from declared file origin, not nominal travel times. Each row specifies start/end laser position and power. Include explicit zero-power dwell/travel for transitions. Z and X/Y are original STL-aligned millimeters, not machine coordinates unless registered.</p>
   {csv&&<p role="status" className="oaSubtle">Parsed {previewCount} physical commands from {csv.name}. File is not sent to an AI service. Source identity and geometric alignment are checked by the local worker.</p>}
   <label className="oaLpbfApproval">
@@ -121,6 +122,7 @@ export default function LpbfPhysicalSchedulePanel({
    <div className="oaLpbfMetrics">
     <div><small>Physical layers supplied</small><strong>{audit.suppliedLayerCount}</strong></div>
     <div><small>Virtual thermal slabs</small><strong>{audit.virtualSlabCount}</strong></div>
+    <div><small>Maximum layer Z registration residual</small><strong>{audit.maxAbsoluteLayerZResidualMm.toPrecision(4)} mm</strong></div>
     <div><small>Total commanded time</small><strong>{audit.commandedTimeSeconds.toPrecision(5)} s</strong></div>
     <div><small>Laser-on time</small><strong>{audit.laserOnSeconds.toPrecision(5)} s</strong></div>
     <div><small>Laser-off time</small><strong>{audit.laserOffSeconds.toPrecision(5)} s</strong></div>
@@ -131,12 +133,13 @@ export default function LpbfPhysicalSchedulePanel({
    {audit.missingIntermediateLayerIndices.length>0&&<p role="alert" className="oaStudyError">Missing physical layer indices: {audit.missingIntermediateLayerIndices.slice(0,25).join(", ")}{audit.missingIntermediateLayerIndices.length>25?" …":""}</p>}
    {audit.unrepresentedLayers.length>0&&<p role="alert" className="oaStudyError">Unrepresented physical layers: {audit.unrepresentedLayers.slice(0,25).join(", ")}{audit.unrepresentedLayers.length>25?" …":""}</p>}
    <details className="oaProbeLayerMap"><summary>Physical-layer chronology and voxel correspondence</summary>
-    <div className="oaTraceTable"><table><thead><tr><th>Layer</th><th>Z (mm)</th><th>Time (s)</th><th>On/Off commands</th><th>Energy (J)</th><th>Virtual slab</th></tr></thead>
+    <div className="oaTraceTable"><table><thead><tr><th>Layer</th><th>Z (mm)</th><th>Time (s)</th><th>On/Off commands</th><th>Energy (J)</th><th>Z residual (mm)</th><th>Virtual slab</th></tr></thead>
      <tbody>{audit.layers.slice(0,150).map(l=><tr key={l.layer}>
       <td>{l.layer}</td><td>{l.zMm.toFixed(3)}</td>
       <td>{l.startSeconds.toFixed(4)}–{l.endSeconds.toFixed(4)}</td>
       <td>{l.laserOnCommands}/{l.laserOffCommands}</td>
       <td>{l.commandedLaserEnergyJ.toPrecision(4)}</td>
+      <td>{l.zRegistrationResidualMm.toPrecision(4)}</td>
       <td>{l.virtualSlab===null?"Not represented":l.virtualSlab}</td>
      </tr>)}</tbody></table></div>
     {audit.layers.length>150&&<p className="oaSubtle">Showing first 150 physical layers. Full audited layer chronology is available in JSON.</p>}
