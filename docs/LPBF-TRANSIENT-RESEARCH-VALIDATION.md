@@ -77,3 +77,29 @@ The numerical Gaussian radius is broadened to at least **half the voxel width**,
 **Validation still required:** NIST AM Bench 2022 IN718 multiple scan paths and single-track data, and AM Bench 2025 thermal/track/pad benchmarks offer candidate measurement targets once the solver is able to represent the required geometry, scan patterns and material conditions. Comparison is not claimed at this stage. See https://www.nist.gov/ambench and https://ambench2022.nist.gov/ . NIST's 2025 research 'The trace of heat: on the predictive power of modeling transient diffusion' also motivates a calibrated conduction-plus-phase-change approach: https://www.nist.gov/publications/trace-heat-predictive-power-modeling-transient-diffusion .
 
 **Next fidelity work:** import an authorized real slicer scan plan, resolve beam-to-voxel size with adaptive/finer mesh, represent powder-solid contrasts and temperature-dependent coefficients, add appropriate surface losses and boundary conditions, run mesh/time-step/spot-size convergence, compare with experimental thermal measurements, and only then consider coupling to structural distortion and defect models.
+
+## Imported CSV virtual-slab scan plans (research interchange v1)
+
+The LPBF panel now offers an additional **Imported numerical CSV laser segments (experimental)** mode. This replaces the generated serpentine raster with ordered segment records. The CSV stays local in the browser. The exported research record includes its SHA-256 hash, filename, segment count and schema version. Preserve the original CSV separately to reproduce the run.
+
+**Exact header:** slab,x0_mm,y0_mm,x1_mm,y1_mm,power_w,speed_mm_s
+
+Each row describes a straight commanded traversal in **millimeter coordinates in the uploaded STL's original model coordinate frame**. The slab index is a *zero-based occupied thermal voxel-slab index*, NOT an actual printed physical layer number. This research tool does not automatically map a real 20–100 μm physical layer onto a coarse thermal slab. Laser power 0 W means laser-off traversal; travel contributes to time but no applied laser energy. Segment ordering matters.
+
+The parser rejects missing/extra columns, malformed or nonfinite values, zero-length segments, unordered slab indices, out-of-bounds speeds/powers, oversized CSV input (256 KB or 2,000 segments). The numerical worker rejects missing slab tracks, coordinates outside STL X/Y bounds, unsupported disconnected solid, and powered spots beyond supported solid geometry (rather than depositing heat over unknown powder). It enforces bounded computation time and iterations.
+
+**Not a native machine job importer.** NIST HDF5, CLI, G-code and real slicer files are not supported directly. They require deliberate conversion into these virtual-slab coordinates and a reviewed transformation of units, origins, layer mapping, scan order, power, velocity and timing. NIST instrument trigger values must not be assumed to be seconds without documentation.
+
+### Public synthetic example
+
+The non-sensitive research fixture is public/verification/cube-10mm-research-scan.csv. It pairs with public/verification/cube-10mm.stl, millimeter units and thermal resolution 6. It alternates powered toy tracks with laser-off return travel over six virtual slabs. This is **not** an authentic production recipe, Boeing part, machine scan file or validated experiment. Engineer approval remains required.
+
+### Evidence and numerical validity
+
+SHA-256 proves byte identity of the input CSV used by the browser, not machine provenance or calibration. Verify authorized source, coordinate frame, layer grouping, executed laser on/off states, settings and measured results independently. Passing numerical energy accounting is not physical validation or mesh convergence. The export does not include full surface-field arrays, so preserve source STL and scan CSV.
+
+NIST AMB2022-01 includes complete layer scan strategy HDF5 data with X, Y, commanded laser power and instrument triggers, and documents laser-off skywriting. Future benchmark import should explicitly map those data and their metadata before quantitative validation.
+
+Reference: https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems
+
+**Next:** compare a consistent physical scan plan at multiple spatial/time resolutions and against measured thermal histories, with documented material/beam and boundary conditions. No defect probability or qualified part assessment follows from this importer.
