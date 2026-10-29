@@ -234,6 +234,29 @@ export default function ChatStudy(){
       {a.journey.process!=="PBF_LB_METAL"&&<p className="oaSubtle">Current uploaded-part process is not LPBF; this geometric orientation screen is unavailable.</p>}
       {showMethods&&<p className="oaSubtle">Inspection uses the STL mesh-audit worker. Orientation screening runs the existing local geometry worker. Estimated down-facing areas, build height and support quantities are geometric proxies, not a time-resolved melt/print simulation.</p>}
      </section>}
+    {a.file&&<section className="oaLpbfCard" aria-label="LPBF thermal process research">
+      <div className="oaBuildTitle"><strong>LPBF layer heat-flow study</strong><span>{lpbfResult?"Research calculation completed":"Separate approval required"}</span></div>
+      <p className="oaSubtle">This runs a coarse finite-volume transient diffusion model with virtual layer activation. It cannot predict porosity, cracking, melt-pool shape, or print-induced residual stress.</p>
+      <button type="button" className="oaSecondaryRun" onClick={()=>setShowLpbf(v=>!v)}>{showLpbf?"Hide":"Review"} process thermal inputs</button>
+      <div className="oaChatServiceVisibility" hidden={!showLpbf}>
+       <ChatLpbfStudy partHash={partHash} confirmed={isConfirmed}
+        onResult={result=>{setLpbfSession(result&&partHash?{hash:partHash,scale:a.settings.unitScale,result}:null);if(!result)setResultField("geometry");}}
+        onFocus={index=>{setLpbfFrameIndex(index);setResultField("lpbf");setShowArtifact(true);}}/>
+      </div>
+      {lpbfResult&&lpbfFrame&&<div className="oaLpbfFrameControls" aria-label="LPBF temperature history">
+       <label>Thermal snapshot {Math.min(lpbfFrameIndex+1,lpbfResult.frames.length)} of {lpbfResult.frames.length}
+        <input type="range" aria-label="Thermal snapshot frame" min={0} max={lpbfResult.frames.length-1}
+          value={lpbfFrameIndex} onChange={e=>{setLpbfFrameIndex(Number(e.target.value));setResultField("lpbf");setShowArtifact(true);}}/>
+       </label>
+       <div className="oaLpbfFrameMetrics">
+        <span>Elapsed {(lpbfFrame.timeSeconds/60).toFixed(2)} min</span>
+        <span>Build height {(lpbfFrame.fraction*100).toFixed(0)}%</span>
+        <span>Max {lpbfFrame.maxC.toFixed(1)} °C</span>
+       </div>
+       {lpbfFrame.aboveSolidus&&<p className="oaLpbfWarning">Above supplied solidus: solid-state model not valid for this snapshot.</p>}
+       <button className="oaSecondaryRun" type="button" onClick={()=>{setResultField("lpbf");setShowArtifact(true);}}>View calculated heat-flow field</button>
+      </div>}
+     </section>}
     {a.file&&<section className="oaServiceCard" aria-label="Approved structural and thermal calculations">
       <div className="oaBuildTitle"><strong>Numerical service studies</strong><span>{serviceCurrent&&serviceStudy?.thermal?"Calculated":"Engineer approval required"}</span></div>
       <p className="oaSubtle">Run real linear-elastic stress/displacement and steady-conduction calculations for the uploaded part. These are not laser-print, melting or residual-stress predictions.</p>
