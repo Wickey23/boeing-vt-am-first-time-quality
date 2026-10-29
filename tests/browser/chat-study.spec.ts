@@ -131,3 +131,43 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
  await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
  await expect(panel.getByLabel("Approve research thermal assumptions")).not.toBeChecked();
 });
+
+test("Imported numerical laser CSV runs with exact path hash and invalidates on replacement",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Review process thermal inputs"}).click();
+ const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
+ await panel.getByLabel("Thermal model").selectOption("imported");
+ const header="slab,x0_mm,y0_mm,x1_mm,y1_mm,power_w,speed_mm_s";
+ const segments=Array.from({length:6},(_,slab)=>[
+  [slab,-3,0,3,0,70,500].join(","),
+  [slab,3,0,-3,0,0,500].join(",")
+ ]).flat();
+ const csv=[header,...segments].join("\n");
+ await expect(panel.getByRole("button",{name:"Run research thermal worker"})).toBeDisabled();
+ await panel.getByLabel("Import numerical scan CSV").setInputFiles({
+  name:"synthetic-cube-plan.csv",mimeType:"text/csv",buffer:Buffer.from(csv,"utf8")
+ });
+ await expect(panel.getByText(/Loaded 12 segments/)).toBeVisible();
+ const start=panel.getByRole("button",{name:"Run research thermal worker"});
+ await expect(start).toBeDisabled();
+ await panel.getByLabel("Approve research thermal assumptions").check();
+ await expect(start).toBeEnabled();
+ await start.click();
+ await expect(panel.getByLabel("Research thermal result")).toBeVisible({timeout:100000});
+ const event=page.waitForEvent("download");
+ await panel.getByRole("button",{name:"Export research run JSON"}).click();
+ const exported=JSON.parse(await readFile((await (await event).path())!,"utf8"));
+ expect(exported.model).toBe("lpbf-imported-enthalpy-0.1");
+ expect(exported.scanPlan.sourceName).toBe("synthetic-cube-plan.csv");
+ expect(exported.scanPlan.segmentCount).toBe(12);
+ expect(exported.scanPlan.sha256).toMatch(/^[a-f0-9]{64}$/);
+ expect(exported.summary.absorbedEnergyJ).toBeGreaterThan(0);
+ await panel.getByLabel("Import numerical scan CSV").setInputFiles({
+  name:"invalid.csv",mimeType:"text/csv",buffer:Buffer.from("bad columns\n0,1,2")
+ });
+ await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
+ await expect(panel.getByLabel("Approve research thermal assumptions")).not.toBeChecked();
+ await expect(start).toBeDisabled();
+});
