@@ -158,7 +158,12 @@ export default function ChatStudy(){
   append(makeMessage("user",question,"engineer"));
   const lower=question.toLowerCase();
   let response:string;
-  if(/\b(lpbf|laser|scan.path|transient|print.thermal|thermal.history)\b/.test(lower)){
+  if(/\b(measur(?:e|ed|ement|ements)|thermograph(?:y|ic)|benchmark|validat(?:e|ion)|temperature trace|experiment(?:al)? data)\b/.test(lower)){
+    response=a.file?
+     "To compare a measured thermal trace, first run an approved LPBF thermal study below, then open the Measured thermal trace panel. Upload time_s,temperature_c,uncertainty_c,x_mm,y_mm,z_mm CSV data, identify the source and confirm position/time alignment. ORIENTAI reports exploratory temperature differences only; it cannot yet validate NIST AM Bench time-above-melt or cooling-rate observables, and no print-defect probability is available.":
+     "Upload an STL and confirm units first. Benchmark comparisons also need an approved thermal research run, source-identified measurements, registered coordinates and the same time origin.";
+    setShowLpbf(true);
+   }else if(/\b(lpbf|laser|scan.path|transient|print.thermal|thermal.history)\b/.test(lower)){
     response=a.file?"Open the LPBF research thermal panel below. Review material, machine and solid-state assumptions, then approve the thermal worker. It computes coarse heat diffusion, not melt-pool physics or defect probability.":"Upload an STL, verify units and choose LPBF to start.";
     setShowLpbf(true);
    }else if(/\b(service|fea|finite.element|structural|stress|displacement|steady.conduction|thermal study)\b/.test(lower)){
