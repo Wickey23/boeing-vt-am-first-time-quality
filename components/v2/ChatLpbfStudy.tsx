@@ -7,6 +7,7 @@ import {parseScanCsv,SCAN_CSV_HEADER,type ScanPlan} from "@/lib/lpbf-scan-plan";
 import LpbfScanPreview from "./LpbfScanPreview";
 import LpbfSensitivityPanel from "./LpbfSensitivityPanel";
 import LpbfMeasurementPanel from "./LpbfMeasurementPanel";
+import LpbfProbePanel from "./LpbfProbePanel";
 import {Play,Square,AlertTriangle} from "lucide-react";
 const labels:Partial<Record<keyof LpbfInputs,string>>={
  laserPowerW:"Laser power (W)",scanSpeedMmS:"Scan speed (mm/s)",hatchSpacingMm:"Hatch spacing (mm)",
@@ -73,7 +74,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    schema:"orientai.lpbf-research-run.v1",createdAt:new Date().toISOString(),
    part:{fileName:a.file.name,sha256:partHash,unitScaleToMm:a.settings.unitScale},
    model:result.engine,inputApproval:"engineer-acknowledged-research-assumptions",
-   inputs:result.inputs,mesh:result.mesh,summary:result.summary,scanPlan:result.scanPlan,numerics:result.numerics,
+   inputs:result.inputs,mesh:result.mesh,summary:result.summary,scanPlan:result.scanPlan,numerics:result.numerics,layerMapping:result.layerMapping,
    snapshots:result.frames.map(({field,...frame})=>frame),
    limitations:result.limitations,
    notice:"Research heat-flow only. No calibrated print-defect or qualification predictions. Surface field arrays are not included."
@@ -159,6 +160,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    <p className="oaSubtle">Total assumed coupled laser energy: {result.summary.absorbedEnergyJ.toFixed(1)} J. {result.engine==="lpbf-imported-enthalpy-0.1"?"Heat source follows supplied CSV segments, which are not machine-verified and cannot resolve beam-scale temperatures.":result.engine===MOVING_SOURCE_VERSION?"Heat source follows an invented serpentine raster on coarse slabs; actual scan paths and beam-scale temperatures are not resolved.":"Mean-field history is represented by coarse slabs, not physical scan tracks."}</p>
    <button className="oaSecondaryRun" type="button" onClick={()=>onFocus(result.frames.length-1)}>Inspect transient temperature in 3D</button>
    <button className="oaSecondaryRun" type="button" onClick={exportSummary}>Export research run JSON</button>
+   {mode!=="uniform"&&<LpbfProbePanel key={"probe-"+result.engine+"-"+(scanPlan?.sha256??"generated")+"-"+result.summary.timeSteps+"-"+a.settings.unitScale} baseline={result} inputs={{...inputs,...movingExtra}} scanPlan={mode==="imported"?scanPlan??undefined:undefined} partHash={partHash??""}/>}
    <LpbfMeasurementPanel key={result.engine+"-"+result.summary.timeSteps+"-"+(scanPlan?.sha256??"generated")+"-"+a.settings.unitScale} baseline={result} partHash={partHash??""}/>
    {mode!=="uniform"&&<LpbfSensitivityPanel key={result.engine+"-"+result.summary.timeSteps+"-"+a.settings.unitScale+"-"+(scanPlan?.sha256??"generated")} baseline={result} inputs={{...inputs,...movingExtra}} scanPlan={mode==="imported"?scanPlan??undefined:undefined} partHash={partHash??""}/> }
   </div>}
