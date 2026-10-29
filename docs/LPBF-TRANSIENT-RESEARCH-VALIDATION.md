@@ -117,3 +117,32 @@ The experimental moving-raster and imported-path research models now expose a se
 **Interpretation:** Two discretizations do not establish convergence, and agreement between two runs of the same unvalidated equations does not show agreement with an actual printed part. The solver remains a coarse virtual-slab approximation with unresolved laser-beam spots and unverified material/beam assumptions. Under no condition does the sensitivity result establish defect probabilities, an aerospace qualification, or first-time build quality.
 
 **Experimental validation route:** NIST AMB2022-01 reports thermal time-above-melt and cooling-rate benchmark challenges on IN718 parts, with published HDF5 machine scan commands and measurement/uncertainty caveats. Before a quantitative comparison, build a documented mapping from physical layer data to the numerical domain and use calibrated beam and material properties. Direct data and source guidance: https://www.nist.gov/ambench/direct-am-bench-data-links-and-referencing-guidance and https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems .
+
+## Exploratory registered surface-temperature trace comparison
+
+The chat research panel now includes an optional **Measured thermal trace — comparison readiness** section after a thermal worker completes. This is an experimental data readiness and numerical discrepancy feature, **not** an AM Bench model-validation result.
+
+### CSV input and registration
+
+Required exact UTF-8 CSV header: `time_s,temperature_c,uncertainty_c,x_mm,y_mm,z_mm`
+
+Supply 3–1,500 strictly increasing readings. Each row contains observed °C, a positive stated temperature uncertainty °C, and the SAME measured position in the uploaded STL's original millimeter-aligned coordinate frame. Times must be seconds from the same origin as the simulation. The user supplies a reference/instrument or synthetic source, classifies synthetic or reported-physical data, and explicitly approves spatial and time registration. These declarations are **not authenticated**. No clock offset is fitted.
+
+The tool finds the nearest original STL vertex and rejects locations farther than 0.75 of a thermal voxel width from a vertex. Proximity does not demonstrate that an instrument or thermography pixel is registered to that surface vertex. Model temperatures are compared only at valid post-activation snapshot times; out-of-range readings are excluded without extrapolation and at least three overlapping readings are required.
+
+### Computed discrepancies
+
+Report includes compared/unmatched counts, geometric registration distance, voxel width, peak model snapshot interval, mean absolute error, RMSE, signed model-minus-trace bias, and a descriptive count within user-reported uncertainty. All paired readings and limitations can be exported to JSON alongside part and trace SHA-256, supplied provenance and model settings. These are **exploratory discrepancies only**, never an accuracy grade or certified acceptance test. A synthetic self-check with near-zero RMSE demonstrates no independent predictiveness.
+
+### NIST AMB2022-01 compatibility gate
+
+NIST AM Bench 2022 TAM is **local time above a melting threshold**, and SCR is **solid cooling rate from specified thermal threshold crossings**. The official definitions require spatially registered high-speed thermographic temperature histories and careful emissivity/solidus assumptions. ORIENTAI currently saves coarse END-OF-VIRTUAL-SLAB fields, missing the fast laser pulse/solidification thermal history. Simple interpolation cannot recover those observables. This feature MUST NOT be called a comparison to CHAL-AMB2022-01-TAM or CHAL-AMB2022-01-SCR.
+
+The app also does NOT parse raw AM Bench HDF5, authenticate source references, calibrate a thermal camera, align clocks, or independently verify reported measurements. The source filename and DOI are user claims. Measured uncertainty does not account for model uncertainty. No defect probability, cracking, residual stress, first-time-quality certification, or aerospace qualification can follow from this feature.
+
+**Future actual benchmark validation:** map NIST physical layer scan vectors and camera registration to the model, retain high-rate local thermal histories, resolve beam-scale gradients and cooling events, use measured IN718 material/beam/powder properties and perform uncertainty-aware comparison to the benchmark's exact TAM/SCR definitions.
+
+NIST challenge definitions: https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems
+NIST dataset DOI and citation guidance: https://www.nist.gov/ambench/direct-am-bench-data-links-and-referencing-guidance
+
+Privacy: uploaded STL and CSV bytes remain in the local browser; the JSON export includes the original-file SHA-256 identities, declared source metadata and comparisons but not the raw source CSV. Retain both original files for independent review.
