@@ -188,7 +188,7 @@ export function simulateMovingSource(
   const pointTemp=temperatureFromEnthalpy(energy[probeCell]/capacity,input);
   if(!Number.isFinite(pointTemp))throw Error("Nonfinite thermal probe reading.");
   observedProbePeak=Math.max(observedProbePeak,pointTemp);
-  probeSteps++;
+  if(!forced)probeSteps++; // Count actual integration steps; forced slab/activation readings are not steps.
   if(!forced&&steps%probeStride!==0)return;
   const sample:LpbfProbeSample={timeSeconds:elapsed,temperatureC:pointTemp,
    virtualSlab:slab,laserPowerW:laserPowerAtStep,laserActive:laserWasOn};
