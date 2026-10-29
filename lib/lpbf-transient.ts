@@ -58,10 +58,10 @@ export function validateLpbfInputs(input:LpbfInputs){
 }
 export function transientHeatStep(args:{
  cells:Array<[number,number,number]>;temp:Float64Array;active:Uint8Array;
- neighbors:Int32Array[];zBase:number;cellSizeM:number;dt:number;powerW:number;
+ neighbors:Int32Array[];zBase:number;cellSizeM:number;dt:number;
  input:LpbfInputs
 }){
- const {cells,temp,active,neighbors,zBase,cellSizeM:h,dt,powerW,input}=args;
+ const {cells,temp,active,neighbors,zBase,cellSizeM:h,dt,input}=args;
  const face=h*h,C=input.densityKgM3*input.specificHeatJKgK*h*h*h;
  const kFace=input.conductivityWmK*h,hConv=input.convectionWm2K*face;
  const delta=new Float64Array(temp.length);let powerConv=0,powerBase=0,activeCells=0;
@@ -83,11 +83,6 @@ export function transientHeatStep(args:{
    flow+=plate;powerBase-=plate;
   }
   delta[i]=flow;
- }
- if(activeCells>0&&powerW!==0){
-  for(let i=0;i<active.length;i++)if(active[i]&&cells[i][2]===args.zBase){
-   // no-op: deposition is applied separately to the newly activated slab
-  }
  }
  let baseJ=powerBase*dt,convJ=powerConv*dt;
  for(let i=0;i<temp.length;i++)if(active[i])temp[i]+=delta[i]*dt/C;
@@ -113,7 +108,6 @@ export function simulateLpbfTransient(
  // A disconnected island has no physical build attachment. The simplified
  // thermal model does not simulate unsupported powder or support conduction.
  const lookup=new Map(cells.map((c,i)=>[c.join(","),i]));
- const dirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1],[0,1],[0,0,-1]]; // replaced below
  const faceDirs:[[number,number,number],[number,number,number],[number,number,number],[number,number,number],[number,number,number],[number,number,number]]=[
   [1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
  const neighbors=cells.map(([x,y,z])=>Int32Array.from(faceDirs.map(([dx,dy,dz])=>lookup.get([x+dx,y+dy,z+dz].join(","))??-1)));
@@ -138,7 +132,6 @@ export function simulateLpbfTransient(
  const active=new Uint8Array(cells.length),t=new Float64Array(cells.length);
  t.fill(input.ambientTemperatureC);
  const frames:LpbfFrame[]=[];let absorbed=0,convLoss=0,plateLoss=0,elapsed=0,maxSeen=-Infinity,timeSteps=0;
- let initialStored=0; // every new slab contributes its initial energy relative to ambient only
  for(let li=0;li<layers.length;li++){
   const z=layers[li],incoming=byZ.get(z)!;
   for(const i of incoming)active[i]=1;
@@ -153,9 +146,8 @@ export function simulateLpbfTransient(
    nominalLayers*input.recoatSecondsPerLayer-
     Math.round((previousZ-box.min.z)/Math.max(size.z,1e-9)*nominalLayers)*input.recoatSecondsPerLayer:
    Math.round(layerSpan/Math.max(size.z,1e-9)*nominalLayers)*input.recoatSecondsPerLayer;
-  const duration=Math.max(0,scanSeconds)+Math.max(0,recoating);
   const depositedPower=input.absorbedFraction*input.laserPowerW;
-  let remainingScan=scanSeconds,remainingDwell=Math.max(0,recoating);
+  let remainingScan=scanSeconds,remainingDwell=Math.max(0,recoating),peakThisSlab=-Infinity;
   while(remainingScan>1e-10||remainingDwell>1e-10){
    const scanning=remainingScan>1e-10;
    const dt=Math.min(maxDt,scanning?remainingScan:remainingDwell);
@@ -166,10 +158,10 @@ export function simulateLpbfTransient(
     absorbed+=heat;
    }
    const losses=transientHeatStep({
-    cells,temp:t,active,neighbors,zBase,cellSizeM:hM,dt,
-    powerW:0,input
+    cells,temp:t,active,neighbors,zBase,cellSizeM:hM,dt,input
    });
    plateLoss+=losses.plateEnergyJ;convLoss+=losses.convectiveEnergyJ;
+   for(const i of incoming)peakThisSlab=Math.max(peakThisSlab,t[i]);
    elapsed+=dt;timeSteps++;
    if(timeSteps>120500)throw Error("Transient worker exceeded safe iteration count.");
    if(scanning)remainingScan=Math.max(0,remainingScan-dt);
@@ -180,12 +172,12 @@ export function simulateLpbfTransient(
    number++;const v=t[i];if(!Number.isFinite(v))throw Error("Non-finite computed temperature: no output published.");
    min=Math.min(min,v);max=Math.max(max,v);sum+=v;
   }
-  maxSeen=Math.max(maxSeen,max);
+  maxSeen=Math.max(maxSeen,max,peakThisSlab);
   // Each thermal slab is a *new geometry layer*, not an individual melt-pool
   // time step; every snapshot is a completed coarse virtual slab.
   const fullValues=projectVoxelValues(mesh,Array.from(t));
   frames.push({fraction:Math.min(1,(currentZ-box.min.z)/size.z),zMm:currentZ-box.min.z,timeSeconds:elapsed,
-   minC:min,maxC:max,meanC:sum/number,aboveSolidus:max>=input.solidusC,
+   minC:min,maxC:max,meanC:sum/number,aboveSolidus:peakThisSlab>=input.solidusC||max>=input.solidusC,
    field:{values:fullValues,min,max,units:"degC"}});
   onProgress?.(li+1,layers.length);
  }
