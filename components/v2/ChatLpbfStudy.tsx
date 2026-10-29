@@ -36,6 +36,22 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
  },[partHash,a.file,a.settings.unitScale,a.journey.process]);
  const change=(key:keyof LpbfInputs,value:number)=>{if(status==="running")return;setInputs(prev=>({...prev,[key]:value}));invalidate();};
  const cancel=()=>{seq.current++;close();setStatus("cancelled");setError("Study cancelled. No result was published.");};
+ const exportSummary=()=>{
+  if(!result||!a.file||!partHash)return;
+  const record={
+   schema:"orientai.lpbf-research-run.v1",createdAt:new Date().toISOString(),
+   part:{fileName:a.file.name,sha256:partHash,unitScaleToMm:a.settings.unitScale},
+   model:result.engine,inputApproval:"engineer-acknowledged-research-assumptions",
+   inputs:result.inputs,mesh:result.mesh,summary:result.summary,
+   snapshots:result.frames.map(({field,...frame})=>frame),
+   limitations:result.limitations,
+   notice:"Research heat-flow only. No calibrated print-defect or qualification predictions. Surface field arrays are not included."
+  };
+  const uri=URL.createObjectURL(new Blob([JSON.stringify(record,null,2)],{type:"application/json"}));
+  const a=document.createElement("a");a.href=uri;a.download="orientai-lpbf-thermal-"+partHash.slice(0,12)+".json";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(uri),2000);
+ };
  const run=async()=>{
   if(!enabled||!approved||invalid||status==="running"||!a.file||!partHash)return;
   const token=++seq.current;close();setError("");setResult(null);onResult(null);setStatus("running");setProgress(0);
@@ -82,6 +98,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    <p className="oaSubtle">Numerical energy accounting passed. This does not establish experimental model validity.</p>}
    <p className="oaSubtle">Total assumed coupled laser energy: {result.summary.absorbedEnergyJ.toFixed(1)} J. Mean-field history is represented by coarse slabs, not physical scan tracks.</p>
    <button className="oaSecondaryRun" type="button" onClick={()=>onFocus(result.frames.length-1)}>Inspect transient temperature in 3D</button>
+   <button className="oaSecondaryRun" type="button" onClick={exportSummary}>Export research run JSON</button>
   </div>}
  </section>;
 }
