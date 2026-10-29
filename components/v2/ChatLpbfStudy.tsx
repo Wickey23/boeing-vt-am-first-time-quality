@@ -4,6 +4,7 @@ import {LPBF_DEMO_INPUTS,LPBF_MODEL_VERSION,validateLpbfInputs,type LpbfInputs,t
 import {useAnalysis} from "@/components/AnalysisProvider";
 import {MOVING_DEMO_INPUTS,MOVING_SOURCE_VERSION,validateMovingInputs} from "@/lib/lpbf-moving-source";
 import {parseScanCsv,SCAN_CSV_HEADER,type ScanPlan} from "@/lib/lpbf-scan-plan";
+import LpbfScanPreview from "./LpbfScanPreview";
 import {Play,Square,AlertTriangle} from "lucide-react";
 const labels:Partial<Record<keyof LpbfInputs,string>>={
  laserPowerW:"Laser power (W)",scanSpeedMmS:"Scan speed (mm/s)",hatchSpacingMm:"Hatch spacing (mm)",
@@ -126,6 +127,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
     </label>
     <p className="oaSubtle">Required numeric header: <code>{SCAN_CSV_HEADER}</code>. Power 0 W means laser-off travel. Every virtual slab needs segments; physical-layer indices cannot be used directly. Track coordinates must fall within the uploaded STL bounds. Uploaded CSV bytes stay in the browser.</p>
     {scanPlan&&<p role="status" className="oaSubtle">Loaded {scanPlan.segments.length} segments · {scanPlan.sourceName} · SHA-256 {scanPlan.sha256.slice(0,16)}… . This is user-provided data, not machine-verified.</p>}
+    {scanPlan&&<LpbfScanPreview plan={scanPlan}/>}
     {scanError&&<p role="alert" className="oaStudyError">{scanError}</p>}
    </div>}
   <p className="oaSubtle">The shown Ti-6Al-4V-like parameters are an illustrative teaching starting point, <strong>not verified material properties or a qualified machine parameter set</strong>. Replace every value with documented conditions before interpreting a result.</p>
