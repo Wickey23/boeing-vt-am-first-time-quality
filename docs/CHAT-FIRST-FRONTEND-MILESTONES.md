@@ -129,3 +129,13 @@ Acceptance: every visible finding ties to source, solver/model and correct geome
 - The chat exports a JSON record carrying source/part hashes, report metrics, all comparison pairs, explicit scientific limitations and the research model inputs.
 - Browser and numerical regression tests cover synthetic trace import, model comparison, export, positional/timing rejection, known-offset RMSE and lack of false validation claims.
 - For true AM Bench comparison we still need high-rate local thermal fields, actual physical-layer mapping and measured beam/material data, followed by comparisons to NIST TAM/SCR exact threshold definitions. See docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
+
+## Absolute physical-layer scan chronology preflight milestone
+
+- Engineers can attach a second, strictly numerical UTF-8 CSV with columns `layer,z_mm,t0_s,t1_s,x0_mm,y0_mm,x1_mm,y1_mm,power_w`, separate from the existing virtual-voxel-slab thermal scan CSV. The physical source is local, SHA-256 hashed, and never submitted to an external model.
+- A bounded WebWorker validates the current STL SHA-256, model units, part envelope, ordered layer heights, explicit absolute command times with no unaccounted gaps, contiguous XY laser motion or zero-power travel, physical Z changes and laser-off transitions, maximum commanded speed/power and per-layer mapping.
+- The computed chronology integrates commanded laser energy (power times elapsed time), on/off/dwell duration, per-layer time/energy, and flags missing physical layers or layers whose center does not map to an occupied thermal voxel. It records maximum physical-layer Z discrepancy relative to the STL bottom and nominal layer-index spacing.
+- The engineer-facing results include a physical-layer-to-virtual-slab table and a source-hashed JSON export with machine-readable status `NOT_APPLIED_TO_COARSE_THERMAL_SOLVER`, so generated energy/time are never mislabeled as modeled thermal results.
+- A fully synthetic 50-layer chronology for the public cube STL is included at `public/verification/cube-10mm-physical-scan.csv` and an in-app download link.
+- **Not yet implemented:** native machine/NIST HDF5 import; actual executed machine-trajectory verification; moving-source activation of each physical layer, partial voxel occupancy, powder/solid interfaces and validated thermo-physical cooling. Source chronology must remain preflight-only until these models are added with numerical and experimental evidence.
+- See `docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md` for the mathematical boundary and NIST AMB2022-01 physical scan command documentation.
