@@ -150,6 +150,11 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
   name:"synthetic-cube-plan.csv",mimeType:"text/csv",buffer:Buffer.from(csv,"utf8")
  });
  await expect(panel.getByText(/Loaded 12 segments/)).toBeVisible();
+ await expect(panel.getByRole("img",{name:"2D laser scan segment paths for virtual slab 0"})).toBeVisible();
+ await panel.getByLabel("Preview scan slab").selectOption("1");
+ await expect(panel.getByRole("img",{name:"2D laser scan segment paths for virtual slab 1"})).toBeVisible();
+ await expect(panel.getByText("Laser on: 1")).toBeVisible();
+ await expect(panel.getByText("Laser off: 1")).toBeVisible();
  const start=panel.getByRole("button",{name:"Run research thermal worker"});
  await expect(start).toBeDisabled();
  await panel.getByLabel("Approve research thermal assumptions").check();
