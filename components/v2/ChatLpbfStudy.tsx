@@ -72,7 +72,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    schema:"orientai.lpbf-research-run.v1",createdAt:new Date().toISOString(),
    part:{fileName:a.file.name,sha256:partHash,unitScaleToMm:a.settings.unitScale},
    model:result.engine,inputApproval:"engineer-acknowledged-research-assumptions",
-   inputs:result.inputs,mesh:result.mesh,summary:result.summary,scanPlan:result.scanPlan,
+   inputs:result.inputs,mesh:result.mesh,summary:result.summary,scanPlan:result.scanPlan,numerics:result.numerics,
    snapshots:result.frames.map(({field,...frame})=>frame),
    limitations:result.limitations,
    notice:"Research heat-flow only. No calibrated print-defect or qualification predictions. Surface field arrays are not included."
