@@ -1,0 +1,35 @@
+import {test,expect} from "@playwright/test";
+test("uploaded STL appears in chat with inspected mesh, geometric build preview and explicit physics limitations",async({page})=>{
+ const externalCalls:string[]=[];
+ page.on("request",r=>{if(r.method()==="POST"&&/engineering-copilot|llm-api/.test(r.url()))externalCalls.push(r.url());});
+ await page.goto("/copilot");
+ await page.getByLabel("Upload STL").click();
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toBeVisible();
+ await expect(page.getByText(/mesh triangles/)).toBeVisible();
+ await expect(page.getByRole("region",{name:"Analysis workflow"})).toContainText("Mesh topology and dimensions");
+ await expect(page.getByText("Print thermal history / residual stress / defect models")).toBeVisible();
+ await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Run geometry screening"}).click();
+ await expect(page.getByText(/Geometric orientation screening completed/)).toBeVisible({timeout:30000});
+ await expect(page.getByRole("region",{name:"Risk assessment results"})).toContainText("Failure-risk assessment");
+ await page.getByLabel("Layer buildup percentage").fill("50");
+ await expect(page.getByText("50% of the model height")).toBeVisible();
+ await page.getByRole("button",{name:"Open side view"}).click();
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await expect(page.getByText(/not real toolpaths, layer timing/)).toBeVisible();
+ expect(externalCalls).toEqual([]);
+});
+test("conversation persists after reload for the active part and its dimensions must be reconfirmed when scale changes",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByLabel("Message ORIENTAI").fill("Does an STL prove that the part will not crack?");
+ await page.getByRole("button",{name:"Send message"}).click();
+ await expect(page.getByText("Does an STL prove that the part will not crack?")).toBeVisible();
+ await page.reload();
+ await expect(page.getByText("Does an STL prove that the part will not crack?")).toBeVisible();
+ await page.getByLabel("STL coordinate units").selectOption("25.4");
+ await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
+ await expect(page.getByRole("button",{name:"Run geometry screening"})).toBeDisabled();
+});
