@@ -8,6 +8,8 @@ import {completedPart} from "@/lib/engineering-journey";
 import {screenCandidate} from "@/lib/part-screening";
 import {failureCoverage,coverageSummary} from "@/lib/failure-coverage";
 import ChatServiceStudy from "@/components/v2/ChatServiceStudy";
+import ChatLpbfStudy from "@/components/v2/ChatLpbfStudy";
+import type {LpbfResult} from "@/lib/lpbf-transient";
 import type {ServiceStudyResults} from "@/components/UnifiedServiceStudy";
 import {ArrowUp,Box as BoxIcon,CheckCircle2,ChevronDown,ChevronUp,FileUp,Paperclip,Play,RotateCcw,ShieldAlert,SlidersHorizontal,SquareArrowOutUpRight,X,LoaderCircle,AlertTriangle,FileText} from "lucide-react";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
@@ -44,8 +46,11 @@ export default function ChatStudy(){
  const [playing,setPlaying]=useState(false);
  const [showMethods,setShowMethods]=useState(true);
  const [showService,setShowService]=useState(false);
+ const [showLpbf,setShowLpbf]=useState(false);
+ const [lpbfSession,setLpbfSession]=useState<{hash:string;scale:number;result:LpbfResult}|null>(null);
+ const [lpbfFrameIndex,setLpbfFrameIndex]=useState(0);
  const [serviceStudy,setServiceStudy]=useState<ServiceStudyResults|null>(null);
- const [resultField,setResultField]=useState<"geometry"|"stress"|"displacement"|"thermal">("geometry");
+ const [resultField,setResultField]=useState<"geometry"|"stress"|"displacement"|"thermal"|"lpbf">("geometry");
  useEffect(()=>{
   if(!playing)return;
   const tick=setInterval(()=>setLayer(v=>Math.min(100,v+1)),80);
@@ -65,12 +70,18 @@ export default function ChatStudy(){
  const meshFindings=inspect.data?.audit.findings??[];
  const serviceCurrent=Boolean(serviceStudy&&a.file&&partHash&&partHash===serviceStudy.partSha256&&
   serviceStudy.unitScale===a.settings.unitScale&&serviceStudy.process===a.journey.process&&isConfirmed);
- const serviceField=serviceCurrent&&resultField==="stress"?serviceStudy?.structural?.stress:
+ const lpbfValid=Boolean(lpbfSession&&partHash&&lpbfSession.hash===partHash&&lpbfSession.scale===a.settings.unitScale&&
+  a.journey.process==="PBF_LB_METAL"&&isConfirmed);
+ const lpbfResult=lpbfValid?lpbfSession?.result:null;
+ const lpbfFrame=lpbfResult?.frames[Math.min(lpbfFrameIndex,lpbfResult.frames.length-1)];
+ const serviceField=lpbfFrame&&resultField==="lpbf"?lpbfFrame.field:
+  serviceCurrent&&resultField==="stress"?serviceStudy?.structural?.stress:
   serviceCurrent&&resultField==="displacement"?serviceStudy?.structural?.displacement:
   serviceCurrent&&resultField==="thermal"?serviceStudy?.thermal:undefined;
  const coverage=failureCoverage({hasMeshAudit:Boolean(inspect.data),hasOrientationRun:currentRun,
   hasStructuralStudy:serviceCurrent&&Boolean(serviceStudy?.structural),
-  hasSteadyThermalStudy:serviceCurrent&&Boolean(serviceStudy?.thermal),process:a.journey.process});
+  hasSteadyThermalStudy:serviceCurrent&&Boolean(serviceStudy?.thermal),
+  hasLpbfTransient:Boolean(lpbfResult),process:a.journey.process});
  const coverageCounts=coverageSummary(coverage);
  const append=(message:Message)=>setMessages(old=>[...old,message].slice(-70));
  useEffect(()=>{
@@ -97,6 +108,7 @@ export default function ChatStudy(){
   setHistoryKey(key);
   pendingRun.current=null;
   setServiceStudy(null);setResultField("geometry");setShowService(false);
+  setLpbfSession(null);setShowLpbf(false);setLpbfFrameIndex(0);
  },[partHash,a.ready]);
  useEffect(()=>{if(historyKey&&historyKey===keyPrefix+partHash){
   try{localStorage.setItem(historyKey,JSON.stringify(messages.slice(-70)))}catch{}
@@ -137,7 +149,10 @@ export default function ChatStudy(){
   append(makeMessage("user",question,"engineer"));
   const lower=question.toLowerCase();
   let response:string;
-  if(/\b(service|fea|finite.element|structural|stress|displacement|steady.conduction|thermal study)\b/.test(lower)){
+  if(/\b(lpbf|laser|scan.path|transient|print.thermal|thermal.history)\b/.test(lower)){
+    response=a.file?"Open the LPBF research thermal panel below. Review material, machine and solid-state assumptions, then approve the thermal worker. It computes coarse heat diffusion, not melt-pool physics or defect probability.":"Upload an STL, verify units and choose LPBF to start.";
+    setShowLpbf(true);
+   }else if(/\b(service|fea|finite.element|structural|stress|displacement|steady.conduction|thermal study)\b/.test(lower)){
     response=a.file?"Open the Engineer-approved numerical studies card below. Confirm actual service loads, fixtures, elastic material properties and thermal boundary conditions before running the real workers. Stress and steady temperature are not print-induced defects.":"Upload the part, then review engineering boundary conditions in the service study card.";
     setShowService(true);
    }else if(/run|simulat|predict|screen|analy[sz]|failure|risk|print/.test(lower)){
@@ -185,7 +200,7 @@ export default function ChatStudy(){
     </div>)}
     {a.file&&<article className="oaInChatModel" aria-label="Uploaded STL model in chat">
       <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button onClick={()=>setShowArtifact(v=>!v)} type="button"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
-      {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
+      {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?"Solid-state LPBF research temperature":resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
       <div className="oaModelMetadata">
        <span>{inspect.data?inspect.data.audit.triangles.toLocaleString()+" mesh triangles":"Inspecting mesh..."}</span>
        <span>{inspect.data?Object.values(inspect.data.dimensions).map(n=>n.toFixed(1)).join(" × ")+" mm (selected units)":"Dimensions pending"}</span>
@@ -288,8 +303,8 @@ export default function ChatStudy(){
   </section>
   {showArtifact&&a.file&&<aside className="oaStudyArtifact" aria-label="Expanded 3D engineering model">
    <header><span><BoxIcon size={18}/> {a.file.name}</span><button type="button" onClick={()=>setShowArtifact(false)} aria-label="Close 3D viewer"><X size={19}/></button></header>
-   <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>
-   <p>Live STL geometry · {serviceField?resultField+" service field":overlay+" view · build height "+layer+"%"} · Research only</p>
+   <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?"Solid-state LPBF research temperature":resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>
+   <p>Live STL geometry · {serviceField?resultField+" calculated research field":overlay+" view · build height "+layer+"%"} · Research only</p>
    <Link href="/copilot/advanced">Open advanced numerical studies <SquareArrowOutUpRight size={14}/></Link>
   </aside>}
   <Link className="oaAdvancedLink" href="/copilot/advanced">Advanced engineering controls, documents and numerical studies <SquareArrowOutUpRight size={14}/></Link>
