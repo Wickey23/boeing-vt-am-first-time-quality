@@ -14,6 +14,7 @@ export type CoverageInputs={
  hasOrientationRun:boolean;
  hasStructuralStudy:boolean;
  hasSteadyThermalStudy:boolean;
+ hasLpbfTransient?:boolean;
  process:"PBF_LB_METAL"|"DED_LB_WIRE"|"DED_LB_POWDER";
 };
 export function failureCoverage(input:CoverageInputs):FailureCoverage[]{
@@ -39,8 +40,13 @@ export function failureCoverage(input:CoverageInputs):FailureCoverage[]{
    limitations:"No laser path, transient melting, deposition history or print residual stress.",
    nextInput:"Specify and approve conductivity, flux and boundary conditions."},
  ];
+ items.push({id:"coarse-lpbf-transient",name:"Coarse solid-state LPBF heat-flow prototype",category:"print-process",
+  state:input.hasLpbfTransient&&input.process==="PBF_LB_METAL"?"calculated":"not-assessed",
+  method:"Explicit voxel diffusion with coarse layer activation and uniformly distributed absorbed energy",
+  limitations:"No melt-pool physics, phase change, moving beam, powder transfer or calibrated defect model. Temperatures beyond solidus invalidate solid-state assumptions.",
+  nextInput:"Verify actual machine/material inputs, run the research worker and compare against benchmark measurements."});
  const unassessed=[
-  ["print-thermal-history","Transient layer heating and cooling","Requires calibrated time-dependent heat-source, scan strategy, layer evolution and alloy properties."],
+  ["print-thermal-history","Validated laser-scan thermal history","Requires calibrated time-dependent heat-source, scan strategy, layer evolution and alloy properties."],
   ["distortion-residual-stress","Print-induced distortion and residual stress","Requires calibrated sequential thermomechanical deposition simulation and validation."],
   ["lack-of-fusion","Lack-of-fusion porosity","Requires qualified material/laser/process parameter data and a calibrated defect predictor."],
   ["keyhole-porosity","Keyhole pore formation","Requires melt-pool evidence or a calibrated process-specific model."],
