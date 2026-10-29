@@ -118,3 +118,14 @@ Acceptance: every visible finding ties to source, solver/model and correct geome
 - Missing/unsafe solver runs are reported as skipped with reasons, rather than synthesized or labeled passed.
 - Engineer can download a numerical sensitivity JSON record with exact part hash, model version, approved inputs, optional original scan-file hash, time-step parameters, computed outputs and limitations.
 - The numerical comparison **does not constitute physical validation or manufacturing defect prediction**. NIST AMB2022-01 remains a future validation target for calibrated laser/thermal physics, layer coordinate mapping and benchmark uncertainty. See docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
+
+## Local thermal-trace observation comparison milestone
+
+- New experimental chat panel: import up to 1,500 observations at one STL-surface location with `time_s,temperature_c,uncertainty_c,x_mm,y_mm,z_mm`. The trace stays in the browser.
+- Numerical comparison verifies STL byte SHA-256, uploaded CSV SHA-256, nearest STL vertex within 0.75 voxel widths, identical time origin by engineer declaration, point activation and at least three overlapping model/trace sample times.
+- Model values are interpolated only between saved coarse virtual-slab snapshots; no extrapolation, no clock fitting and no physical spatial registration claim. Out-of-window readings are counted as excluded.
+- Real metrics include MAE, RMSE, bias, reported uncertainty count, registration distance, modeled cell width, largest thermal snapshot gap, source identity and exact matched samples. Data provenance is user declared, not authenticated.
+- Machine-readable output states `EXPLORATORY_NOT_VALIDATED`, `NOT_COMPARABLE` to NIST TAM/SCR, no defect prediction, and no authenticated measurement source. Synthetic data is labeled and cannot establish accuracy.
+- The chat exports a JSON record carrying source/part hashes, report metrics, all comparison pairs, explicit scientific limitations and the research model inputs.
+- Browser and numerical regression tests cover synthetic trace import, model comparison, export, positional/timing rejection, known-offset RMSE and lack of false validation claims.
+- For true AM Bench comparison we still need high-rate local thermal fields, actual physical-layer mapping and measured beam/material data, followed by comparisons to NIST TAM/SCR exact threshold definitions. See docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
