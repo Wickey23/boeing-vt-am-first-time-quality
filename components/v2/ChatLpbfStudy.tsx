@@ -114,7 +114,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    "A generated, repeating serpentine raster moves a Gaussian heat source across each coarse activated slab. A linear equilibrium solidus–liquidus enthalpy interval adds latent heat. The tool does not use actual machine scan paths, resolve a real beam spot, or validate melt-pool geometry.":
    "Coarse layer activation and solid-state 3D voxel heat diffusion. Uniform absorbed heat per virtual slab, idealized plate contact and convection. No moving laser, latent heat, melt pool, powder-bed physics or calibrated failure predictions."}</p>
   <div className="oaLpbfInputs">{(Object.entries(labels) as [keyof LpbfInputs,string][]).map(([key,label])=>
-   <label key={key}>{label}<input aria-label={label} type="number" step="any" disabled={status==="running"}
+   <label key={key}>{label}<input aria-label={label} type="number" step="any" disabled={status==="running"||(mode==="imported"&&["laserPowerW","scanSpeedMmS","hatchSpacingMm"].includes(key))}
     value={inputs[key]} onChange={e=>change(key,Number(e.target.value))}/></label>)}</div>
   {mode!=="uniform"&&<div className="oaLpbfInputs oaMovingInputs">
    <label>Gaussian beam radius (mm)<input aria-label="Gaussian beam radius (mm)" type="number" step="any" disabled={status==="running"} value={movingExtra.beamRadiusMm} onChange={e=>changeExtra("beamRadiusMm",Number(e.target.value))}/></label>
@@ -125,6 +125,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
     <label>CSV scan path (model X/Y coordinates in mm, zero-based virtual voxel-slab indices)
      <input aria-label="Import numerical scan CSV" type="file" accept=".csv,text/csv" disabled={status==="running"} onChange={e=>void uploadScanPlan(e.target.files?.[0])}/>
     </label>
+    <p className="oaSubtle">Imported segment commands override the generic laser-power, speed and hatch-spacing fields above. Only segment power and speed drive scan energy/timing; review layer thickness and other thermophysical assumptions separately.</p>
     <p className="oaSubtle">Required numeric header: <code>{SCAN_CSV_HEADER}</code>. Power 0 W means laser-off travel. Every virtual slab needs segments; physical-layer indices cannot be used directly. Track coordinates must fall within the uploaded STL bounds. Uploaded CSV bytes stay in the browser.</p>
     {scanPlan&&<p role="status" className="oaSubtle">Loaded {scanPlan.segments.length} segments · {scanPlan.sourceName} · SHA-256 {scanPlan.sha256.slice(0,16)}… . This is user-provided data, not machine-verified.</p>}
     {scanPlan&&<LpbfScanPreview plan={scanPlan}/>}
