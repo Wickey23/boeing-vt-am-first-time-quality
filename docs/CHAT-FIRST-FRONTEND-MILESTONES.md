@@ -97,3 +97,14 @@ Acceptance: every visible finding ties to source, solver/model and correct geome
 - Tests verify energy conservation, two-cell conduction flux, zero-source equilibrium, positive coupled energy, solidus validity and browser consent/staleness behavior.
 - Technical method and validation plan: docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
 - Next engineering milestone: real scan-path heat source, temperature-dependent conductivity and heat capacity, latent heat/phase changes, measured benchmark comparison and mesh/time-step convergence. A credible defect model requires calibrated labeled outcomes; do not infer probabilities from this prototype.
+
+## Imported scan-path CSV interchange milestone
+
+- The experimental LPBF enthalpy worker accepts an explicit bounded ordered laser scan command plan from user-supplied UTF-8 CSV, separate from the generated serpentine demonstration raster. Required columns: slab,x0_mm,y0_mm,x1_mm,y1_mm,power_w,speed_mm_s.
+- Segments specify coarse zero-based thermal voxel slabs in original STL X/Y millimeters, **not physical printed layer IDs**. Laser-off travel (power=0) advances time without laser deposition. Every virtual slab must be covered.
+- Geometry/continuity validation rejects out-of-bounds paths, discontinuous path teleportation without travel, disconnected solid, powered laser exposure away from solid voxels, nonfinite settings, oversized inputs and unsafe solver-step counts.
+- Browser computes SHA-256 of the uploaded CSV; the exported thermal research record stores filename, byte hash, number of segments, solver version, approved assumptions and numerical energy accounting. Source CSV itself must be retained by the engineer.
+- A path-preview component shows source scan tracks by slab (orange laser-on and dashed gray laser-off) as a scaled 2D diagram, explicitly *not* a registered STL overlay or proof of machine execution.
+- A public, non-sensitive reproducibility example is included: public/verification/cube-10mm-research-scan.csv for the 10-mm cube STL at millimeter units and voxel resolution 6.
+- Numerical and Playwright tests verify parser rejection, bounds, continuity, commanded power energy accounting, upload/hash, simulation, results invalidation, and path review.
+- NIST AMB2022-01 offers layer-wise detailed HDF5 scan records. Native HDF5, machine scan file parsing, calibrated thermal measurements, validated powder conductivity, and true physical-layer mapping remain future work. See docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
