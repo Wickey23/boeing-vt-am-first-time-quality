@@ -158,3 +158,17 @@
 .oaLpbfMode select:focus-visible,.oaMovingInputs input:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
 .oaLpbfMode select:disabled{opacity:.6}
 .oaMovingInputs{padding:12px;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:10px}
+
+/* Explicit scan-path review, clearly separated from physical STL contours. */
+.oaScanImport{margin-top:14px;border:1px solid var(--oa-border);border-radius:12px;padding:12px;background:var(--oa-card)}
+.oaScanImport>label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:600}
+.oaScanImport input[type=file]{max-width:100%;font-size:11px}
+.oaScanImport code{overflow-wrap:anywhere}
+.oaScanPreview{border:1px solid var(--oa-border);padding:11px;border-radius:10px;margin-top:12px;background:var(--oa-bg)}
+.oaScanPreview .oaBuildTitle label{display:flex;align-items:center;gap:7px;font-weight:400;color:var(--oa-muted)}
+.oaScanPreview select{border:1px solid var(--oa-border);background:var(--oa-card);color:var(--oa-text);padding:5px 7px;border-radius:7px}
+.oaScanPreview svg{display:block;width:100%;max-height:230px;margin-top:12px;border-radius:8px}
+.oaScanLegend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:9px;font-size:11px;color:var(--oa-muted)}
+.oaScanLegend span{display:inline-flex;gap:6px;align-items:center}
+.oaOnMark,.oaOffMark{display:inline-block;width:18px;height:3px;border-radius:2px;background:#ffb454}
+.oaOffMark{background:#8cabb9}
