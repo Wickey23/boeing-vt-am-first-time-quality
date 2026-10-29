@@ -41,6 +41,10 @@ export default function UnifiedServiceStudy({partSha256,verified,reviewedEvidenc
  const seq=useRef(0),worker=useRef<Worker|null>(null),timer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const jobRef=useRef<EngineeringJob|null>(null),write=useRef<Promise<void>>(Promise.resolve());
  const serviceKey=serviceInputKey(service.input);
+ const provenanceKey=JSON.stringify({
+  reviewedEvidence:reviewedEvidence.map(e=>[e.key,e.sourceRevision,e.reviewedAt]),
+  parameterBindings:parameterBindings.map(b=>[b.id,b.value,b.approvedAt])
+ });
  const fingerprintReady=typeof partSha256==="string"&&/^[0-9a-f]{64}$/.test(partSha256);
  const active=phase==="structural"||phase==="thermal";
  const canRun=verified&&!!a.file&&fingerprintReady&&structuralValid(service.input)&&thermalValid(thermal)&&approved&&!active&&a.journey.mode!=="ded-example";
@@ -68,7 +72,7 @@ export default function UnifiedServiceStudy({partSha256,verified,reviewedEvidenc
  // Jobs are specific to this exact STL, its units, process label, and service case.
  useEffect(()=>{invalidate();
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[a.file,a.settings.unitScale,a.journey.process,serviceKey,service.id,partSha256]);
+ },[a.file,a.settings.unitScale,a.journey.process,serviceKey,service.id,partSha256,provenanceKey]);
  useEffect(()=>{
   let alive=true;
   setHistory([]);
