@@ -223,7 +223,7 @@ export default function ChatStudy(){
       <div className="oaBuildTitle"><strong>Numerical service studies</strong><span>{serviceCurrent&&serviceStudy?.thermal?"Calculated":"Engineer approval required"}</span></div>
       <p className="oaSubtle">Run real linear-elastic stress/displacement and steady-conduction calculations for the uploaded part. These are not laser-print, melting or residual-stress predictions.</p>
       <button type="button" className="oaSecondaryRun" onClick={()=>setShowService(v=>!v)}>{showService?"Close":"Review inputs and run"} numerical studies</button>
-      {showService&&<ChatServiceStudy partHash={partHash} verified={isConfirmed} onResults={next=>{setServiceStudy(next);if(!next)setResultField("geometry");}} onOpenResults={()=>{setResultField("stress");setShowArtifact(true);}}/>}
+      <div className="oaChatServiceVisibility" hidden={!showService}><ChatServiceStudy partHash={partHash} verified={isConfirmed} onResults={next=>{setServiceStudy(next);if(!next)setResultField("geometry");}} onOpenResults={()=>{setResultField("stress");setShowArtifact(true);}}/></div>}
       {serviceCurrent&&serviceStudy?.structural&&<div className="oaServiceSummary" aria-label="Calculated service results">
        <div><small>Maximum stress</small><strong>{serviceStudy.structural.solver.maxVonMisesMPa.toPrecision(4)} MPa</strong></div>
        <div><small>Maximum displacement</small><strong>{serviceStudy.structural.solver.maxDisplacementMm.toPrecision(4)} mm</strong></div>
