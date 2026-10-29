@@ -170,3 +170,27 @@ Numerical tests compare runs with and without a probe to ensure sampled observat
 **NOT NIST AM Bench validation:** The NIST AMB2022-01 challenge computes time above the midpoint of solidus/liquidus temperatures and solid cooling rate after crossing the solidus at specified spatial locations, using high-speed thermographic profiles. ORIENTAI's internal coarse-volume voxel history has neither the required spatial beam resolution, physically correct powder/phase-change physics nor independently registered thermography to score those observables. Do not compute a 'NIST passed' label or aerospace qualification result from this research output.
 
 Official NIST reference: https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems
+
+## Physical-layer absolute-time scan chronology audit
+
+The LPBF research card now exposes a collapsed **Physical-layer laser schedule — timing audit (not simulated)** section. This audit is intentionally separate from the moving-source enthalpy worker. It accepts an engineer-provided UTF-8 CSV of ordered *physical layer* commands; it does not import native machine jobs, assume NIST HDF5 conventions automatically, or change the temperature model's original virtual-slab inputs.
+
+**Required exact CSV header:** `layer,z_mm,t0_s,t1_s,x0_mm,y0_mm,x1_mm,y1_mm,power_w`
+
+Each command declares a nonnegative physical layer integer, physical Z in the original STL-aligned millimeter frame, absolute start and end times in seconds relative to a declared clock origin, start/end laser XY in mm, and commanded power in W. Model `power_w=0` movements and stationary dwells explicitly. Timestamps must begin at zero and remain contiguous without hidden gaps or overlaps; scan positions must be continuous, including laser-off repositioning. A change in physical layer Z requires the new layer to begin with a zero-power command.
+
+**Audit checks:** strict numeric CSV schema, max 256 KB/3,000 commands, finite physical bounds, monotonic time/layer/Z order, supported speed and power ranges, powered XY within the uploaded STL bounding box, and no unaccounted jumps. These checks validate the *declared command chronology*, not the actual executed motion or whether the laser was over solid or powder in 3D. The local WebWorker independently verifies the original STL SHA-256 and computes the imported CSV SHA-256.
+
+**Reported outputs:** number of physical layers, nominal count for the part height, omitted layer indices, laser-on and laser-off durations, total commanded laser energy integrated as the sum of `power_w × (t1_s - t0_s)`, maximum commanded speed, layer-by-layer energy/time, and the coarse thermal voxel slab containing each physical layer's nominal Z center. A mismatch between physical heights and nominal layer-index spacing creates a warning, not a correction. Physical layers that cannot be assigned to occupied thermal voxels are explicitly marked unrepresented.
+
+The audit exports a traceable JSON record with part/source hashes, all layer metrics, the separately completed virtual-slab model's assumptions and computed time/absorbed energy for context, and the machine-readable status `NOT_APPLIED_TO_COARSE_THERMAL_SOLVER`. **These energy quantities refer to different calculations and must not be compared as model validation or merged without a physically consistent layer-activation and heat transfer discretization.**
+
+A public non-proprietary example at `public/verification/cube-10mm-physical-scan.csv` has fifty synthetic 0.2 mm physical layers over the 10 mm cube, explicit powered horizontal strokes, zero-power returns and zero-power dwells. It is NOT a physical printer file, Boeing recipe, machine-qualified scan job or NIST source dataset. It is purposely separate from `cube-10mm-research-scan.csv`, which uses six coarse *virtual* slabs.
+
+### NIST AM Bench relationship
+
+NIST AMB2022-01 includes 312 physical-layer scan groups in a native HDF5 `/XYPT/` structure containing XY positions in mm, commanded power in W and digital trigger values sampled at a **documented 100 kHz** command rate (10 microseconds per element). The commanded trajectory may differ from the executed trajectory due to galvo/laser dynamics. That metadata must be interpreted explicitly and transformed into this CSV's *absolute-time* format; raw HDF5 is not supported. This standalone preflight does not claim parity with NIST scanning, powder physics, melt-pool measurements or their TAM/SCR challenge metrics.
+
+Source: https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems
+
+**Next fidelity step:** implement physical-layer-by-physical-layer material activation, partial voxel occupancy, beam-scale thermal coupling, powder/solid interfaces, and time-stepped cooling between actual events. Only after numerical mesh/time convergence and experimental correlation should the imported physical chronology become an input to a predictive process-thermal simulation.
