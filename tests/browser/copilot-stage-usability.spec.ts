@@ -1,6 +1,6 @@
 import {test,expect} from "@playwright/test";
 test("five-stage workflow presents only relevant controls while part remains visible",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await expect(page.getByRole("navigation",{name:"Engineering workflow"})).toBeVisible();
  await expect(page.getByRole("region",{name:"Current engineering stage"})).toContainText("Inspect and confirm the part");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
