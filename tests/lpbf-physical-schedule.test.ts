@@ -75,7 +75,7 @@ test("Powered out-of-part segments and out-of-build Z are rejected",()=>{
 test("Partial physical histories and unoccupied slab mappings are explicit warnings",()=>{
  const plan=parsePhysicalScanCsv(fixture(6));
  const shifted={...plan,commands:plan.commands.map(c=>({...c,layer:c.layer+15}))};
- const report=audit(shifted,{occupiedVoxelZIndices:[0,2,3,4,5]});
+ const report=audit(shifted,{occupiedVoxelZIndices:[1,2,3,4,5]});
  assert.equal(report.firstLayer,15);
  assert.ok(report.unrepresentedLayers.some(l=>l>=15));
  assert.ok(report.warnings.some(x=>/begins after layer 0/.test(x)));
