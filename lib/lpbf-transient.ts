@@ -11,6 +11,7 @@
  * material solidus, its solid-state physics is outside validity.
  */
 import * as THREE from "three";
+import type {NominalLayerMap} from "./lpbf-layer-mapping";
 import {voxelizePart,projectVoxelValues} from "./voxel-thermal";
 
 export const LPBF_MODEL_VERSION="lpbf-solid-transient-0.1";
@@ -32,7 +33,20 @@ export type LpbfFrame={
  fraction:number;zMm:number;timeSeconds:number;minC:number;maxC:number;meanC:number;
  aboveSolidus:boolean;field:{values:number[];min:number;max:number;units:"degC"};
 };
+export type LpbfProbePoint={xMm:number;yMm:number;zMm:number};
+export type LpbfProbeSample={timeSeconds:number;temperatureC:number;virtualSlab:number;laserPowerW:number;laserActive:boolean;};
+export type LpbfProbeHistory={
+ model:"INTERNAL_THERMAL_VOXEL_PROBE_UNVALIDATED";
+ requestedMm:LpbfProbePoint;sampledVoxelCenterMm:LpbfProbePoint;
+ registrationOffsetMm:number;voxelWidthMm:number;
+ voxelActivationTimeSeconds:number;samplingStrideSteps:number;
+ actualStepsObserved:number;sampledPoints:LpbfProbeSample[];
+ observedStepPeakC:number;sampledPeakC:number;maximumSampleGapSeconds:number;
+ limitations:string[];
+};
 export type LpbfResult={
+ layerMapping?:NominalLayerMap;
+ probe?:LpbfProbeHistory;
  engine:string;inputs:LpbfInputs;scanPlan?:{sourceName:string;sha256:string;segmentCount:number;version:string};numerics?:{stepScale:number;maxDtSeconds:number};mesh:{cells:number;cellSizeMm:number;virtualSlabs:number;nominalLayers:number;voxelVolumeMm3:number};
  frames:LpbfFrame[];summary:{
   elapsedSeconds:number;absorbedEnergyJ:number;storedEnergyJ:number;
