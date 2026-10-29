@@ -77,3 +77,12 @@ Acceptance: every visible finding ties to source, solver/model and correct geome
 - The build-height animation clips the **actual geometry** as a visualization, not a generated slicer toolpath or thermal process simulation.
 - Failure findings currently come from mesh topology and geometric orientation screening. Physical print defect probabilities remain *not assessed*.
 - ARC is not configured in the new primary chat. A user-facing local-guide label prevents interpreting this deterministic guidance as model output.
+
+## 2026-10-29 continuation — numerical worker integration
+- The primary chat exposes a collapsible engineer-approved numerical service study that reuses the existing UnifiedServiceStudy workers and job provenance ledger. AI text cannot authorize a run.
+- The two existing real workers calculate original-part isotropic linear-elastic service-load stress/displacement and independent steady conduction. Result cards display MPa, mm and degrees Celsius, with optional calculated 3D fields.
+- Calculated fields remain in original STL coordinates; orientation rotation and build-height clipping are disabled while a service contour is selected.
+- Stale numerical results are hidden when STL hash, unit scale, process, or reviewed input assumptions change.
+- The failure-coverage taxonomy distinguishes geometric screening, service calculations and print failure mechanisms that are not assessed. No service solve is rebranded as print-process prediction.
+- The legacy engineering document review remains available at /copilot/advanced.
+- Next: verified machine/material parameters, validated LPBF scan/deposition thermal physics, calibrated defect prediction, and physical benchmark comparisons. Never fabricate defect probabilities from geometry alone.
