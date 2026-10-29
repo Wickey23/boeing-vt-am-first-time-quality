@@ -81,14 +81,14 @@ export default function LpbfSensitivityPanel({baseline,inputs,scanPlan,partHash}
    "Spatial refinement is disabled for imported paths because their indices reference specific virtual voxel slabs.":
    "A second comparison tries a finer voxel grid; its laser discretization and layer grouping also change, so this is not a controlled mesh-convergence proof."}
   </p>
-  <p className="oaSubtle">This extra computation is local and optional. **No benchmark measurements are used.** Small differences do not establish predictive accuracy, defect probability, or a first-time-quality guarantee.</p>
+  <p className="oaSubtle">This extra computation is local and optional. No benchmark measurements are used. Small differences do not establish predictive accuracy, defect probability, or a first-time-quality guarantee.</p>
   <div className="oaRunActions">
    <button type="button" className="oaRunButton" disabled={status==="running"} onClick={()=>void run()}>Run numerical sensitivity checks</button>
    {status==="running"&&<button type="button" className="oaSecondaryRun" onClick={cancel}>Cancel sensitivity run</button>}
   </div>
   {status==="running"&&<><progress aria-label="Sensitivity progress" className="oaRunProgress" max={100} value={progress}/><p role="status" className="oaSubtle">Calculating {stage==="spatial"?"finer spatial grid":"smaller time step"} · {progress}%</p></>}
   {error&&<p role="alert" className="oaStudyError">{error}</p>}
-  {study&&<div className="oaSensitivityOutput" aria-label="Calculated numerical sensitivity results">
+  {study&&<div role="region" className="oaSensitivityOutput" aria-label="Calculated numerical sensitivity results">
    <Case title="Time-step sensitivity" metric={study.temporal}/>
    {study.spatial?<Case title="Spatial grid sensitivity" metric={study.spatial}/>:<p className="oaSubtle">Spatial comparison not reported: {study.spatialSkippedReason}</p>}
    <details className="oaUnavailable"><summary>Interpretation and validation limits</summary>
