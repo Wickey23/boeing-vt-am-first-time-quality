@@ -29,7 +29,7 @@ const categories:[EvidenceCategory,RegExp][]=[
  ["inspection",/\b(inspection|non[- ]destructive|ct scan|ultrasonic|x[- ]?ray|acceptance|defect|porosity|fatigue life)\b/i],
  ["assembly",/\b(assembly|fuselage|bulkhead|rib|frame|stringer|station|interfac(?:e|es)|adjacent|subassembly)\b/i]
 ];
-const uncertain=/\b(unverified|unconfirmed|unknown|approx(?:imate(?:ly)?)?|estimated|assumed|pending|proposed|candidate|draft|not verified|not confirmed|tbd)\b/i;
+const uncertain=/\b(unverified|unconfirmed|unknown|approx(?:imate(?:ly)?)?|estimated|assumed|pending|proposed|candidate|draft|not verified|not confirmed|to be verified|requires? (?:independent )?(?:verification|approval)|subject to verification|tbd)\b/i;
 function toCategory(value:string):EvidenceCategory|null{
  for(const [category,rule] of categories)if(rule.test(value))return category;
  return null;
