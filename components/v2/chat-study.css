@@ -87,3 +87,41 @@
  .oaAdvancedLink{display:none}
 }
 @media(prefers-reduced-motion:reduce){.oaSpin{animation:none}}
+
+
+/* Numerical service studies, always scoped to the part identity and engineer approval. */
+.oaServiceCard,.oaCoverageCard{border:1px solid var(--oa-border);border-radius:16px;background:var(--oa-bg);padding:14px 16px;min-width:0}
+.oaServiceCard>.oaSecondaryRun{margin-top:12px}
+.oaChatServiceVisibility[hidden]{display:none!important}
+.oaServiceWorkspace{margin-top:14px;min-width:0}
+.oaSourceStatus{padding:10px 12px;border-radius:9px;background:var(--oa-card);margin:12px 0;font-size:11px;line-height:1.5;color:var(--oa-text)}
+.oaServiceWorkspace .unifiedStudy{box-sizing:border-box;max-width:100%;overflow-wrap:anywhere}
+.oaServiceWorkspace .unifiedStudy .runbookFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.oaServiceWorkspace .unifiedStudy .runbookFields label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:12px}
+.oaServiceWorkspace .unifiedStudy .runbookFields input,.oaServiceWorkspace .unifiedStudy .runbookFields select{width:100%;min-width:0;box-sizing:border-box;background:#071b2b;color:#f4fbff;border-radius:8px;border:1px solid #5b8098;padding:10px}
+.oaServiceWorkspace .unifiedStudy .runbookActions button,.oaServiceWorkspace .unifiedStudy .runbookComplete button,.oaServiceWorkspace .unifiedStudy .runbookHistory button{border:1px solid #5b8098;border-radius:8px;background:#154a69;color:#f4fbff;padding:9px 11px;font-size:12px;cursor:pointer}
+.oaServiceWorkspace .unifiedStudy .runbookActions button:disabled{opacity:.45;cursor:not-allowed}
+.oaServiceWorkspace .unifiedStudy .runbookHistory{margin-top:18px}
+.oaServiceWorkspace .unifiedStudy .runbookHistory small{display:block;color:#bad9e9;overflow-wrap:anywhere}
+.oaServiceSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:13px}
+.oaServiceSummary>div:not(.oaFieldControls){border:1px solid var(--oa-border);padding:11px;border-radius:9px;background:var(--oa-card);min-width:0}
+.oaServiceSummary small{display:block;color:var(--oa-muted);font-size:11px}
+.oaServiceSummary strong{display:block;font-size:13px;overflow-wrap:anywhere;margin-top:3px}
+.oaFieldControls{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.oaFieldControls button{color:var(--oa-text);background:var(--oa-card);border:1px solid var(--oa-border);padding:8px 11px;border-radius:10px;font-size:11px}
+.oaFieldControls button[aria-pressed=true]{border-color:var(--oa-strong);font-weight:700}
+.oaFieldControls button:disabled{opacity:.4;cursor:not-allowed}
+.oaServiceSummary>.oaSubtle{grid-column:1/-1}
+.oaCoverageRows{display:flex;flex-direction:column;margin-top:14px}
+.oaCoverageRow{border-top:1px solid var(--oa-border);padding:11px 0}
+.oaCoverageRow summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none}
+.oaCoverageRow summary::-webkit-details-marker{display:none}
+.oaCoverageName{font-weight:600;font-size:12px}
+.oaCoverageStatus{font-size:10px;border-radius:8px;padding:4px 7px;white-space:nowrap;background:var(--oa-card);color:var(--oa-muted)}
+.oaState-screened,.oaState-calculated{color:var(--oa-text);font-weight:650}
+.oaCoverageRow p{color:var(--oa-muted);font-size:11px;margin:6px 0 0;line-height:1.55}
+.oaCoverageRow p strong{color:var(--oa-text)}
+@media(max-width:850px){
+ .oaServiceSummary{grid-template-columns:1fr}
+ .oaServiceWorkspace .unifiedStudy .runbookFields{grid-template-columns:1fr}
+}
