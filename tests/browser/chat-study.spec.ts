@@ -133,7 +133,7 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
 });
 
 test("Imported numerical laser CSV runs with exact path hash and invalidates on replacement",async({page})=>{
- test.setTimeout(120000);
+ test.setTimeout(180000);
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
@@ -170,6 +170,27 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
  expect(exported.scanPlan.segmentCount).toBe(12);
  expect(exported.scanPlan.sha256).toMatch(/^[a-f0-9]{64}$/);
  expect(exported.summary.absorbedEnergyJ).toBeGreaterThan(0);
+ const physical=panel.locator('details[aria-label="Physical-layer laser schedule audit"]');
+ await physical.locator("summary").click();
+ await physical.getByLabel("Import physical-layer scan CSV").setInputFiles("public/verification/cube-10mm-physical-scan.csv");
+ await expect(physical.getByText(/Parsed 150 physical commands/)).toBeVisible();
+ const auditButton=physical.getByRole("button",{name:"Audit physical scan chronology"});
+ await expect(auditButton).toBeDisabled();
+ await physical.getByLabel("Approve physical schedule coordinate and clock assumptions").check();
+ await auditButton.click();
+ const auditRegion=physical.getByRole("region",{name:"Physical scan chronology audit result"});
+ await expect(auditRegion).toBeVisible({timeout:45000});
+ await expect(auditRegion).toContainText("Not simulated.");
+ await expect(auditRegion).toContainText("Physical layers supplied");
+ const physicalDownload=page.waitForEvent("download");
+ await physical.getByRole("button",{name:"Export physical scan audit JSON"}).click();
+ const auditRecord=JSON.parse(await readFile((await (await physicalDownload).path())!,"utf8"));
+ expect(auditRecord.schema).toBe("orientai.lpbf-physical-scan-audit.v1");
+ expect(auditRecord.audit.suppliedLayerCount).toBe(50);
+ expect(auditRecord.audit.virtualSlabCount).toBe(6);
+ expect(auditRecord.audit.totalCommandedLaserEnergyJ).toBeCloseTo(17.5,6);
+ expect(auditRecord.audit.simulationCompatibility).toBe("NOT_APPLIED_TO_COARSE_THERMAL_SOLVER");
+ expect(auditRecord.audit.sourceSha256).toMatch(/^[a-f0-9]{64}$/);
  const probePanel=panel.getByRole("region",{name:"High-rate internal thermal voxel history"});
  await expect(probePanel.getByRole("button",{name:"Run internal thermal probe"})).toBeEnabled();
  await probePanel.getByRole("button",{name:"Run internal thermal probe"}).click();
