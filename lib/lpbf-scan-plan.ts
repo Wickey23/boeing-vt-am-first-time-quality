@@ -68,6 +68,9 @@ export function validateScanPlan(
    throw Error("Scan segment "+(index+1)+": invalid laser power, speed or length.");
   const dt=length/s.speedMmS;
   time+=dt;energy+=dt*s.powerW;
+  const earlier=bySlab[s.slab].at(-1);
+  if(earlier&&Math.hypot(earlier.x1Mm-s.x0Mm,earlier.y1Mm-s.y0Mm)>1e-4)
+   throw Error("Scan segment "+(index+1)+": discontinuous travel. Supply an explicit laser-off segment connecting the prior endpoint to this start.");
   bySlab[s.slab].push(s);lastSlab=s.slab;
  }
  if(bySlab.some(g=>g.length===0))
