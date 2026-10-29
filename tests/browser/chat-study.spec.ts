@@ -63,3 +63,29 @@ test("chat only runs numerical service workers after explicit engineering approv
  await expect(page.getByRole("region",{name:"Calculated service results"})).toHaveCount(0);
  await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("0 calculated");
 });
+
+test("LPBF solid-state thermal prototype requires approval and displays bounded real worker frames",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Review process thermal inputs"}).click();
+ const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
+ const run=panel.getByRole("button",{name:"Run research thermal worker"});
+ await expect(run).toBeDisabled();
+ await panel.getByLabel("Recoating dwell per physical layer (s)").fill("0");
+ await panel.getByLabel("Effective solid energy coupling (0–1)").fill("0");
+ await panel.getByLabel("Thermal voxel resolution (6–16)").fill("6");
+ await panel.getByLabel("Approve research thermal assumptions").check();
+ await expect(run).toBeEnabled();
+ await run.click();
+ await expect(panel.getByLabel("Research thermal result")).toBeVisible({timeout:100000});
+ await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Coarse solid-state LPBF heat-flow prototype");
+ const history=page.getByRole("group",{name:"LPBF temperature history"}).or(page.locator(".oaLpbfFrameControls"));
+ await expect(history).toBeVisible();
+ await page.getByLabel("Thermal snapshot frame").fill("0");
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await expect(page.getByText("Solid-state LPBF research temperature")).toBeVisible();
+ await page.getByLabel("STL coordinate units").selectOption("25.4");
+ await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
+ await expect(page.locator(".oaLpbfFrameControls")).toHaveCount(0);
+});
