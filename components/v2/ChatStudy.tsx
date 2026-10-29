@@ -28,7 +28,8 @@ function restore(value:string|null):Message[]{
 export default function ChatStudy(){
  const a=useAnalysis();
  const inspect=usePartInspection(a.file,a.settings.unitScale);
- const [partHash,setPartHash]=useState<string|null>(null);
+ const [fingerprint,setFingerprint]=useState<{file:File|null;hash:string}|null>(null);
+ const partHash=fingerprint?.file===a.file?fingerprint.hash:null;
  const [historyKey,setHistoryKey]=useState<string|null>(null);
  const [messages,setMessages]=useState<Message[]>(emptyMessages);
  const [draft,setDraft]=useState("");
@@ -58,11 +59,11 @@ export default function ChatStudy(){
  const meshFindings=inspect.data?.audit.findings??[];
  const append=(message:Message)=>setMessages(old=>[...old,message].slice(-70));
  useEffect(()=>{
-  if(!a.file){setPartHash("no-part");return;}
+  if(!a.file){setFingerprint({file:null,hash:"no-part"});return;}
   let active=true;
   a.file.arrayBuffer().then(x=>crypto.subtle.digest("SHA-256",x)).then(d=>{
-   if(active)setPartHash(Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,"0")).join(""));
-  }).catch(()=>{if(active)setPartHash(null)});
+   if(active)setFingerprint({file:a.file,hash:Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,"0")).join("")});
+  }).catch(()=>{if(active)setFingerprint(null)});
   return()=>{active=false};
  },[a.file]);
  useEffect(()=>{
@@ -93,6 +94,7 @@ export default function ChatStudy(){
  },[a.file]);
  useEffect(()=>{
   if(!currentRun||!a.result||!partHash||pendingRun.current===a.result.runId||historyKey!==keyPrefix+partHash)return;
+  if(messages.some(m=>m.source==="run"&&m.runId===a.result?.runId)){pendingRun.current=a.result.runId;return;}
   pendingRun.current=a.result.runId;
   const best=a.result.candidates.find(c=>c.feasible);
   append(makeMessage("assistant",
@@ -101,7 +103,7 @@ export default function ChatStudy(){
     "A geometrically feasible candidate was found. Inspect its down-facing surfaces, contact and support proxies below.":
     "No geometrically feasible orientation was found under the current configured constraints.")+
     " This is not a layer-by-layer thermal simulation or a validated probability of print success.","run",a.result.runId));
- },[currentRun,a.result,partHash,historyKey]);
+ },[currentRun,a.result,partHash,historyKey,messages]);
  const submit=()=>{
   const question=draft.trim();
   if(!question||historyKey!==keyPrefix+partHash)return;
