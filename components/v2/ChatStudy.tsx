@@ -224,7 +224,7 @@ export default function ChatStudy(){
       <p className="oaSubtle">Run real linear-elastic stress/displacement and steady-conduction calculations for the uploaded part. These are not laser-print, melting or residual-stress predictions.</p>
       <button type="button" className="oaSecondaryRun" onClick={()=>setShowService(v=>!v)}>{showService?"Close":"Review inputs and run"} numerical studies</button>
       <div className="oaChatServiceVisibility" hidden={!showService}><ChatServiceStudy partHash={partHash} verified={isConfirmed} onResults={next=>{setServiceStudy(next);if(!next)setResultField("geometry");}} onOpenResults={()=>{setResultField("stress");setShowArtifact(true);}}/></div>
-      {serviceCurrent&&serviceStudy?.structural&&<div className="oaServiceSummary" aria-label="Calculated service results">
+      {serviceCurrent&&serviceStudy?.structural&&<div role="region" className="oaServiceSummary" aria-label="Calculated service results">
        <div><small>Maximum stress</small><strong>{serviceStudy.structural.solver.maxVonMisesMPa.toPrecision(4)} MPa</strong></div>
        <div><small>Maximum displacement</small><strong>{serviceStudy.structural.solver.maxDisplacementMm.toPrecision(4)} mm</strong></div>
        <div><small>Steady temperature</small><strong>{serviceStudy.thermal?serviceStudy.thermal.min.toFixed(2)+"–"+serviceStudy.thermal.max.toFixed(2)+" °C":"Not yet calculated"}</strong></div>
