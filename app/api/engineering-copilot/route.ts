@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {copilotProvider} from "@/lib/ai-provider";
 export const runtime="nodejs";
+export const dynamic="force-dynamic";
 export const maxDuration=30;
 const MAX_BODY=6_500_000;
 const valid=(s:unknown,n:number)=>typeof s==="string"?s.slice(0,n):"";
@@ -86,14 +87,19 @@ export async function POST(request:Request){
   const response=await fetch(provider.endpoint,{
    method:"POST",
    headers:{"Content-Type":"application/json",Authorization:"Bearer "+provider.key},
-   body:JSON.stringify({model:provider.model,temperature:0.2,max_tokens:550,
+   body:JSON.stringify({model:provider.model,max_tokens:550,
+    ...(provider.kind==="gateway"?{temperature:0.2}:{}),
     messages:[{role:"system",content:instruction},...history,{role:"user",content:provider.kind==="arc"?(pdfInput[0] as {type:"text";text:string}).text:pdfInput}]}),
    signal:AbortSignal.timeout(23000),
    cache:"no-store"
   });
   if(!response.ok){
-   return NextResponse.json({error:response.status===401||response.status===403?
-    "AI model authorization failed. Check your server-side provider credentials.":"AI model request failed (HTTP "+response.status+"). Use the local engineering guide."},{status:502});
+   const explanation=response.status===401||response.status===403?
+    "AI model authorization failed. Check your server-side provider credentials.":
+    response.status===429||response.status===503?
+    "The model is busy or queued at the provider (HTTP "+response.status+"). Try again later; no solver was run.":
+    "AI model request failed (HTTP "+response.status+"). Use the local engineering guide.";
+   return NextResponse.json({error:explanation},{status:502});
   }
   const result=await response.json();
   const answer=result?.choices?.[0]?.message?.content;
