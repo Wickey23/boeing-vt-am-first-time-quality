@@ -15,7 +15,7 @@ export type MovingInputs=LpbfInputs&{
  beamRadiusMm:number;liquidusC:number;latentHeatJKg:number;
 };
 export const MOVING_DEMO_INPUTS:MovingInputs={
- ...LPBF_DEMO_INPUTS,beamRadiusMm:.08,liquidusC:1660,latentHeatJKg:290000
+ ...LPBF_DEMO_INPUTS,hatchSpacingMm:.5,layerThicknessMm:.2,recoatSecondsPerLayer:0,resolution:6,beamRadiusMm:.08,liquidusC:1660,latentHeatJKg:290000
 };
 const dirs:[[number,number,number],[number,number,number],[number,number,number],[number,number,number],[number,number,number],[number,number,number]]=[
  [1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
