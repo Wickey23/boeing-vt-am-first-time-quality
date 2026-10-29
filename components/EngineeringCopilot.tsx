@@ -35,7 +35,7 @@ export default function EngineeringCopilot(){
  const [knowledge,setKnowledge]=useState<ProjectKnowledge|null>(null);
  const [draft,setDraft]=useState("");
  const [intakeDraft,setIntakeDraft]=useState("");
- const [activeTab,setActiveTab]=useState<"part"|"documents"|"requirements"|"run"|"results">("requirements");
+ const [activeTab,setActiveTab]=useState<"part"|"documents"|"requirements"|"run"|"results">("part");
  const factsRef=useRef<HTMLDetailsElement|null>(null);
  const docsRef=useRef<HTMLDetailsElement|null>(null);
  const evidenceRef=useRef<HTMLDetailsElement|null>(null);
@@ -455,7 +455,7 @@ export default function EngineeringCopilot(){
        intakeStep?.stage==="unsupported"?<div className="copilotUnsupported">DED planning for this STL is not implemented. Change the process to LPBF for supported screening, or use <Link href="/orientation?example=ded">the synthetic DED example</Link>.</div>:
        intakeStep?.stage==="ready"?<div className="copilotNextHint">Review the guided simulation plan below and run only the applicable analyses.</div>:null}
     </div>
-<details ref={conversationRef} open className="copilotConversation"><summary>Conversation and reference lookup <span>{knowledge.messages.length} messages</span></summary><div className="copilotConversationBody">
+<details ref={conversationRef} className="copilotConversation"><summary>Conversation and reference lookup <span>{knowledge.messages.length} messages</span></summary><div className="copilotConversationBody">
 <div className="copilotTimeline" ref={timeline} aria-label="Engineering conversation" role="log">
       {!knowledge.messages.length&&<div className="copilotBubble assistant"><b>Guided engineering intake</b><p>Start with the current question above. Your answers are recorded as engineer-provided context. The assistant does not assume loads, material allowables, or that a simulation has run.</p></div>}
       {knowledge.messages.map(m=><div key={m.id} className={"copilotBubble "+m.role}>
