@@ -35,7 +35,7 @@ export default function EngineeringCopilot(){
  const [knowledge,setKnowledge]=useState<ProjectKnowledge|null>(null);
  const [draft,setDraft]=useState("");
  const [intakeDraft,setIntakeDraft]=useState("");
- const [activeTab,setActiveTab]=useState<"part"|"documents"|"requirements"|"run"|"results">("part");
+ const [activeTab,setActiveTab]=useState<"part"|"documents"|"requirements"|"run"|"results">("requirements");
  const factsRef=useRef<HTMLDetailsElement|null>(null);
  const docsRef=useRef<HTMLDetailsElement|null>(null);
  const evidenceRef=useRef<HTMLDetailsElement|null>(null);
@@ -58,6 +58,7 @@ export default function EngineeringCopilot(){
  const [reviewExportBusy,setReviewExportBusy]=useState(false);
  const [reviewExportError,setReviewExportError]=useState("");
  const timeline=useRef<HTMLDivElement|null>(null);
+ const conversationRef=useRef<HTMLDetailsElement|null>(null);
  const inspect=usePartInspection(a.file,a.settings.unitScale);
 
  const verified=completedPart(a.journey,a.file,a.settings.unitScale);
@@ -159,6 +160,22 @@ export default function EngineeringCopilot(){
   process:a.journey.process
  };
  const append=(items:CopilotMessage[])=>setKnowledge(s=>s?{...s,messages:[...s.messages,...items].slice(-45)}:s);
+ // Continue the first message from the chat-first landing page without running a
+ // remote model or triggering an engineering solver. The local guide is explicit.
+ useEffect(()=>{
+  if(!knowledge||!partKey||knowledge.partKey!==partKey)return;
+  let initial="";
+  try{
+   initial=sessionStorage.getItem("orientai-pending-message-v1")??"";
+   if(initial)sessionStorage.removeItem("orientai-pending-message-v1");
+  }catch{return;}
+  if(!initial.trim())return;
+  const reply=localCopilotReply(knowledge,initial.trim(),opts);
+  append([createMessage("user",initial.trim(),"user"),
+   createMessage("assistant",reply.text,"local_guide",reply.sourceIds)]);
+  setActiveTab("requirements");
+  if(conversationRef.current)conversationRef.current.open=true;
+ },[partKey,knowledge?.partKey]);
  const intakeStep=knowledge?getIntakeStep(knowledge,{partName:opts.partName,confirmed:verified,
   loadsReviewed:opts.loadsReviewed,process:opts.process}):null;
  const progressSteps=knowledge?intakeProgress(knowledge,{partName:opts.partName,confirmed:verified,
@@ -438,7 +455,7 @@ export default function EngineeringCopilot(){
        intakeStep?.stage==="unsupported"?<div className="copilotUnsupported">DED planning for this STL is not implemented. Change the process to LPBF for supported screening, or use <Link href="/orientation?example=ded">the synthetic DED example</Link>.</div>:
        intakeStep?.stage==="ready"?<div className="copilotNextHint">Review the guided simulation plan below and run only the applicable analyses.</div>:null}
     </div>
-<details className="copilotConversation"><summary>Conversation and reference lookup <span>{knowledge.messages.length} messages</span></summary><div className="copilotConversationBody">
+<details ref={conversationRef} open className="copilotConversation"><summary>Conversation and reference lookup <span>{knowledge.messages.length} messages</span></summary><div className="copilotConversationBody">
 <div className="copilotTimeline" ref={timeline} aria-label="Engineering conversation" role="log">
       {!knowledge.messages.length&&<div className="copilotBubble assistant"><b>Guided engineering intake</b><p>Start with the current question above. Your answers are recorded as engineer-provided context. The assistant does not assume loads, material allowables, or that a simulation has run.</p></div>}
       {knowledge.messages.map(m=><div key={m.id} className={"copilotBubble "+m.role}>
