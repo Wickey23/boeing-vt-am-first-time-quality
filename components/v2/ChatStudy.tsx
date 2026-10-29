@@ -5,12 +5,15 @@ import Link from "next/link";
 import {useAnalysis} from "@/components/AnalysisProvider";
 import {usePartInspection} from "@/components/PartInspection";
 import {completedPart} from "@/lib/engineering-journey";
-import {screenCandidate,UNAVAILABLE_PHYSICS} from "@/lib/part-screening";
+import {screenCandidate} from "@/lib/part-screening";
+import {failureCoverage,coverageSummary} from "@/lib/failure-coverage";
+import ChatServiceStudy from "@/components/v2/ChatServiceStudy";
+import type {ServiceStudyResults} from "@/components/UnifiedServiceStudy";
 import {ArrowUp,Box as BoxIcon,CheckCircle2,ChevronDown,ChevronUp,FileUp,Paperclip,Play,RotateCcw,ShieldAlert,SlidersHorizontal,SquareArrowOutUpRight,X,LoaderCircle,AlertTriangle,FileText} from "lucide-react";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import "./chat-study.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
-type Message={id:string;role:"user"|"assistant";text:string;createdAt:string;source:"engineer"|"local"|"run";runId?:string};
+type Message={id:string;role:"user"|"assistant";text:string;createdAt:string;source:"engineer"|"local"|"run"|"service";runId?:string};
 const keyPrefix="orientai-chat-study-v2-";
 const emptyMessages:Message[]=[];
 function makeMessage(role:Message["role"],text:string,source:Message["source"],runId?:string):Message{
@@ -21,7 +24,7 @@ function restore(value:string|null):Message[]{
   const items=JSON.parse(value??"[]");
   if(!Array.isArray(items))return [];
   return items.filter(v=>v&&typeof v.id==="string"&&typeof v.text==="string"&&
-   (v.role==="user"||v.role==="assistant")&&["engineer","local","run"].includes(v.source))
+   (v.role==="user"||v.role==="assistant")&&["engineer","local","run","service"].includes(v.source))
    .slice(-70).map(v=>({...v,text:v.text.slice(0,4000)}));
  }catch{return [];}
 }
@@ -40,6 +43,9 @@ export default function ChatStudy(){
  const [layer,setLayer]=useState(100);
  const [playing,setPlaying]=useState(false);
  const [showMethods,setShowMethods]=useState(true);
+ const [showService,setShowService]=useState(false);
+ const [serviceStudy,setServiceStudy]=useState<ServiceStudyResults|null>(null);
+ const [resultField,setResultField]=useState<"geometry"|"stress"|"displacement"|"thermal">("geometry");
  useEffect(()=>{
   if(!playing)return;
   const tick=setInterval(()=>setLayer(v=>Math.min(100,v+1)),80);
@@ -57,6 +63,15 @@ export default function ChatStudy(){
  const selected=useMemo(()=>currentRun?a.result?.candidates.find(v=>v.id===a.selected)??a.result?.candidates[0]:undefined,[a.result,a.selected,currentRun]);
  const findings=useMemo(()=>selected&&a.result?screenCandidate(selected,a.result.candidates):[],[selected,a.result]);
  const meshFindings=inspect.data?.audit.findings??[];
+ const serviceCurrent=Boolean(serviceStudy&&a.file&&partHash&&partHash===serviceStudy.partSha256&&
+  serviceStudy.unitScale===a.settings.unitScale&&serviceStudy.process===a.journey.process&&isConfirmed);
+ const serviceField=serviceCurrent&&resultField==="stress"?serviceStudy?.structural?.stress:
+  serviceCurrent&&resultField==="displacement"?serviceStudy?.structural?.displacement:
+  serviceCurrent&&resultField==="thermal"?serviceStudy?.thermal:undefined;
+ const coverage=failureCoverage({hasMeshAudit:Boolean(inspect.data),hasOrientationRun:currentRun,
+  hasStructuralStudy:serviceCurrent&&Boolean(serviceStudy?.structural),
+  hasSteadyThermalStudy:serviceCurrent&&Boolean(serviceStudy?.thermal),process:a.journey.process});
+ const coverageCounts=coverageSummary(coverage);
  const append=(message:Message)=>setMessages(old=>[...old,message].slice(-70));
  useEffect(()=>{
   if(!a.file){setFingerprint({file:null,hash:"no-part"});return;}
@@ -81,6 +96,7 @@ export default function ChatStudy(){
   }else setMessages(existing);
   setHistoryKey(key);
   pendingRun.current=null;
+  setServiceStudy(null);setResultField("geometry");setShowService(false);
  },[partHash,a.ready]);
  useEffect(()=>{if(historyKey&&historyKey===keyPrefix+partHash){
   try{localStorage.setItem(historyKey,JSON.stringify(messages.slice(-70)))}catch{}
@@ -104,13 +120,27 @@ export default function ChatStudy(){
     "No geometrically feasible orientation was found under the current configured constraints.")+
     " This is not a layer-by-layer thermal simulation or a validated probability of print success.","run",a.result.runId));
  },[currentRun,a.result,partHash,historyKey,messages]);
+ useEffect(()=>{
+  if(!serviceCurrent||!serviceStudy?.thermal||!serviceStudy.structural||!partHash||historyKey!==keyPrefix+partHash)return;
+  if(messages.some(m=>m.source==="service"&&m.runId===serviceStudy.jobId))return;
+  append(makeMessage("assistant",
+   "Engineer-approved service study completed on the uploaded STL. The linear-elastic model calculated maximum von Mises stress "+
+   serviceStudy.structural.solver.maxVonMisesMPa.toPrecision(5)+" MPa and displacement "+
+   serviceStudy.structural.solver.maxDisplacementMm.toPrecision(5)+" mm. The separate steady-conduction model calculated "+
+   serviceStudy.thermal.min.toPrecision(5)+" to "+serviceStudy.thermal.max.toPrecision(5)+
+   " °C. These results use idealized service boundary conditions and do NOT simulate the printing process, residual stress, porosity or certification.",
+   "service",serviceStudy.jobId));
+ },[serviceCurrent,serviceStudy,partHash,historyKey,messages]);
  const submit=()=>{
   const question=draft.trim();
   if(!question||historyKey!==keyPrefix+partHash)return;
   append(makeMessage("user",question,"engineer"));
   const lower=question.toLowerCase();
   let response:string;
-  if(/run|simulat|predict|screen|analy[sz]|failure|risk|print/.test(lower)){
+  if(/\b(service|fea|finite.element|structural|stress|displacement|steady.conduction|thermal study)\b/.test(lower)){
+    response=a.file?"Open the Engineer-approved numerical studies card below. Confirm actual service loads, fixtures, elastic material properties and thermal boundary conditions before running the real workers. Stress and steady temperature are not print-induced defects.":"Upload the part, then review engineering boundary conditions in the service study card.";
+    setShowService(true);
+   }else if(/run|simulat|predict|screen|analy[sz]|failure|risk|print/.test(lower)){
    response=!a.file?"Upload an STL to start local mesh inspection. I cannot simulate a part that has not been provided.":
    !isConfirmed?"First confirm the STL units and actual dimensions below. This prevents invalid physical scaling.":
    a.journey.process!=="PBF_LB_METAL"?"The uploaded arbitrary-part DED process simulation is not implemented; choose LPBF for supported geometric screening, or open the DED teaching example.":
@@ -149,12 +179,13 @@ export default function ChatStudy(){
        <div className="oaMessageText">{m.text}</div>
        {m.source==="local"&&<small className="oaMessageSource">Local engineering guide · no external AI request</small>}
        {m.source==="run"&&<small className="oaMessageSource">Executed geometry worker · run {m.runId?.slice(0,8)}</small>}
+        {m.source==="service"&&<small className="oaMessageSource">Executed engineer-approved service workers · job {m.runId?.slice(0,8)}</small>}
       </>}
      </div>
     </div>)}
     {a.file&&<article className="oaInChatModel" aria-label="Uploaded STL model in chat">
       <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button onClick={()=>setShowArtifact(v=>!v)} type="button"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
-      {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports} buildFraction={layer/100}/></ViewerErrorBoundary></div>}
+      {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
       <div className="oaModelMetadata">
        <span>{inspect.data?inspect.data.audit.triangles.toLocaleString()+" mesh triangles":"Inspecting mesh..."}</span>
        <span>{inspect.data?Object.values(inspect.data.dimensions).map(n=>n.toFixed(1)).join(" × ")+" mm (selected units)":"Dimensions pending"}</span>
@@ -231,8 +262,8 @@ export default function ChatStudy(){
   </section>
   {showArtifact&&a.file&&<aside className="oaStudyArtifact" aria-label="Expanded 3D engineering model">
    <header><span><BoxIcon size={18}/> {a.file.name}</span><button type="button" onClick={()=>setShowArtifact(false)} aria-label="Close 3D viewer"><X size={19}/></button></header>
-   <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports} buildFraction={layer/100}/></ViewerErrorBoundary></div>
-   <p>Live STL geometry · {overlay} view · build height {layer}%</p>
+   <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>
+   <p>Live STL geometry · {serviceField?resultField+" service field":overlay+" view · build height "+layer+"%"} · Research only</p>
    <Link href="/copilot/advanced">Open advanced numerical studies <SquareArrowOutUpRight size={14}/></Link>
   </aside>}
   <Link className="oaAdvancedLink" href="/copilot/advanced">Advanced engineering controls, documents and numerical studies <SquareArrowOutUpRight size={14}/></Link>
