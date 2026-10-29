@@ -36,6 +36,7 @@ test("Explicit physical layer chronology totals laser-on/off command times and e
  assert.equal(report.firstLayer,0);
  assert.equal(report.lastLayer,49);
  assert.equal(report.unrepresentedLayers.length,0);
+ assert.ok(report.maxAbsoluteLayerZResidualMm<1e-8);
  assert.equal(report.missingIntermediateLayerIndices.length,0);
  assert.equal(report.physicalLayerCountFromGeometry,50);
  assert.equal(report.virtualSlabCount,6);
@@ -79,4 +80,6 @@ test("Partial physical histories and unoccupied slab mappings are explicit warni
  assert.equal(report.firstLayer,15);
  assert.ok(report.unrepresentedLayers.some(l=>l>=15));
  assert.ok(report.warnings.some(x=>/begins after layer 0/.test(x)));
+ assert.ok(report.maxAbsoluteLayerZResidualMm>1);
+ assert.ok(report.warnings.some(x=>/build-origin or machine-to-STL transform/.test(x)));
 });
