@@ -7,9 +7,10 @@
  * simplified equilibrium phase transition. No powder or melt-pool fluid flow.
  */
 import {voxelizePart,projectVoxelValues} from "./voxel-thermal";
+import {nominalLayerMap} from "./lpbf-layer-mapping";
 import {validateScanPlan,positionOnScanSegment,type ScanPlan,type ScanSegment} from "./lpbf-scan-plan";
 import {
- LPBF_DEMO_INPUTS,validateLpbfInputs,type LpbfInputs,type LpbfResult,type LpbfFrame
+ LPBF_DEMO_INPUTS,validateLpbfInputs,type LpbfInputs,type LpbfResult,type LpbfFrame,type LpbfProbePoint,type LpbfProbeSample
 } from "./lpbf-transient";
 export const MOVING_SOURCE_VERSION="lpbf-raster-enthalpy-0.1";
 export type MovingInputs=LpbfInputs&{
@@ -103,7 +104,7 @@ export function movingEnthalpyStep(args:{
  * Exposed in UI as a bounded, unvalidated engineering-research calculation. */
 export function simulateMovingSource(
  buffer:ArrayBuffer,unitScale:number,input:MovingInputs,
- onProgress?:(done:number,total:number)=>void,scanPlan?:ScanPlan,stepScale=1
+ onProgress?:(done:number,total:number)=>void,scanPlan?:ScanPlan,stepScale=1,probePoint?:LpbfProbePoint
 ):LpbfResult{
  validateMovingInputs(input);
  if(!Number.isFinite(stepScale)||stepScale<.25||stepScale>1)throw Error("Numerical time-step scaling must be 0.25–1.");
@@ -129,6 +130,7 @@ export function simulateMovingSource(
  cells.forEach((c,i)=>{const list=byZ.get(c[2])??[];list.push(i);byZ.set(c[2],list);});
  const extent={minX:box.min.x,maxX:box.max.x,minY:box.min.y,maxY:box.max.y};
  const zSpan=box.max.z-box.min.z;
+ const mapping=nominalLayerMap({buildHeightMm:zSpan,physicalLayerThicknessMm:input.layerThicknessMm,virtualCellHeightMm:h,occupiedZIndices:layers});
  const checkedScan=scanPlan?validateScanPlan(scanPlan,layers.length,extent):null;
  if(scanPlan&&!/^[a-f0-9]{64}$/.test(scanPlan.sha256))throw Error("Imported scan CSV requires a valid content SHA-256.");
  const nominalLayers=Math.ceil(zSpan/input.layerThicknessMm);
@@ -154,6 +156,47 @@ export function simulateMovingSource(
  let absorbed=0,plate=0,conv=0,elapsed=0,steps=0,peak=-Infinity,maxLiquid=0;
  let accumulatedRecoating=0;
  const effectiveRadius=Math.max(input.beamRadiusMm,h/2);
+ const probeCell=(()=>{
+  if(!probePoint)return -1;
+  if(Object.values(probePoint).some(v=>!Number.isFinite(v)||Math.abs(v)>100000))
+   throw Error("Thermal probe point must have finite STL-aligned millimeter coordinates.");
+  let chosen=-1,nearest=Infinity;
+  for(let i=0;i<cells.length;i++){
+   const c=cells[i];
+   const distance=Math.hypot(
+    box.min.x+(c[0]+.5)*h-probePoint.xMm,
+    box.min.y+(c[1]+.5)*h-probePoint.yMm,
+    box.min.z+(c[2]+.5)*h-probePoint.zMm
+   );
+   if(distance<nearest){chosen=i;nearest=distance;}
+  }
+  if(chosen<0||nearest>h*.9)
+   throw Error("Requested temperature probe is not within 0.9 voxel widths of modeled solid. Review STL millimeters and internal voxel resolution.");
+  return chosen;
+ })();
+ const probeCenter=probeCell<0?undefined:{
+  xMm:box.min.x+(cells[probeCell][0]+.5)*h,
+  yMm:box.min.y+(cells[probeCell][1]+.5)*h,
+  zMm:box.min.z+(cells[probeCell][2]+.5)*h
+ };
+ const probeSamples:LpbfProbeSample[]=[];
+ const probeStride=Math.max(1,Math.ceil(estimatedSteps/1600));
+ let probeActivation=-1,observedProbePeak=-Infinity,probeSteps=0;
+ let laserPowerAtStep=0,laserWasOn=false;
+ const readProbe=(slab:number,forced=false)=>{
+  if(probeCell<0||!active[probeCell])return;
+  const pointTemp=temperatureFromEnthalpy(energy[probeCell]/capacity,input);
+  if(!Number.isFinite(pointTemp))throw Error("Nonfinite thermal probe reading.");
+  observedProbePeak=Math.max(observedProbePeak,pointTemp);
+  probeSteps++;
+  if(!forced&&steps%probeStride!==0)return;
+  const sample:LpbfProbeSample={timeSeconds:elapsed,temperatureC:pointTemp,
+   virtualSlab:slab,laserPowerW:laserPowerAtStep,laserActive:laserWasOn};
+  const previous=probeSamples.at(-1);
+  if(previous&&Math.abs(previous.timeSeconds-elapsed)<1e-11)probeSamples[probeSamples.length-1]=sample;
+  else probeSamples.push(sample);
+  if(probeSamples.length>2050)throw Error("Thermal probe exceeded sampling cap; no history published.");
+ };
  const notes=[
   scanPlan?"Imported, content-hashed numerical CSV coordinates; the actual machine file, scan calibration, layer mapping and measured timing are not verified.":"Unvalidated raster research model: invented serpentine bounding-box tracks, not a real slicer, measured laser path or qualified scan strategy.",
   "Gaussian beam is discretized at voxel scale; effective numerical radius is the larger of beam radius and half a voxel. Typical physical LPBF beam spots are not resolved by this coarse browser grid.",
@@ -167,6 +210,7 @@ export function simulateMovingSource(
  for(let k=0;k<layers.length;k++){
   const z=layers[k],newCells=byZ.get(z)!;
   for(const i of newCells)active[i]=1; // initial cell energy=0 at ambient
+  if(probeCell>=0&&active[probeCell]&&probeActivation<0){probeActivation=elapsed;laserPowerAtStep=0;laserWasOn=false;readProbe(k,true);}
   const currentZ=Math.min(box.max.z,box.min.z+(z+1)*h);
   const previousZ=k?Math.min(box.max.z,box.min.z+(layers[k-1]+1)*h):box.min.z;
   const span=Math.max(0,currentZ-previousZ);
@@ -185,12 +229,14 @@ export function simulateMovingSource(
    const dt=Math.min(maxDt,laserOn?(durations?Math.min(duration-inScan,durations[scanIndex]-segmentElapsed):duration-inScan):remainingDwell);
    if(!(dt>0))break;
    heatJ.fill(0);
+   laserPowerAtStep=0;laserWasOn=false;
    if(laserOn){
     const segment=explicitSegments?.[scanIndex];
     const point=segment&&durations?positionOnScanSegment(segment,
      (segmentElapsed+dt/2)/durations[scanIndex]):
      rasterPosition((inScan+dt/2)*input.scanSpeedMmS,extent,input.hatchSpacingMm);
     const powerW=segment?segment.powerW:input.laserPowerW;
+    laserPowerAtStep=powerW;laserWasOn=powerW>0;
     if(powerW>0){
      // Reject a powered beam over unmodeled powder/empty space rather than
      // silently renormalizing its energy into distant solid voxels.
@@ -207,6 +253,7 @@ export function simulateMovingSource(
    absorbed+=exchange.absorbedEnergyJ;
    plate+=exchange.plateEnergyJ;conv+=exchange.convectiveEnergyJ;
    elapsed+=dt;steps++;
+   readProbe(k);
    if(steps>130100)throw Error("Moving-source worker iteration cap exceeded.");
    if(laserOn){
     inScan+=dt;
@@ -231,6 +278,7 @@ export function simulateMovingSource(
    min=Math.min(min,t);max=Math.max(max,t);sum+=t;count++;
   }
   peak=Math.max(peak,max);
+  readProbe(k,true);
   const projected=projectVoxelValues(mesh,temps);
   frames.push({fraction:Math.min(1,(currentZ-box.min.z)/zSpan),
    zMm:currentZ-box.min.z,timeSeconds:elapsed,
@@ -251,6 +299,22 @@ export function simulateMovingSource(
   exceedsSolidus:peak>=input.solidusC,timeSteps:steps
  };
  return {engine:scanPlan?"lpbf-imported-enthalpy-0.1":MOVING_SOURCE_VERSION,inputs:{...input},
+  layerMapping:mapping,
+  probe:probePoint&&probeCenter?{
+   model:"INTERNAL_THERMAL_VOXEL_PROBE_UNVALIDATED",requestedMm:{...probePoint},sampledVoxelCenterMm:probeCenter,
+   registrationOffsetMm:Math.hypot(probePoint.xMm-probeCenter.xMm,probePoint.yMm-probeCenter.yMm,probePoint.zMm-probeCenter.zMm),
+   voxelWidthMm:h,voxelActivationTimeSeconds:probeActivation,
+   samplingStrideSteps:probeStride,actualStepsObserved:probeSteps,sampledPoints:probeSamples,
+   observedStepPeakC:observedProbePeak,
+   sampledPeakC:Math.max(...probeSamples.map(x=>x.temperatureC)),
+   maximumSampleGapSeconds:Math.max(0,...probeSamples.slice(1).map((x,i)=>x.timeSeconds-probeSamples[i].timeSeconds)),
+   limitations:[
+    "The probe is the *nearest active volume voxel center*, not a surface thermography pixel or physical thermocouple.",
+    "Samples are decimated from explicit solver timesteps; even exact per-step peak is limited by unresolved beam spot and virtual-slab deposition.",
+    "The physical-layer count is geometric only; an aggregated virtual slab is not an executed machine layer or measured scan trajectory.",
+    "No native NIST TAM/SCR benchmark comparison, clock calibration, measured uncertainty, or validated defect prediction."
+   ]
+  }:undefined,
   scanPlan:scanPlan?{sourceName:scanPlan.sourceName,sha256:scanPlan.sha256,segmentCount:scanPlan.segments.length,version:scanPlan.version}:undefined,
   numerics:{stepScale,maxDtSeconds:maxDt},
   mesh:{cells:cells.length,cellSizeMm:h,virtualSlabs:layers.length,
