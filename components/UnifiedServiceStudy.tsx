@@ -6,6 +6,7 @@ import {END_FACES,type EndFace,validateServiceSetup} from "@/lib/service-load";
 import type {StructuralField} from "@/lib/voxel-structural";
 import type {ThermalField,ThermalInput} from "@/lib/voxel-thermal";
 import type {ReviewedEvidence} from "@/lib/engineering-evidence";
+import type {ApprovedParameterBinding} from "@/lib/engineering-parameter-binding";
 import {
  createEngineeringJob,applyJobEvent,loadEngineeringJobs,saveEngineeringJob,summarizeJobForExport,
  type EngineeringJob,type JobStep
@@ -26,8 +27,8 @@ function structuralValid(value:Parameters<typeof validateServiceSetup>[0]):boole
  try{validateServiceSetup(value);const f=value as {forceXN:number;forceYN?:number;forceZN:number};
  return Math.abs(f.forceXN)+Math.abs(f.forceYN??0)+Math.abs(f.forceZN)>0;}catch{return false;}
 }
-export default function UnifiedServiceStudy({partSha256,verified,reviewedEvidence,sourceIds,onResults,onOpenResults}:{
- partSha256?:string;verified:boolean;reviewedEvidence:ReviewedEvidence[];sourceIds:string[];
+export default function UnifiedServiceStudy({partSha256,verified,reviewedEvidence,sourceIds,parameterBindings=[],onResults,onOpenResults}:{
+ partSha256?:string;verified:boolean;reviewedEvidence:ReviewedEvidence[];sourceIds:string[];parameterBindings?:ApprovedParameterBinding[];
  onResults:(value:ServiceStudyResults|null)=>void;onOpenResults:()=>void;
 }){
  const a=useAnalysis(),service=activeServiceCase(a.servicePlan);
@@ -124,6 +125,9 @@ export default function UnifiedServiceStudy({partSha256,verified,reviewedEvidenc
     serviceCase:{id:service.id,name:service.name,input:JSON.parse(JSON.stringify(input))},
     thermalInput:heat,approvedAt:new Date().toISOString(),sourceIds,
     reviewedEvidence:reviewedEvidence.map(x=>({...x})),
+    parameterBindings:parameterBindings.filter(b=>b.serviceCaseId===service.id&&
+      b.independentlyVerified&&sourceIds.includes(b.sourceId)&&
+      Object.is(input[b.target],b.value)).map(x=>({...x})),
     modelScope:"research-not-qualified"
    },["service-structural","steady-conduction"]);
    persist(next);
