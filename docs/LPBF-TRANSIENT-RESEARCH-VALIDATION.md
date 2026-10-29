@@ -146,3 +146,27 @@ NIST challenge definitions: https://www.nist.gov/ambench/amb2022-01-benchmark-me
 NIST dataset DOI and citation guidance: https://www.nist.gov/ambench/direct-am-bench-data-links-and-referencing-guidance
 
 Privacy: uploaded STL and CSV bytes remain in the local browser; the JSON export includes the original-file SHA-256 identities, declared source metadata and comparisons but not the raw source CSV. Retain both original files for independent review.
+
+## Solver-step internal thermal voxel probes and nominal physical-layer index mapping
+
+The moving-raster and imported-CSV LPBF research modes now offer an optional **Run internal thermal probe** calculation. It reruns the original approved inputs and identical part/scan plan in an independently cancellable browser worker. The worker verifies uploaded STL bytes against the approved part SHA-256 and checks that the original model mode, parameters and imported path hash match the baseline before simulating.
+
+The user specifies a point (x_mm, y_mm, z_mm) in the STL's original, engineer-confirmed millimeter frame. The tool chooses the closest **occupied thermal volume voxel CENTER**, rejecting points farther than 0.9 voxel widths. This is *not* an arbitrary surface finite-element sample, registered camera pixel, independent thermocouple position, or experimentally calibrated location. The output reports voxel-center coordinate and offset, activation time, internal voxel width and data classification.
+
+Within each numerical integration step, the solver evaluates the thermal voxel's enthalpy-based temperature, tracks its exact **numerical-step maximum**, and records an ordered, bounded history for the chart/CSV. To avoid excessive memory, a deterministic stride based on the estimated step budget reduces recorded samples (up to roughly 2,050 points), with additional activation/end-of-slab samples. The recorded-sample maximum may miss narrow model transients, while the independent per-step maximum captures only those resolved by this **coarse explicit integrator**. Neither represents a physically resolved laser spot or measured melt-pool thermal peak.
+
+The output includes virtual-slab number, elapsed model time (s), internal voxel temperature (°C), commanded scan power (W) and laser-on status. A CSV exports these samples; a separate JSON exports source part/scan SHA-256, solver version, material/scan assumptions, probe location and offset, sampled data, numerical energy accounting and validity limits. Data stay in the local browser unless exported deliberately.
+
+### Physical-layer geometry correspondence
+
+The moving-source calculation also supplies a geometric **nominal layer index manifest**. Based on uploaded STL build height and the user-entered nominal physical layer thickness, each hypothetical layer CENTER is assigned to the virtual voxel-height slab containing it. The manifest records original nominal layer indices for every occupied slab and flags nominal layer centers that fall outside modeled solid slabs.
+
+This grouping **does NOT import or reconstruct physical machine scan commands**. It cannot preserve the sequence, machine-time delays, laser-off travel, volume-overlap deposition, dynamic powder bed state, physical layer cooling or hatch orientations when multiple real layers are aggregated into a single thermal slab. It must not be used automatically to convert real G-code/HDF5 layer paths into valid laser heat input. Until a layer-consistent physics representation exists, the imported CSV format continues to use *virtual* slab indices only.
+
+### Verification and remaining limitations
+
+Numerical tests compare runs with and without a probe to ensure sampled observations do not change energy deposition or temperature solutions; verify laser-on/off signals, monotone sample timestamps, active-voxel tolerance, interval spacing/peak tracking, invalid coordinate rejection and complete layer-index partitioning. Browser tests execute a source-hashed imported scan, probe run and downloaded trace on the public 10 mm cube test geometry.
+
+**NOT NIST AM Bench validation:** The NIST AMB2022-01 challenge computes time above the midpoint of solidus/liquidus temperatures and solid cooling rate after crossing the solidus at specified spatial locations, using high-speed thermographic profiles. ORIENTAI's internal coarse-volume voxel history has neither the required spatial beam resolution, physically correct powder/phase-change physics nor independently registered thermography to score those observables. Do not compute a 'NIST passed' label or aerospace qualification result from this research output.
+
+Official NIST reference: https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems
