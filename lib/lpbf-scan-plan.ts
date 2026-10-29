@@ -20,7 +20,7 @@ export type ScanPlan={
 const HEADER="slab,x0_mm,y0_mm,x1_mm,y1_mm,power_w,speed_mm_s";
 export const SCAN_CSV_HEADER=HEADER;
 const safeLabel=(label:string)=>label.replace(/[\r\n<>]/g,"").slice(0,120)||"user-supplied.csv";
-export function parseScanCsv(text:string,sourceName="user-supplied.csv"){
+export function parseScanCsv(text:string,sourceName="user-supplied.csv"):Omit<ScanPlan,"sha256">{
  if(text.length>256*1024)throw Error("Scan CSV exceeds 256 KB input limit.");
  const rows=text.replace(/^\uFEFF/,"").split(/\r?\n/).map(s=>s.trim()).filter(s=>s&&!s.startsWith("#"));
  if(rows.length<2)throw Error("Scan CSV must include a header and at least one segment.");
