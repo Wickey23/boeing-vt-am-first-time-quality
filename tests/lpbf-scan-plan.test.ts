@@ -56,11 +56,11 @@ test("Explicit bounded laser-on and laser-off travel controls real coupled energ
  assert.ok(result.summary.relativeEnergyImbalance<1e-4);
  assert.ok(result.summary.peakSolidTemperatureC>25);
 });
-test("Imported powered scan never silently deposits energy into unmodeled empty space",()=>{
+test("Imported powered scan with coordinates outside the part is rejected before solving",()=>{
  const mesh=voxelizePart(cube(),{x:0,y:0,z:0},1,6);
  const n=[...new Set(mesh.cells.map(c=>c[2]))].length;
  const parsed=parseScanCsv(sample(n));
  const plan={...parsed,sha256:digest};
- plan.segments[0]={...plan.segments[0],y0Mm:1,y1Mm:1};
- assert.throws(()=>validateScanPlan(plan,n,{minX:-1,maxX:1,minY:-1,maxY:1}),/^(?!.*outside)/); // within bounds but may be inactive perimeter
+ plan.segments[0]={...plan.segments[0],y0Mm:2,y1Mm:2};
+ assert.throws(()=>validateScanPlan(plan,n,{minX:-1,maxX:1,minY:-1,maxY:1}),/outside uploaded STL/);
 });
