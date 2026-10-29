@@ -44,4 +44,7 @@ test("a reviewed source maps an engineer-approved force to a real service job an
  await page.getByLabel("Notes for fixture-loads.txt").fill("Source has been edited after numerical approval.");
  await page.getByRole("button",{name:"Open Requirements stage"}).click();
  await expect(page.locator(".parameterBinding")).toContainText("Stale: source, review, case or value changed");
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
+ await expect(page.getByRole("button",{name:"Run All Applicable Analyses"})).toBeDisabled();
+ await expect(page.getByText("All three result fields computed.")).toHaveCount(0);
 });
