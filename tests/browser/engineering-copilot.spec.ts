@@ -5,6 +5,7 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
  await page.goto("/");
  await expect(page.getByRole("heading",{name:"What are we working on today?"})).toBeVisible();
  await page.getByRole("link",{name:"Current study"}).click();
+ await page.goto("/copilot/advanced");
  await expect(page.getByLabel("Upload target STL")).toBeVisible();
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByText("cube-10mm.stl").first()).toBeVisible();
@@ -43,7 +44,7 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
  expect(pageErrors).toEqual([]);
 });
 test("AI sharing requires explicit approval and PDFs are not misrepresented as locally read",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotDocs > summary").click();
