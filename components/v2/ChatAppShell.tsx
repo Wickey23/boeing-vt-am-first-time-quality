@@ -3,7 +3,7 @@ import Link from "next/link";
 import {usePathname,useRouter} from "next/navigation";
 import {useState} from "react";
 import {useAnalysis} from "@/components/AnalysisProvider";
-import {PanelLeft,PanelLeftClose,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,Menu,X,ShieldCheck} from "lucide-react";
+import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck} from "lucide-react";
 import "./chat-shell.css";
 
 /** The chat-first shell is intentionally isolated from the legacy engineering dashboard.
@@ -59,6 +59,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
      <Link href="/orientation" onClick={()=>setMobileOpen(false)}>Orientation workspace</Link>
      <Link href="/simulation/benchmarks" onClick={()=>setMobileOpen(false)}>Simulation benchmarks</Link>
      <Link href="/ml" onClick={()=>setMobileOpen(false)}>ML experiments</Link>
+     <Link href="/orientation?example=ded" onClick={()=>setMobileOpen(false)}>Launch DED example</Link>
      <Link href="/validation" onClick={()=>setMobileOpen(false)}>Validation</Link>
      <Link href="/how-it-works" onClick={()=>setMobileOpen(false)}><BookOpen size={14}/> Technical guide</Link>
     </div>
