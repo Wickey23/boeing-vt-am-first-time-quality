@@ -20,6 +20,8 @@ import {applyIntakeAnswer,getIntakeStep,intakeProgress} from "@/lib/engineering-
 import {exportEngineeringTeamBundle,importEngineeringTeamBundle} from "@/lib/engineering-team-bundle";
 import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
 import EngineeringReadinessPanel from "@/components/EngineeringReadinessPanel";
+import EngineeringParameterReview from "@/components/EngineeringParameterReview";
+import {activeParameterBindings,type ApprovedParameterBinding} from "@/lib/engineering-parameter-binding";
 import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
 import "./copilot.css";
 const Viewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
@@ -71,6 +73,7 @@ export default function EngineeringCopilot(){
  const studyCurrent=Boolean(serviceStudy&&partKey===serviceStudy.partSha256&&
   serviceStudy.unitScale===a.settings.unitScale&&serviceStudy.process===a.journey.process);
  const activeCase=activeServiceCase(a.servicePlan);
+ const currentParameterBindings=activeParameterBindings(knowledge?.parameterBindings??[],sourceList,validEvidence,activeCase);
  const readiness=assessEngineeringReadiness({
   fileName:a.file?.name??null,unitsConfirmed:verified,process:a.journey.process,
   componentName:knowledge?.componentName??"",assemblyContext:knowledge?.assemblyContext??"",
@@ -221,6 +224,16 @@ export default function EngineeringCopilot(){
   setError("");a.retry();setNotice("Started local orientation screening. The progress and results below come from the actual geometry worker.");
  };
  const editService=(next:typeof activeCase.input)=>{setAcknowledgedLoads(false);a.setServiceSetup(next);};
+ const approveParameter=(binding:ApprovedParameterBinding,next:typeof activeCase.input)=>{
+  setAcknowledgedLoads(false);
+  a.setServiceSetup(next);
+  setKnowledge(current=>current?{...current,
+   parameterBindings:[...current.parameterBindings.filter(item=>!(item.serviceCaseId===binding.serviceCaseId&&item.target===binding.target)),binding].slice(-40)
+  }:current);
+ };
+ const removeParameter=(id:string)=>setKnowledge(current=>current?{
+  ...current,parameterBindings:current.parameterBindings.filter(item=>item.id!==id)
+ }:current);
  const exportTeamProject=async()=>{
   if(!a.file||!knowledge||!verified){setError("Confirm an STL before exporting the project.");return;}
   setBundleBusy(true);setError("");setNotice("");
@@ -448,6 +461,8 @@ export default function EngineeringCopilot(){
     </div>
     {(error||notice)&&<div className="copilotWarning" role="status">{error||notice}</div>}
 </div></details>
+<EngineeringParameterReview sources={sourceList} reviewed={validEvidence} bindings={knowledge.parameterBindings}
+ serviceCase={activeCase} onApply={approveParameter} onRemove={removeParameter}/>
 <details ref={factsRef} className="copilotFacts copilotFold">
       <summary>Engineering facts and boundary conditions <span>{knowledge.componentName?"In progress":"Needs context"} · open to edit</span></summary>
       <div className="copilotFoldBody"><h3>Reviewed engineering facts</h3>
@@ -478,6 +493,7 @@ export default function EngineeringCopilot(){
 <div className="copilotStageTitle"><small>04 · SOLVE</small><h2>Run stress, displacement and temperature together</h2><p>Confirm physical assumptions once, then run the structural and thermal workers automatically for this STL. LPBF and DED service studies use the same independent calculation path.</p></div>
 <div className="copilotProgress">
      <UnifiedServiceStudy verified={verified} partSha256={partKey??undefined} sourceIds={[...new Set(validEvidence.map(x=>x.sourceId))]}
+      parameterBindings={currentParameterBindings}
       reviewedEvidence={validEvidence} onResults={next=>{
        setServiceStudy(next);
        if(next?.structural)setShowFields("stress");
