@@ -22,6 +22,7 @@ export type PhysicalLayerSummary={
  layer:number;zMm:number;startSeconds:number;endSeconds:number;
  commands:number;laserOnCommands:number;laserOffCommands:number;
  commandedLaserEnergyJ:number;poweredDistanceMm:number;laserOffSeconds:number;
+ zRegistrationResidualMm:number;
  virtualSlab:number|null;
 };
 export type PhysicalScanAudit={
@@ -33,6 +34,7 @@ export type PhysicalScanAudit={
  totalCommandedLaserEnergyJ:number;maxCommandedSpeedMmS:number;
  nominalThicknessMm:number;physicalLayerCountFromGeometry:number;
  virtualSlabCount:number;unrepresentedLayers:number[];
+ maxAbsoluteLayerZResidualMm:number;
  layers:PhysicalLayerSummary[];
  warnings:string[];
  simulationCompatibility:"NOT_APPLIED_TO_COARSE_THERMAL_SOLVER";
@@ -141,7 +143,9 @@ export function auditPhysicalScanPlan(
    const slab=occupied.indexOf(voxelZ);
    row={layer:c.layer,zMm:c.zMm,startSeconds:c.t0Seconds,endSeconds:c.t1Seconds,
     commands:0,laserOnCommands:0,laserOffCommands:0,commandedLaserEnergyJ:0,
-    poweredDistanceMm:0,laserOffSeconds:0,virtualSlab:slab>=0?slab:null};
+    poweredDistanceMm:0,laserOffSeconds:0,
+    zRegistrationResidualMm:c.zMm-(minZ+(c.layer+1)*t),
+    virtualSlab:slab>=0?slab:null};
    records.set(c.layer,row);
   }
   row.endSeconds=c.t1Seconds;row.commands++;
@@ -154,6 +158,7 @@ export function auditPhysicalScanPlan(
  for(let k=layers[0].layer;k<=layers[layers.length-1].layer;k++)
   if(!records.has(k))missingIntermediateLayerIndices.push(k);
  const unrepresentedLayers=layers.filter(l=>l.virtualSlab===null).map(l=>l.layer);
+ const maxAbsoluteLayerZResidualMm=Math.max(...layers.map(l=>Math.abs(l.zRegistrationResidualMm)));
  const physicalLayerCountFromGeometry=Math.ceil((maxZ-minZ)/t);
  const warnings=[
   "Physical layer commands are audit-only: NO thermal calculation uses these data. The current LPBF solver accepts coarse virtual slabs, not actual executed physical layers.",
@@ -162,6 +167,8 @@ export function auditPhysicalScanPlan(
   "The layer-to-voxel relationship assigns each physical layer's nominal center to one coarse voxel; no accurate thermal-layer remapping, energy coupling or within-layer physical simulation follows."
  ];
  if(layers[0].layer!==0)warnings.push("The provided physical timeline begins after layer 0 and omits earlier machine history.");
+ if(maxAbsoluteLayerZResidualMm>Math.max(.02,t*.1))
+  warnings.push("Physical layer Z values are not registered to the STL bottom plus nominal index times layer thickness. A build-origin or machine-to-STL transform must be supplied before any physical thermal interpretation.");
  if(missingIntermediateLayerIndices.length)warnings.push("Some intermediate physical layer indices are missing; do not infer their power or cooling history.");
  if(unrepresentedLayers.length)warnings.push("Some supplied layers do not map to occupied STL thermal voxels; they cannot be simulated using the current coarse geometry.");
  if(Math.abs((layers.at(-1)!.zMm-layers[0].zMm)-
@@ -175,7 +182,7 @@ export function auditPhysicalScanPlan(
   laserOnSeconds:totalLaserOn,laserOffSeconds:totalLaserOff,
   totalCommandedLaserEnergyJ:totalEnergy,maxCommandedSpeedMmS:maxSpeed,
   nominalThicknessMm:t,physicalLayerCountFromGeometry,virtualSlabCount:occupied.length,
-  unrepresentedLayers,layers,warnings,
+  unrepresentedLayers,maxAbsoluteLayerZResidualMm,layers,warnings,
   simulationCompatibility:"NOT_APPLIED_TO_COARSE_THERMAL_SOLVER",
   qualification:"RESEARCH_ONLY_NOT_MACHINE_VERIFIED"
  };
