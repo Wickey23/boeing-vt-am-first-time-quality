@@ -48,3 +48,12 @@ test("two-voxel explicit finite volume update matches hand-calculated heat flux"
  assert.ok(Math.abs(t[0]-(20+(-face*20-2*face*20)*dt/C))<1e-10);
  assert.ok(Math.abs(t[1]-(face*20*dt/C))<1e-10);
 });
+
+test("high coupling is flagged as outside solid-state validity, never labeled as a melt-pool prediction",()=>{
+ const result=simulateLpbfTransient(cubeStl(),1,{
+  ...base,laserPowerW:950,absorbedFraction:.9,solidusC:400
+ });
+ assert.equal(result.summary.exceedsSolidus,true);
+ assert.ok(result.frames.some(frame=>frame.aboveSolidus));
+ assert.ok(result.limitations.some(line=>/OUTSIDE.*validity/.test(line)));
+});
