@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import {LPBF_DEMO_INPUTS,simulateLpbfTransient,validateLpbfInputs} from "../lib/lpbf-transient";
+import {LPBF_DEMO_INPUTS,simulateLpbfTransient,transientHeatStep,validateLpbfInputs} from "../lib/lpbf-transient";
 function cubeStl(){
  const mesh=new THREE.BoxGeometry(2,2,2).toNonIndexed();
  const p=mesh.getAttribute("position"),text=["solid cube"];
@@ -35,4 +35,16 @@ test("coupled laser energy drives temperature above the zero-power baseline, wit
  assert.ok(out.frames.every(x=>x.field.values.length===36));
  assert.ok(out.limitations.some(x=>/porosity/.test(x)));
  assert.ok(out.mesh.nominalLayers>out.mesh.virtualSlabs);
+});
+
+test("two-voxel explicit finite volume update matches hand-calculated heat flux",()=>{
+ const h=.001,dt=.0001,k=7,rho=4430,cp=600;
+ const cells:Array<[number,number,number]>=[[0,0,0],[0,0,1]];
+ const a=new Int32Array([-1,-1,-1,-1,1,-1]),b=new Int32Array([-1,-1,-1,-1,-1,0]);
+ const t=new Float64Array([20,0]);
+ const input={...base,conductivityWmK:k,densityKgM3:rho,specificHeatJKgK:cp,plateTemperatureC:0,ambientTemperatureC:0,convectionWm2K:0};
+ const C=rho*cp*h**3,face=k*h;
+ transientHeatStep({cells,temp:t,active:new Uint8Array([1,1]),neighbors:[a,b],zBase:0,cellSizeM:h,dt,input});
+ assert.ok(Math.abs(t[0]-(20+(-face*20-2*face*20)*dt/C))<1e-10);
+ assert.ok(Math.abs(t[1]-(face*20*dt/C))<1e-10);
 });
