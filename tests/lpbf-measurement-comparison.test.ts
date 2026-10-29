@@ -57,6 +57,10 @@ test("Identical synthetic trace has near-zero errors and is NOT identified as va
  assert.ok(report.registrationDistanceMm<1e-8);
  assert.ok(report.limitations.join(" ").includes("NOT reproduce"));
  assert.equal(report.dataClassification,"synthetic");
+ assert.equal(report.validationStatus,"EXPLORATORY_NOT_VALIDATED");
+ assert.equal(report.amBenchTamScrStatus,"NOT_COMPARABLE");
+ assert.equal(report.defectPredictionAvailable,false);
+ assert.equal(report.measurementSourceAuthenticated,false);
 });
 test("Explicit discrepancy metrics reproduce signed known offset without fitting time",()=>{
  const f=fixture(),trace=parseLpbfTraceCsv(toCsv(f,10));
