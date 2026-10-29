@@ -213,3 +213,13 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
  await expect(panel.getByLabel("Approve research thermal assumptions")).not.toBeChecked();
  await expect(start).toBeDisabled();
 });
+
+test("measurement questions open the appropriate study panel without claiming NIST validation",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByLabel("Message ORIENTAI").fill("Can you validate my thermography measurement against NIST AM Bench?");
+ await page.getByRole("button",{name:"Send message"}).click();
+ await expect(page.getByRole("region",{name:"LPBF process thermal research study"})).toBeVisible();
+ await expect(page.getByText(/cannot yet validate NIST AM Bench time-above-melt/)).toBeVisible();
+ await expect(page.getByRole("button",{name:"Run research thermal worker"})).toBeDisabled();
+});
