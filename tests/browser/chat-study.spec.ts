@@ -133,6 +133,7 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
 });
 
 test("Imported numerical laser CSV runs with exact path hash and invalidates on replacement",async({page})=>{
+ test.setTimeout(120000);
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
@@ -169,6 +170,18 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
  expect(exported.scanPlan.segmentCount).toBe(12);
  expect(exported.scanPlan.sha256).toMatch(/^[a-f0-9]{64}$/);
  expect(exported.summary.absorbedEnergyJ).toBeGreaterThan(0);
+ const sensitivity=panel.getByRole("region",{name:"LPBF numerical sensitivity review"});
+ await expect(sensitivity.getByRole("button",{name:"Run numerical sensitivity checks"})).toBeEnabled();
+ await sensitivity.getByRole("button",{name:"Run numerical sensitivity checks"}).click();
+ const comparison=panel.getByRole("region",{name:"Calculated numerical sensitivity results"});
+ await expect(comparison).toContainText("Time-step sensitivity",{timeout:100000});
+ await expect(comparison).toContainText("Spatial comparison not reported");
+ const sensitivityDownload=page.waitForEvent("download");
+ await sensitivity.getByRole("button",{name:"Export sensitivity JSON report"}).click();
+ const sensitivityReport=JSON.parse(await readFile((await (await sensitivityDownload).path())!,"utf8"));
+ expect(sensitivityReport.schema).toBe("orientai.lpbf-numerical-sensitivity.v1");
+ expect(sensitivityReport.study.sourceScanSha256).toBe(exported.scanPlan.sha256);
+ expect(sensitivityReport.study.temporal.candidateStepScale).toBe(.5);
  await panel.getByLabel("Import numerical scan CSV").setInputFiles({
   name:"invalid.csv",mimeType:"text/csv",buffer:Buffer.from("bad columns\n0,1,2")
  });
