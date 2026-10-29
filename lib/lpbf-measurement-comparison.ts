@@ -20,6 +20,10 @@ export type TracePair={
 };
 export type TraceComparison={
  version:typeof LPBF_TRACE_COMPARISON_VERSION;
+ validationStatus:"EXPLORATORY_NOT_VALIDATED";
+ amBenchTamScrStatus:"NOT_COMPARABLE";
+ defectPredictionAvailable:false;
+ measurementSourceAuthenticated:false;
  engine:string;
  sourceName:string;
  sourceSha256:string;
@@ -142,7 +146,10 @@ export function compareLpbfSurfaceTrace(args:{
  const spacing=Math.max(...frames.slice(1).map((f,i)=>f.timeSeconds-frames[i].timeSeconds));
  if(!Number.isFinite(spacing)||spacing<=0)throw Error("Invalid simulated thermal frame spacing.");
  return {
-  version:LPBF_TRACE_COMPARISON_VERSION,engine:result.engine,
+  version:LPBF_TRACE_COMPARISON_VERSION,
+  validationStatus:"EXPLORATORY_NOT_VALIDATED",amBenchTamScrStatus:"NOT_COMPARABLE",
+  defectPredictionAvailable:false,measurementSourceAuthenticated:false,
+  engine:result.engine,
   sourceName:trace.sourceName,sourceSha256,partSha256,
   dataClassification,sourceReference:sourceReference.trim(),claimedTimingConfirmed,
   measuredLocation:trace.location,matchedVertexIndex:chosen,registrationDistanceMm:nearest,
