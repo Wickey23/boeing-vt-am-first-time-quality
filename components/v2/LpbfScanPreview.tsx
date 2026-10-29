@@ -12,9 +12,9 @@ export default function LpbfScanPreview({plan}:{plan:ScanPlan}){
  const visible=tracks.slice(0,250);
  const xs=tracks.flatMap(s=>[s.x0Mm,s.x1Mm]),ys=tracks.flatMap(s=>[s.y0Mm,s.y1Mm]);
  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
- const spreadX=Math.max(.01,maxX-minX),spreadY=Math.max(.01,maxY-minY);
- const x=(v:number)=>20+(v-minX)/spreadX*300;
- const y=(v:number)=>200-(v-minY)/spreadY*180;
+ const spanX=maxX-minX,spanY=maxY-minY;
+ const x=(v:number)=>spanX<1e-9?170:20+(v-minX)/spanX*300;
+ const y=(v:number)=>spanY<1e-9?110:200-(v-minY)/spanY*180;
  const on=tracks.filter(s=>s.powerW>0).length,off=tracks.length-on;
  const duration=tracks.reduce((t,s)=>t+Math.hypot(s.x1Mm-s.x0Mm,s.y1Mm-s.y0Mm)/s.speedMmS,0);
  return <div className="oaScanPreview" aria-label="Imported scan path preview">
