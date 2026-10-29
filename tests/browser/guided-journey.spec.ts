@@ -32,6 +32,7 @@ test("new user completes one STL project without switching to unrelated geometry
 });
 test("DED teaching project is explicitly synthetic, shows supported stages and exports separately",async({page})=>{
  await page.goto("/");
+ await page.locator(".oaAdvanced > summary").click();
  await page.getByRole("link",{name:/Launch DED example/}).click();
  await expect(page.getByRole("heading",{name:"DED research example"})).toBeVisible();
  await expect(page.getByText("Synthetic DED teaching wall").first()).toBeVisible();
