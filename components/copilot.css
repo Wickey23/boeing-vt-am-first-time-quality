@@ -455,3 +455,34 @@
 .copilotReviewExport button{flex:0 0 auto}
 .copilotReviewExport span{font-size:11px;line-height:1.55;color:#c0dbe9;flex:1;min-width:180px}
 .copilotReviewExport .copilotWarning{width:100%;margin:4px 0}
+
+/* Engineer-approved mapping from reviewed source excerpts to service inputs */
+.copilotParameterReview{margin:15px 0 20px;padding:16px;border:1px solid #426a81;border-radius:12px;background:#0c2a3d;color:#e5f4fe}
+.copilotParameterReview header{display:block!important;position:static!important;height:auto!important;min-height:0!important;padding:0 0 12px!important;margin:0 0 12px!important;background:transparent!important;border:0!important;border-bottom:1px solid #3b6178!important}
+.copilotParameterReview h3,.copilotParameterReview h4{color:#f1faff;font-size:15px;margin:0 0 7px}
+.copilotParameterReview p{font-size:12px;line-height:1.6;color:#c4dbe9;margin:7px 0}
+.copilotParameterReview header strong{color:#f2faff}
+.parameterSummary{font-size:12px;color:#a7dbf5;margin:10px 0}
+.parameterBindings{border-top:1px solid #36586c;padding-top:13px;margin-top:12px}
+.parameterBinding{padding:11px 12px;background:#123b3c;border:1px solid #458476;border-radius:8px;margin:8px 0;display:flex;flex-direction:column;gap:7px}
+.parameterBinding.parameterStale{background:#35291f;border-color:#88694c}
+.parameterBinding>div{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.parameterBinding b{font-size:12px;color:#e2faff}.parameterBinding span,.parameterBinding small{font-size:11px;color:#d1e2ea}
+.parameterBinding button{align-self:flex-start}
+.parameterCandidate{background:#081f31;border:1px solid #335a71;border-radius:10px;padding:13px;margin:10px 0}
+.parameterRow{display:flex;justify-content:space-between;gap:10px;align-items:start;flex-wrap:wrap}
+.parameterRow>div{display:flex;flex-direction:column;gap:5px}
+.parameterRow strong{font-size:13px;color:#e6f5ff}
+.parameterRow small{font-size:11px;color:#bed6e5}
+.parameterUncertain{font-size:11px;color:#ffdbb7;border:1px solid #94714e;border-radius:999px;padding:3px 8px}
+.parameterApproval{background:#14374b;border:1px solid #466a81;border-radius:9px;padding:12px;margin-top:12px}
+.parameterApproval label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#e3eff9;margin:10px 0}
+.parameterApproval label select,.parameterApproval label textarea{background:#081c2b;color:#e9f7ff;border:1px solid #63839b;border-radius:8px;padding:10px;max-width:100%;width:100%}
+.parameterApproval label.parameterConfirmation{flex-direction:row;gap:9px;line-height:1.5}
+.parameterApproval input[type=checkbox]{width:17px;height:17px;flex:0 0 auto}
+.parameterPreview{background:#10304a;color:#e0f3ff;padding:9px;border:1px solid #447392;border-radius:8px;font-size:12px}
+.parameterButtons{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.parameterButtons>button:first-child{background:#2175a5;border:1px solid #5ca9d7;color:#fff;border-radius:8px;font-size:12px;font-weight:750;padding:10px 14px;cursor:pointer}
+.parameterButtons>button:disabled{opacity:.5;cursor:not-allowed}
+.parameterUncertaintyText,.parameterError{color:#ffdcad!important}
+.parameterEmpty,.parameterCaution{font-size:12px;color:#bad5e5;line-height:1.5}
