@@ -37,7 +37,14 @@ export default function ChatStudy(){
  const [showOverhangs,setShowOverhangs]=useState(false);
  const [showSupports,setShowSupports]=useState(false);
  const [layer,setLayer]=useState(100);
+ const [playing,setPlaying]=useState(false);
  const [showMethods,setShowMethods]=useState(true);
+ useEffect(()=>{
+  if(!playing)return;
+  const tick=setInterval(()=>setLayer(v=>Math.min(100,v+1)),80);
+  return()=>clearInterval(tick);
+ },[playing]);
+ useEffect(()=>{if(layer>=100&&playing)setPlaying(false);},[layer,playing]);
  const [url,setUrl]=useState<string|undefined>(undefined);
  const fileInput=useRef<HTMLInputElement>(null);
  const bottom=useRef<HTMLDivElement>(null);
@@ -121,7 +128,7 @@ export default function ChatStudy(){
   setAttachError("");
   a.upload(file);
   a.setProjectName(file.name.replace(/\.stl$/i,""));
-  setLayer(100);setShowArtifact(false);
+  setLayer(100);setPlaying(false);setShowArtifact(false);
  };
  const doScreen=()=>{
   if(!canScreen||a.busy)return;
@@ -193,7 +200,8 @@ export default function ChatStudy(){
     </section>}
     {a.file&&<section className="oaBuildPreview" aria-label="Print buildup visualization">
       <div className="oaBuildTitle"><strong>Layer buildup preview</strong><span>{layer}% of the model height</span></div>
-      <input aria-label="Layer buildup percentage" type="range" min="1" max="100" step="1" value={layer} onChange={e=>setLayer(Number(e.target.value))}/>
+      <div className="oaRunActions"><button className="oaSecondaryRun" type="button" onClick={()=>{if(layer>=100)setLayer(1);setPlaying(v=>!v);}}>{playing?"Pause build preview":"Play build preview"}</button><button className="oaSecondaryRun" type="button" onClick={()=>{setPlaying(false);setLayer(1);}}>Restart</button></div>
+      <input aria-label="Layer buildup percentage" type="range" min="1" max="100" step="1" value={layer} onChange={e=>{setPlaying(false);setLayer(Number(e.target.value))}}/>
       <p className="oaSubtle">The model viewer clips the actual STL geometry at the selected build height. This is a visualization of geometric progression only—not real toolpaths, layer timing, temperature evolution or material deposition physics.</p>
       <div className="oaToggleControls">
        <label><input type="checkbox" checked={showOverhangs} onChange={e=>setShowOverhangs(e.target.checked)}/> Highlight down-facing surfaces</label>
