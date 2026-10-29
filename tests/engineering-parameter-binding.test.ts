@@ -36,7 +36,7 @@ test("explicit Fx direction, elastic modulus and ratio are recognized only as ca
  ],"engineering.txt"));
  const reviewed=suggestEngineeringEvidence(sources).map(x=>acceptEngineeringEvidence(x,"Requires engineering confirmation before use."));
  const hits=proposeNumericalParameters(reviewed,sources);
- assert.equal(hits.length,3);
+ assert.equal(hits.length,3,JSON.stringify({reviewed:reviewed.map(e=>({category:e.category,excerpt:e.excerpt})),hits}));
  assert.equal(hits.find(x=>x.targetKind==="force")?.suggestedTarget,"forceXN");
  assert.equal(hits.find(x=>x.targetKind==="force")?.normalizedMagnitude,-2000);
  assert.equal(hits.find(x=>x.targetKind==="elastic")?.normalizedMagnitude,110000);
@@ -61,7 +61,7 @@ test("ambiguity, incorrect units and unsupported torque never become force propo
  ],"mixed.txt"));
  const reviewed=suggestEngineeringEvidence(sources).map(x=>acceptEngineeringEvidence(x,"Public lab sample; applicability must be checked."));
  const hits=proposeNumericalParameters(reviewed,sources);
- assert.equal(hits.length,1);
+ assert.equal(hits.length,1,JSON.stringify({reviewed:reviewed.map(e=>({category:e.category,excerpt:e.excerpt})),hits}));
  assert.equal(hits[0].uncertain,true);
  assert.match(hits[0].excerpt,/UNVERIFIED/);
 });
