@@ -1,5 +1,8 @@
 # Implementation Roadmap
 
+> **Current canonical plan (2026-10-29):** [Master 21-milestone roadmap](MASTER-MILESTONE-ROADMAP.md), [milestone tracker](MILESTONE-TRACKER.md), and [HCI/human-factors protocol](hci/ORIENTAI-HCI-PROTOCOL.md). This earlier roadmap is retained for historical design context; its phase labels are not the current completion tracker.
+
+
 ## Phase 1 — Working digital thread (current)
 - Web workspace and STL viewer
 - Structured part intent and parametric seed CAD
