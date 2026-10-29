@@ -170,6 +170,24 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
  expect(exported.scanPlan.segmentCount).toBe(12);
  expect(exported.scanPlan.sha256).toMatch(/^[a-f0-9]{64}$/);
  expect(exported.summary.absorbedEnergyJ).toBeGreaterThan(0);
+ const probePanel=panel.getByRole("region",{name:"High-rate internal thermal voxel history"});
+ await expect(probePanel.getByRole("button",{name:"Run internal thermal probe"})).toBeEnabled();
+ await probePanel.getByRole("button",{name:"Run internal thermal probe"}).click();
+ const probeResults=probePanel.getByRole("region",{name:"Calculated internal thermal probe"});
+ await expect(probeResults).toBeVisible({timeout:100000});
+ await expect(probeResults.getByRole("img",{name:"Simulated internal voxel temperature versus modeled elapsed time"})).toBeVisible();
+ const probeJsonDownload=page.waitForEvent("download");
+ await probePanel.getByRole("button",{name:"Export probe provenance JSON"}).click();
+ const probeExport=JSON.parse(await readFile((await (await probeJsonDownload).path())!,"utf8"));
+ expect(probeExport.schema).toBe("orientai.lpbf-internal-probe.v1");
+ expect(probeExport.sourceScanSha256).toBe(exported.scanPlan.sha256);
+ expect(probeExport.probe.sampledPoints.length).toBeGreaterThan(exported.snapshots.length);
+ expect(probeExport.validationStatus).toBe("UNVALIDATED_INTERNAL_VOXEL_HISTORY");
+ expect(probeExport.layerMapping.physicalLayerCount).toBeGreaterThan(6);
+ const probeCsvDownload=page.waitForEvent("download");
+ await probePanel.getByRole("button",{name:"Export probe samples CSV"}).click();
+ const probeCsv=await readFile((await (await probeCsvDownload).path())!,"utf8");
+ expect(probeCsv).toContain("time_s,voxel_temperature_c,virtual_slab,laser_power_w,laser_on");
  const tracePanel=panel.getByRole("region",{name:"Exploratory thermal measurement comparison"});
  const traceHeader="time_s,temperature_c,uncertainty_c,x_mm,y_mm,z_mm";
  const syntheticRows=exported.snapshots.slice(0,4).map((frame:{timeSeconds:number})=>
