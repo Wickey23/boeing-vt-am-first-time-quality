@@ -38,7 +38,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
  const invalidate=()=>{
   seq.current++;close();setApproved(false);setResult(null);onResult(null);setStatus("idle");setProgress(0);setError("");
  };
- useEffect(()=>{invalidate();return()=>{seq.current++;close()};
+ useEffect(()=>{invalidate();setScanPlan(null);setScanError("");return()=>{seq.current++;close()};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[partHash,a.file,a.settings.unitScale,a.journey.process]);
  const change=(key:keyof LpbfInputs,value:number)=>{if(status==="running")return;setInputs(prev=>({...prev,[key]:value}));invalidate();};
@@ -51,6 +51,7 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
  const uploadScanPlan=async(file?:File)=>{
   if(!file)return;
   invalidate();setScanPlan(null);setScanError("");
+  const token=seq.current;
   try{
    if(!file.name.toLowerCase().endsWith(".csv")||file.size>256*1024||file.size===0)
     throw Error("Use a nonempty UTF-8 CSV no larger than 256 KB.");
@@ -58,8 +59,9 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    const raw=new TextDecoder("utf-8",{fatal:true}).decode(bytes);
    const parsed=parseScanCsv(raw,file.name);
    const hash=await crypto.subtle.digest("SHA-256",bytes);
+   if(token!==seq.current)return;
    setScanPlan({...parsed,sha256:Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,"0")).join("")});
-  }catch(e){setScanError(e instanceof Error?e.message:"Could not load scan CSV.");}
+  }catch(e){if(token===seq.current)setScanError(e instanceof Error?e.message:"Could not load scan CSV.");}
  };
  const cancel=()=>{seq.current++;close();setStatus("cancelled");setError("Study cancelled. No result was published.");};
  const exportSummary=()=>{
