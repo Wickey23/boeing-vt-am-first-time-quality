@@ -2,7 +2,7 @@ import {test,expect} from "@playwright/test";
 
 test("focused workspace shows one task at a time with a persistent CAD viewer",async({page})=>{
  await page.setViewportSize({width:1440,height:950});
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  const tabs=page.locator(".copilotStageTab");
  await expect(tabs).toHaveCount(5);
  await expect(page.getByRole("heading",{name:"Inspect and confirm the part"})).toBeVisible();
@@ -27,7 +27,7 @@ test("focused workspace shows one task at a time with a persistent CAD viewer",a
 });
 test("small screen remains navigable without horizontal scrolling",async({page})=>{
  await page.setViewportSize({width:390,height:844});
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await expect(page.getByRole("button",{name:"Open Part stage"})).toBeVisible();
  await page.getByRole("button",{name:"Open Documents stage"}).click();
  await expect(page.getByRole("heading",{name:"Understand the larger assembly"})).toBeVisible();
