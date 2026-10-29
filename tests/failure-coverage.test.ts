@@ -26,3 +26,11 @@ test("LPBF geometry eligibility never transfers to an unimplemented uploaded-par
  const items=failureCoverage({...base,hasOrientationRun:true,process:"DED_LB_WIRE"});
  assert.equal(items.find(x=>x.id==="overhangs-supports")?.state,"not-assessed");
 });
+
+test("successful coarse LPBF heat flow does not mark validated scan-path or defect predictions as assessed",()=>{
+ const items=failureCoverage({...base,hasMeshAudit:true,hasLpbfTransient:true});
+ assert.equal(items.find(x=>x.id==="coarse-lpbf-transient")?.state,"calculated");
+ for(const id of ["print-thermal-history","distortion-residual-stress","lack-of-fusion","keyhole-porosity","hot-cracking"]){
+  assert.equal(items.find(x=>x.id===id)?.state,"not-assessed",id);
+ }
+});
