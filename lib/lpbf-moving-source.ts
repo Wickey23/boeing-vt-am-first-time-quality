@@ -7,6 +7,7 @@
  * simplified equilibrium phase transition. No powder or melt-pool fluid flow.
  */
 import {voxelizePart,projectVoxelValues} from "./voxel-thermal";
+import {validateScanPlan,positionOnScanSegment,type ScanPlan,type ScanSegment} from "./lpbf-scan-plan";
 import {
  LPBF_DEMO_INPUTS,validateLpbfInputs,type LpbfInputs,type LpbfResult,type LpbfFrame
 } from "./lpbf-transient";
@@ -102,7 +103,7 @@ export function movingEnthalpyStep(args:{
  * Exposed in UI as a bounded, unvalidated engineering-research calculation. */
 export function simulateMovingSource(
  buffer:ArrayBuffer,unitScale:number,input:MovingInputs,
- onProgress?:(done:number,total:number)=>void
+ onProgress?:(done:number,total:number)=>void,scanPlan?:ScanPlan
 ):LpbfResult{
  validateMovingInputs(input);
  if(!Number.isFinite(unitScale)||unitScale<.001||unitScale>1000)
@@ -127,6 +128,8 @@ export function simulateMovingSource(
  cells.forEach((c,i)=>{const list=byZ.get(c[2])??[];list.push(i);byZ.set(c[2],list);});
  const extent={minX:box.min.x,maxX:box.max.x,minY:box.min.y,maxY:box.max.y};
  const zSpan=box.max.z-box.min.z;
+ const checkedScan=scanPlan?validateScanPlan(scanPlan,layers.length,extent):null;
+ if(scanPlan&&!/^[a-f0-9]{64}$/.test(scanPlan.sha256))throw Error("Imported scan CSV requires a valid content SHA-256.");
  const nominalLayers=Math.ceil(zSpan/input.layerThicknessMm);
  const cellM=h/1000,volMm3=h**3;
  const capacity=input.densityKgM3*cellM**3;
@@ -134,10 +137,12 @@ export function simulateMovingSource(
  const thermalDiff=input.conductivityWmK/(input.densityKgM3*input.specificHeatJKgK);
  const dtThermal=.35/(6*thermalDiff/cellM**2+
   6*input.convectionWm2K/(input.densityKgM3*input.specificHeatJKgK*cellM));
- const dtMotion=(h/2)/input.scanSpeedMmS; // source moves < half a voxel per step
+ const fastest=scanPlan?Math.max(...scanPlan.segments.map(seg=>seg.speedMmS)):input.scanSpeedMmS;
+ const dtMotion=(h/2)/fastest; // source moves < half a voxel per step
  const maxDt=Math.min(dtThermal,dtMotion);
  if(!(maxDt>0&&Number.isFinite(maxDt)))throw Error("Invalid explicit time step.");
- const scanTime=cells.length*volMm3/(input.hatchSpacingMm*input.layerThicknessMm*input.scanSpeedMmS);
+ const scanTime=checkedScan?checkedScan.totalSeconds:
+  cells.length*volMm3/(input.hatchSpacingMm*input.layerThicknessMm*input.scanSpeedMmS);
  const totalRecoating=nominalLayers*input.recoatSecondsPerLayer;
  const estimatedSteps=Math.ceil((scanTime+totalRecoating)/maxDt)+2*layers.length;
  if(estimatedSteps>130000||scanTime+totalRecoating>14400)
@@ -149,11 +154,11 @@ export function simulateMovingSource(
  let accumulatedRecoating=0;
  const effectiveRadius=Math.max(input.beamRadiusMm,h/2);
  const notes=[
-  "Unvalidated raster research model: invented serpentine bounding-box tracks, not a real slicer, measured laser path or qualified scan strategy.",
+  scanPlan?"Imported, content-hashed numerical CSV coordinates; the actual machine file, scan calibration, layer mapping and measured timing are not verified.":"Unvalidated raster research model: invented serpentine bounding-box tracks, not a real slicer, measured laser path or qualified scan strategy.",
   "Gaussian beam is discretized at voxel scale; effective numerical radius is the larger of beam radius and half a voxel. Typical physical LPBF beam spots are not resolved by this coarse browser grid.",
   "Latent heat is represented by a linear equilibrium solidus–liquidus enthalpy interval, with constant solid properties. No powder conduction, evaporation, fluid convection, fluid flow, recoil pressure or keyhole physics.",
   "A computed liquid fraction is a mathematical equilibrium indicator, not a validated melt-pool size, porosity mechanism or printability decision.",
-  "Raster repeats on each activated virtual slab to approximate aggregated physical layers; turnaround timing, scan islands, recoater interference and inactive powder are not represented.",
+  scanPlan?"Imported tracks are mapped to coarse virtual slabs, not validated physical printed layers; machine delays, laser-off timing other than explicit zero-power segments, recoater interference and inactive powder are not represented.":"Raster repeats on each activated virtual slab to approximate aggregated physical layers; turnaround timing, scan islands, recoater interference and inactive powder are not represented.",
   "Plate is a fixed-temperature idealized reservoir. Radiation and thermal expansion/residual-stress coupling are omitted.",
   "Numerical energy conservation does not equal mesh convergence or validation against AM Bench measurements.",
   "Does not predict part failure, cracking, residual stress, distortion, porosity, fatigue performance or first-time acceptance."
@@ -167,21 +172,33 @@ export function simulateMovingSource(
   const recoatedTotal=k===layers.length-1?totalRecoating:
    Math.round((currentZ-box.min.z)/zSpan*nominalLayers)*input.recoatSecondsPerLayer;
   const dwell=Math.max(0,recoatedTotal-accumulatedRecoating);accumulatedRecoating+=dwell;
-  const duration=newCells.length*volMm3/
-   (input.hatchSpacingMm*input.layerThicknessMm*input.scanSpeedMmS);
+  const explicitSegments=checkedScan?.bySlab[k];
+  const durations=explicitSegments?.map(seg=>Math.hypot(seg.x1Mm-seg.x0Mm,seg.y1Mm-seg.y0Mm)/seg.speedMmS);
+  const duration=durations?durations.reduce((sum,dt)=>sum+dt,0):
+   newCells.length*volMm3/(input.hatchSpacingMm*input.layerThicknessMm*input.scanSpeedMmS);
   const positions=newCells.map(i=>({x:box.min.x+(cells[i][0]+.5)*h,
    y:box.min.y+(cells[i][1]+.5)*h}));
-  let inScan=0,remainingDwell=dwell;
+  let inScan=0,remainingDwell=dwell,scanIndex=0,segmentElapsed=0;
   while(inScan<duration-1e-12||remainingDwell>1e-12){
    const laserOn=inScan<duration-1e-12;
-   const dt=Math.min(maxDt,laserOn?duration-inScan:remainingDwell);
+   const dt=Math.min(maxDt,laserOn?(durations?Math.min(duration-inScan,durations[scanIndex]-segmentElapsed):duration-inScan):remainingDwell);
    if(!(dt>0))break;
    heatJ.fill(0);
    if(laserOn){
-    const distance=(inScan+dt/2)*input.scanSpeedMmS;
-    const point=rasterPosition(distance,extent,input.hatchSpacingMm);
-    const weights=gaussianWeights(positions,point.x,point.y,effectiveRadius);
-    for(let p=0;p<newCells.length;p++)heatJ[newCells[p]]=weights[p]*input.laserPowerW*input.absorbedFraction*dt;
+    const segment=explicitSegments?.[scanIndex];
+    const point=segment&&durations?positionOnScanSegment(segment,
+     (segmentElapsed+dt/2)/durations[scanIndex]):
+     rasterPosition((inScan+dt/2)*input.scanSpeedMmS,extent,input.hatchSpacingMm);
+    const powerW=segment?segment.powerW:input.laserPowerW;
+    if(powerW>0){
+     // Reject a powered beam over unmodeled powder/empty space rather than
+     // silently renormalizing its energy into distant solid voxels.
+     const distanceToSolid=Math.min(...positions.map(p=>Math.hypot(p.x-point.x,p.y-point.y)));
+     if(distanceToSolid>Math.max(h*1.5,input.beamRadiusMm*2))
+      throw Error("Laser-on scan path does not intersect active solid geometry. No powder-bed energy model is available.");
+     const weights=gaussianWeights(positions,point.x,point.y,effectiveRadius);
+     for(let p=0;p<newCells.length;p++)heatJ[newCells[p]]=weights[p]*powerW*input.absorbedFraction*dt;
+    }
    }
    const exchange=movingEnthalpyStep({
     cells,neighbors,active,energy,heatJ,zBase,hM:cellM,dt,input
@@ -190,7 +207,13 @@ export function simulateMovingSource(
    plate+=exchange.plateEnergyJ;conv+=exchange.convectiveEnergyJ;
    elapsed+=dt;steps++;
    if(steps>130100)throw Error("Moving-source worker iteration cap exceeded.");
-   if(laserOn)inScan+=dt;else remainingDwell=Math.max(0,remainingDwell-dt);
+   if(laserOn){
+    inScan+=dt;
+    if(durations){
+     segmentElapsed+=dt;
+     if(segmentElapsed>=durations[scanIndex]-1e-12){scanIndex++;segmentElapsed=0;}
+    }
+   }else remainingDwell=Math.max(0,remainingDwell-dt);
    // Track within-slab temperature peaks (snapshots alone miss laser pulses).
    for(const i of newCells){
     const H=energy[i]/capacity,T=temperatureFromEnthalpy(H,input);
@@ -226,7 +249,8 @@ export function simulateMovingSource(
   relativeEnergyImbalance:relative,peakSolidTemperatureC:peak,
   exceedsSolidus:peak>=input.solidusC,timeSteps:steps
  };
- return {engine:MOVING_SOURCE_VERSION,inputs:{...input},
+ return {engine:scanPlan?"lpbf-imported-enthalpy-0.1":MOVING_SOURCE_VERSION,inputs:{...input},
+  scanPlan:scanPlan?{sourceName:scanPlan.sourceName,sha256:scanPlan.sha256,segmentCount:scanPlan.segments.length,version:scanPlan.version}:undefined,
   mesh:{cells:cells.length,cellSizeMm:h,virtualSlabs:layers.length,
    nominalLayers,voxelVolumeMm3:cells.length*volMm3},
   frames,summary,
