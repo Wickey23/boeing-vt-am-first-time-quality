@@ -151,3 +151,10 @@
 .oaLpbfFrameMetrics{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;color:var(--oa-muted);font-size:11px;padding:8px 0}
 .oaLpbfFrameControls>.oaSecondaryRun{margin-top:10px}
 @media(max-width:850px){.oaLpbfInputs,.oaLpbfMetrics{grid-template-columns:1fr}}
+
+/* Research-model selector: display model provenance adjacent to approved inputs. */
+.oaLpbfMode{display:flex;flex-direction:column;gap:7px;margin:13px 0 11px;font-size:12px;font-weight:650}
+.oaLpbfMode select{max-width:100%;width:100%;background:var(--oa-card);color:var(--oa-text);border:1px solid var(--oa-border);padding:10px 11px;border-radius:10px;font-size:12px}
+.oaLpbfMode select:focus-visible,.oaMovingInputs input:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+.oaLpbfMode select:disabled{opacity:.6}
+.oaMovingInputs{padding:12px;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:10px}
