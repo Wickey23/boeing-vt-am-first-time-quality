@@ -2,7 +2,7 @@ import {test,expect} from "@playwright/test";
 import {readFile} from "node:fs/promises";
 
 test("a reviewed source maps an engineer-approved force to a real service job and becomes stale on edit",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
  await page.getByRole("button",{name:"Open Documents stage"}).click();
