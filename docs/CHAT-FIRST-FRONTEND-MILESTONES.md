@@ -86,3 +86,14 @@ Acceptance: every visible finding ties to source, solver/model and correct geome
 - The failure-coverage taxonomy distinguishes geometric screening, service calculations and print failure mechanisms that are not assessed. No service solve is rebranded as print-process prediction.
 - The legacy engineering document review remains available at /copilot/advanced.
 - Next: verified machine/material parameters, validated LPBF scan/deposition thermal physics, calibrated defect prediction, and physical benchmark comparisons. Never fabricate defect probabilities from geometry alone.
+
+## 2026-10-29 — LPBF transient heat-flow research milestone
+
+- Implemented a separate browser worker using finite-volume solid heat diffusion on activated, geometry-dependent thermal voxels.
+- Engineer reviews nominal laser power, speed, hatch, physical layer thickness, retained energy fraction, recoating, material properties, plate and ambient boundary conditions. Inputs are illustrative until independently verified.
+- Worker emits real progress, coarse thermal snapshots, numerical energy-balance diagnostic, warnings for exceeding solidus, and surface-mapped temperature fields displayed in the chat 3D model.
+- Layer animation and temperature timeline are *virtual thermal slabs*, NOT true deposited-layer laser path, melt-pool dynamics or calculated print-defect probabilities.
+- Updated risk coverage distinguishes a computed unvalidated LPBF heat-flow research study from validated scan-path thermal history, distortion, porosity and cracking, which remain **not assessed**.
+- Tests verify energy conservation, two-cell conduction flux, zero-source equilibrium, positive coupled energy, solidus validity and browser consent/staleness behavior.
+- Technical method and validation plan: docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
+- Next engineering milestone: real scan-path heat source, temperature-dependent conductivity and heat capacity, latent heat/phase changes, measured benchmark comparison and mesh/time-step convergence. A credible defect model requires calibrated labeled outcomes; do not infer probabilities from this prototype.
