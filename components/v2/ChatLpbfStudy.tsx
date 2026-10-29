@@ -48,8 +48,8 @@ export default function ChatLpbfStudy({partHash,confirmed,onResult,onFocus}:{
    notice:"Research heat-flow only. No calibrated print-defect or qualification predictions. Surface field arrays are not included."
   };
   const uri=URL.createObjectURL(new Blob([JSON.stringify(record,null,2)],{type:"application/json"}));
-  const a=document.createElement("a");a.href=uri;a.download="orientai-lpbf-thermal-"+partHash.slice(0,12)+".json";
-  document.body.appendChild(a);a.click();a.remove();
+  const anchor=document.createElement("a");anchor.href=uri;anchor.download="orientai-lpbf-thermal-"+partHash.slice(0,12)+".json";
+  document.body.appendChild(anchor);anchor.click();anchor.remove();
   setTimeout(()=>URL.revokeObjectURL(uri),2000);
  };
  const run=async()=>{
