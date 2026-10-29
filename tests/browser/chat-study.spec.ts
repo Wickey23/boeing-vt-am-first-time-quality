@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {readFile} from "node:fs/promises";
 test("uploaded STL appears in chat with inspected mesh, geometric build preview and explicit physics limitations",async({page})=>{
  const externalCalls:string[]=[];
  page.on("request",r=>{if(r.method()==="POST"&&/engineering-copilot|llm-api/.test(r.url()))externalCalls.push(r.url());});
@@ -79,6 +80,14 @@ test("LPBF solid-state thermal prototype requires approval and displays bounded 
  await expect(run).toBeEnabled();
  await run.click();
  await expect(panel.getByLabel("Research thermal result")).toBeVisible({timeout:100000});
+ const exported=page.waitForEvent("download");
+ await panel.getByRole("button",{name:"Export research run JSON"}).click();
+ const data=JSON.parse(await readFile((await (await exported).path())!,"utf8"));
+ expect(data.schema).toBe("orientai.lpbf-research-run.v1");
+ expect(data.part.sha256).toMatch(/^[0-9a-f]{64}$/);
+ expect(data.model).toBe("lpbf-solid-transient-0.1");
+ expect(data.snapshots.length).toBeGreaterThan(0);
+ expect(data.summary.relativeEnergyImbalance).toBeLessThan(1e-4);
  await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Coarse solid-state LPBF heat-flow prototype");
  const history=page.getByRole("group",{name:"LPBF temperature history"}).or(page.locator(".oaLpbfFrameControls"));
  await expect(history).toBeVisible();
