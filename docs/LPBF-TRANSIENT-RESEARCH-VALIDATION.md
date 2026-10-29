@@ -61,3 +61,19 @@ The failure-mode matrix marks **coarse solid-state LPBF heat flow** as calculate
 - NIST, *The trace of heat: on the predictive power of modeling transient diffusion*, 2025: https://www.nist.gov/publications/trace-heat-predictive-power-modeling-transient-diffusion
 
 **Security:** Use only authorized, non-controlled test STL geometry and manufacturing inputs in this research demonstration. Do not upload confidential Boeing design data to public GitHub, public examples, or external AI services without explicit institutional approval.
+
+## Experimental moving Gaussian raster and enthalpy (lpbf-raster-enthalpy-0.1)
+
+An optional model now generates an **idealized serpentine raster** over the occupied voxel slab's rectangular bounds. It applies a discrete Gaussian beam input to newly activated solid cells, with laser motion limited to at most half a thermal voxel per explicit step. It uses a **conservative enthalpy method** to capture reversible latent heat across a *user-supplied* solidus-to-liquidus interval. These are research approximations, not calibrated melt-pool predictions.
+
+For each cell, H(T) = c_p(T - T_ambient) + L clamp((T - T_s)/(T_l - T_s), 0, 1). The scheme updates cell energy by Gaussian-deposited input, neighboring face conduction, convective exchange, and the idealized build-plate reservoir, then inverts the monotone enthalpy law to calculate temperature. All coefficients are held constant; molten flow, recoil, vaporization, surface deformation, powder thermophysics, radiation, contact resistance, phase kinetics and grain evolution are omitted.
+
+The numerical Gaussian radius is broadened to at least **half the voxel width**, because the browser-scale grid cannot resolve most realistic LPBF laser spot radii. Beam energy is distributed over the occupied virtual slab and conservatively normalized; its drawn path is *not* a true physical laser hatch or slicer output. The virtual scan repeats across aggregated coarse deposition slabs, does not represent contours, scan islands, skywriting or layer-by-layer machine timings, and has no experimentally demonstrated accuracy.
+
+**New controls:** Choose *Moving Gaussian raster + latent heat (experimental)* in the chat's LPBF research panel. The selection resets engineering approval. Inputs include beam radius, liquidus and latent heat as well as base thermal/process inputs. The output uses the same bounded worker timeline and part-specific temperature viewer, with a distinct engine version in JSON exports.
+
+**Verification:** automated checks include a two-cell energy balance, a raster-direction test, Gaussian weight normalization, solidus/liquidus enthalpy inversion, latent-heat effect, no-laser equilibrium and positive-energy convergence. End-to-end browser checks verify a newly authorized moving-source run, export identity and invalidation on switching back to the simpler solver.
+
+**Validation still required:** NIST AM Bench 2022 IN718 multiple scan paths and single-track data, and AM Bench 2025 thermal/track/pad benchmarks offer candidate measurement targets once the solver is able to represent the required geometry, scan patterns and material conditions. Comparison is not claimed at this stage. See https://www.nist.gov/ambench and https://ambench2022.nist.gov/ . NIST's 2025 research 'The trace of heat: on the predictive power of modeling transient diffusion' also motivates a calibrated conduction-plus-phase-change approach: https://www.nist.gov/publications/trace-heat-predictive-power-modeling-transient-diffusion .
+
+**Next fidelity work:** import an authorized real slicer scan plan, resolve beam-to-voxel size with adaptive/finer mesh, represent powder-solid contrasts and temperature-dependent coefficients, add appropriate surface losses and boundary conditions, run mesh/time-step/spot-size convergence, compare with experimental thermal measurements, and only then consider coupling to structural distortion and defect models.
