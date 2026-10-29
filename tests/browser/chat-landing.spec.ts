@@ -32,7 +32,7 @@ test("mobile entry is navigable and rejects unsupported CAD formats",async({page
  await expect(page.locator(".oaHomeError")).toContainText("Other CAD formats are not yet supported");
  await page.getByRole("button",{name:"Toggle sidebar"}).click();
  await expect(page.getByRole("navigation",{name:"Primary navigation"})).toBeVisible();
- await page.getByRole("button",{name:"Close sidebar"}).first().click();
+ await page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("button",{name:"Close sidebar"}).click();
  const size=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:window.innerWidth}));
  expect(size.width).toBeLessThanOrEqual(size.viewport+1);
 });
