@@ -22,10 +22,36 @@ test("uploaded STL appears in chat with inspected mesh, geometric build preview 
  await page.getByRole("button",{name:"Play build preview"}).click();
  await expect.poll(async()=>Number(await page.getByLabel("Layer buildup percentage").inputValue())).toBeGreaterThan(1);
  await page.getByRole("button",{name:"Pause build preview"}).click();
+ // Uploaded STL should open the live engineering side workspace automatically.
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await page.getByRole("button",{name:"Close 3D viewer"}).click();
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toHaveCount(0);
+ await expect(page.locator(".oaInlineViewer")).toBeVisible();
  await page.getByRole("button",{name:"Open side view"}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await page.keyboard.press("Escape");
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toHaveCount(0);
+ await page.getByRole("button",{name:"Open side view"}).click();
  await expect(page.getByText(/not real toolpaths, layer timing/)).toBeVisible();
  expect(externalCalls).toEqual([]);
+});
+test("auto-open model can be resized by keyboard and closed on mobile",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ const panel=page.getByRole("complementary",{name:"Expanded 3D engineering model"});
+ await expect(panel).toBeVisible();
+ const divider=page.getByRole("separator",{name:"Resize 3D model panel"});
+ await expect(divider).toHaveAttribute("aria-valuenow","46");
+ await divider.focus();
+ await divider.press("ArrowLeft");
+ await expect(divider).toHaveAttribute("aria-valuenow","48");
+ await divider.press("End");
+ await expect(divider).toHaveAttribute("aria-valuenow","32");
+ await page.setViewportSize({width:390,height:844});
+ await expect(panel).toBeVisible();
+ await page.getByRole("button",{name:"Close 3D viewer"}).click();
+ await expect(panel).toHaveCount(0);
+ await expect(page.getByRole("button",{name:"Open side view"})).toBeVisible();
 });
 test("conversation persists after reload for the active part and its dimensions must be reconfirmed when scale changes",async({page})=>{
  await page.goto("/copilot");
