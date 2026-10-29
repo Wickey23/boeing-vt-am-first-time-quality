@@ -15,7 +15,7 @@ export type CoverageInputs={
  hasStructuralStudy:boolean;
  hasSteadyThermalStudy:boolean;
  hasLpbfTransient?:boolean;
- lpbfMethod?:"uniform"|"moving";
+ lpbfMethod?:"uniform"|"moving"|"imported";
  process:"PBF_LB_METAL"|"DED_LB_WIRE"|"DED_LB_POWDER";
 };
 export function failureCoverage(input:CoverageInputs):FailureCoverage[]{
@@ -41,10 +41,10 @@ export function failureCoverage(input:CoverageInputs):FailureCoverage[]{
    limitations:"No laser path, transient melting, deposition history or print residual stress.",
    nextInput:"Specify and approve conductivity, flux and boundary conditions."},
  ];
- items.push({id:"coarse-lpbf-transient",name:input.lpbfMethod==="moving"?"Experimental moving-raster LPBF enthalpy heat flow":"Coarse solid-state LPBF heat-flow prototype",category:"print-process",
+ items.push({id:"coarse-lpbf-transient",name:input.lpbfMethod==="imported"?"User-supplied laser-path LPBF enthalpy research":input.lpbfMethod==="moving"?"Experimental moving-raster LPBF enthalpy heat flow":"Coarse solid-state LPBF heat-flow prototype",category:"print-process",
   state:input.hasLpbfTransient&&input.process==="PBF_LB_METAL"?"calculated":"not-assessed",
-  method:input.lpbfMethod==="moving"?"Generated serpentine Gaussian source and equilibrium latent-heat finite-volume approximation":"Explicit voxel diffusion with coarse layer activation and uniformly distributed absorbed energy",
-  limitations:input.lpbfMethod==="moving"?"Not a measured scan path or resolved physical beam; no powder, fluid flow, verified melt-pool physics or calibrated defect prediction. Equilibrium phase transition is a research approximation.":"No melt-pool physics, phase change, moving beam, powder transfer or calibrated defect model. Temperatures beyond solidus invalidate solid-state assumptions.",
+  method:input.lpbfMethod==="imported"?"Bounded imported CSV laser segments, power/speed history, Gaussian source and equilibrium enthalpy":input.lpbfMethod==="moving"?"Generated serpentine Gaussian source and equilibrium latent-heat finite-volume approximation":"Explicit voxel diffusion with coarse layer activation and uniformly distributed absorbed energy",
+  limitations:input.lpbfMethod==="imported"?"CSV segment data and coordinate alignment are user-provided and not verified machine trajectories. No validated melt pool, powder, fluid flow or defect predictions.":input.lpbfMethod==="moving"?"Not a measured scan path or resolved physical beam; no powder, fluid flow, verified melt-pool physics or calibrated defect prediction. Equilibrium phase transition is a research approximation.":"No melt-pool physics, phase change, moving beam, powder transfer or calibrated defect model. Temperatures beyond solidus invalidate solid-state assumptions.",
   nextInput:"Verify actual machine/material inputs, run the research worker and compare against benchmark measurements."});
  const unassessed=[
   ["print-thermal-history","Validated laser-scan thermal history","Requires calibrated time-dependent heat-source, scan strategy, layer evolution and alloy properties."],
