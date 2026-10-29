@@ -103,9 +103,10 @@ export function movingEnthalpyStep(args:{
  * Exposed in UI as a bounded, unvalidated engineering-research calculation. */
 export function simulateMovingSource(
  buffer:ArrayBuffer,unitScale:number,input:MovingInputs,
- onProgress?:(done:number,total:number)=>void,scanPlan?:ScanPlan
+ onProgress?:(done:number,total:number)=>void,scanPlan?:ScanPlan,stepScale=1
 ):LpbfResult{
  validateMovingInputs(input);
+ if(!Number.isFinite(stepScale)||stepScale<.25||stepScale>1)throw Error("Numerical time-step scaling must be 0.25–1.");
  if(!Number.isFinite(unitScale)||unitScale<.001||unitScale>1000)
   throw Error("Invalid STL physical unit scale.");
  if(buffer.byteLength>2*1024*1024)
@@ -139,7 +140,7 @@ export function simulateMovingSource(
   6*input.convectionWm2K/(input.densityKgM3*input.specificHeatJKgK*cellM));
  const fastest=scanPlan?Math.max(...scanPlan.segments.map(seg=>seg.speedMmS)):input.scanSpeedMmS;
  const dtMotion=(h/2)/fastest; // source moves < half a voxel per step
- const maxDt=Math.min(dtThermal,dtMotion);
+ const maxDt=Math.min(dtThermal,dtMotion)*stepScale;
  if(!(maxDt>0&&Number.isFinite(maxDt)))throw Error("Invalid explicit time step.");
  const scanTime=checkedScan?checkedScan.totalSeconds:
   cells.length*volMm3/(input.hatchSpacingMm*input.layerThicknessMm*input.scanSpeedMmS);
@@ -251,6 +252,7 @@ export function simulateMovingSource(
  };
  return {engine:scanPlan?"lpbf-imported-enthalpy-0.1":MOVING_SOURCE_VERSION,inputs:{...input},
   scanPlan:scanPlan?{sourceName:scanPlan.sourceName,sha256:scanPlan.sha256,segmentCount:scanPlan.segments.length,version:scanPlan.version}:undefined,
+  numerics:{stepScale,maxDtSeconds:maxDt},
   mesh:{cells:cells.length,cellSizeMm:h,virtualSlabs:layers.length,
    nominalLayers,voxelVolumeMm3:cells.length*volMm3},
   frames,summary,
