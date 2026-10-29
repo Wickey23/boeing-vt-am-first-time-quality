@@ -2,7 +2,7 @@ import {test,expect} from "@playwright/test";
 import {readFile} from "node:fs/promises";
 
 test("reviewed source passage enters real study snapshot and survives project reload",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
  await page.getByRole("button",{name:"Open Documents stage"}).click();
@@ -43,7 +43,7 @@ test("reviewed source passage enters real study snapshot and survives project re
 });
 
 test("editing a source invalidates previous review and excludes it from new study records",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Open Documents stage"}).click();
  await page.locator(".copilotDocs > summary").click();
