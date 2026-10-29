@@ -16,6 +16,11 @@ test("uploaded STL appears in chat with inspected mesh, geometric build preview 
  await expect(page.getByRole("region",{name:"Risk assessment results"})).toContainText("Failure-risk assessment");
  await page.getByLabel("Layer buildup percentage").fill("50");
  await expect(page.getByText("50% of the model height")).toBeVisible();
+ await page.getByRole("button",{name:"Restart"}).click();
+ await expect(page.getByText("1% of the model height")).toBeVisible();
+ await page.getByRole("button",{name:"Play build preview"}).click();
+ await expect.poll(async()=>Number(await page.getByLabel("Layer buildup percentage").inputValue())).toBeGreaterThan(1);
+ await page.getByRole("button",{name:"Pause build preview"}).click();
  await page.getByRole("button",{name:"Open side view"}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await expect(page.getByText(/not real toolpaths, layer timing/)).toBeVisible();
