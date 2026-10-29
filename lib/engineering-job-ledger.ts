@@ -5,6 +5,7 @@
  */
 import type {StudyKind} from "./engineering-runbook";
 import type {ReviewedEvidence} from "./engineering-evidence";
+import type {ApprovedParameterBinding} from "./engineering-parameter-binding";
 
 export type JobStatus="queued"|"running"|"completed"|"failed"|"cancelled"|"interrupted"|"stale";
 export type StepStatus="queued"|"running"|"completed"|"failed"|"cancelled";
@@ -20,6 +21,7 @@ export type StudySnapshot={
  thermalInput?:{conductivityWmK:number;baseTemperatureC:number;topFluxWm2:number;resolution:number};
  approvedAt:string;sourceIds:string[];
  reviewedEvidence?:ReviewedEvidence[];
+ parameterBindings?:ApprovedParameterBinding[];
  modelScope:"research-not-qualified";
 };
 export type EngineeringJob={schema:1;id:string;createdAt:string;updatedAt:string;
@@ -38,6 +40,14 @@ export function createEngineeringJob(id:string,snapshot:StudySnapshot,kinds:Stud
   !Array.isArray(snapshot.reviewedEvidence)||snapshot.reviewedEvidence.length>30||
   snapshot.reviewedEvidence.some(e=>!snapshot.sourceIds.includes(e.sourceId)||!e.reviewedAt||!e.reviewerNote)
  ))throw Error("Invalid or unreviewed source references in the study snapshot.");
+ if(snapshot.parameterBindings&&(
+  !Array.isArray(snapshot.parameterBindings)||snapshot.parameterBindings.length>40||
+  snapshot.parameterBindings.some(b=>!b.independentlyVerified||!Number.isFinite(b.value)||
+   !snapshot.sourceIds.includes(b.sourceId)||
+   !snapshot.reviewedEvidence?.some(e=>e.key===b.evidenceKey&&e.sourceId===b.sourceId&&e.sourceRevision===b.sourceRevision)||
+   b.serviceCaseId!==snapshot.serviceCase?.id||
+   snapshot.serviceCase.input[b.target]!==b.value)
+ ))throw Error("Unreviewed, stale or mismatched source-to-solver parameter binding.");
  if(kinds.length===0||(
     snapshot.analysisMode==="service-independent"?
       kinds.join(",")!=="service-structural,steady-conduction":
