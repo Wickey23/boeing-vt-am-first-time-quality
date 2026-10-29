@@ -158,7 +158,10 @@ export function runPartialLayerResearch(input:PartialLayerInputs):PartialLayerRe
      weights[i]=weight;sumWeight+=weight;
     }
     if(sumWeight<1e-12)throw Error("Powered beam crosses unrepresented grid footprint; energy was not reassigned.");
-    for(const i of byLayer[command.layer])if((weights[i]??0)>0)solid[i]=1;
+    for(const i of byLayer[command.layer]){
+     const c=cells[i],dx=o.x+(c[0]+.5)*p-x,dy=o.y+(c[1]+.5)*p-y;
+     if(dx*dx+dy*dy<=input.beamRadiusMm**2)solid[i]=1; // heuristic beam core only, not Gaussian tails
+    }
    }
    const changes=new Float64Array(cells.length);
    for(let i=0;i<cells.length;i++)if(active[i]){
