@@ -108,3 +108,13 @@ Acceptance: every visible finding ties to source, solver/model and correct geome
 - A public, non-sensitive reproducibility example is included: public/verification/cube-10mm-research-scan.csv for the 10-mm cube STL at millimeter units and voxel resolution 6.
 - Numerical and Playwright tests verify parser rejection, bounds, continuity, commanded power energy accounting, upload/hash, simulation, results invalidation, and path review.
 - NIST AMB2022-01 offers layer-wise detailed HDF5 scan records. Native HDF5, machine scan file parsing, calibrated thermal measurements, validated powder conductivity, and true physical-layer mapping remain future work. See docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
+
+## 2026-10-29 numerical sensitivity diagnostics
+
+- The approved experimental LPBF process-thermal chat card exposes a separate **Run numerical sensitivity checks** action. It runs in an independently cancellable and bounded browser worker, and verifies the uploaded STL bytes against the active part SHA-256 before comparison.
+- A time-step refinement repeats the same part, inputs and generated/imported source path with half the maximum explicit time step. The actual run differences in peak temperature, final mean temperature, RMS of final surface-projected temperatures, energy and solver steps are reported.
+- A generated-raster study also *attempts* a bounded spatial sensitivity study at resolution +2. Because this changes the discretized source and virtual layer aggregation, it is **not** a controlled grid-convergence result.
+- Imported CSV scans intentionally **disable spatial refinement**: their ordered virtual-slab indices cannot simply be reused with a different voxel resolution.
+- Missing/unsafe solver runs are reported as skipped with reasons, rather than synthesized or labeled passed.
+- Engineer can download a numerical sensitivity JSON record with exact part hash, model version, approved inputs, optional original scan-file hash, time-step parameters, computed outputs and limitations.
+- The numerical comparison **does not constitute physical validation or manufacturing defect prediction**. NIST AMB2022-01 remains a future validation target for calibrated laser/thermal physics, layer coordinate mapping and benchmark uncertainty. See docs/LPBF-TRANSIENT-RESEARCH-VALIDATION.md.
