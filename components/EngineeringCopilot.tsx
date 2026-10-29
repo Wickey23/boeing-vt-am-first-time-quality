@@ -274,7 +274,7 @@ export default function EngineeringCopilot(){
    const doc=await createCopilotReviewPDF({
     projectName:a.projectName,partName:a.file.name,partSha256:partKey,
     process:a.journey.process,unitsConfirmed:verified,createdAt:new Date().toISOString(),
-    knowledge,reviewedEvidence:validEvidence,readiness,
+    knowledge,reviewedEvidence:validEvidence,approvedBindings:currentParameterBindings,readiness,
     study:field?{jobId:field.jobId,
      stressMPa:field.structural?.solver.maxVonMisesMPa,
      displacementMm:field.structural?.solver.maxDisplacementMm,
