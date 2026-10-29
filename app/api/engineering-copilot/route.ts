@@ -87,7 +87,7 @@ export async function POST(request:Request){
    method:"POST",
    headers:{"Content-Type":"application/json",Authorization:"Bearer "+provider.key},
    body:JSON.stringify({model:provider.model,temperature:0.2,max_tokens:550,
-    messages:[{role:"system",content:instruction},...history,{role:"user",content:provider.kind==="arc"?pdfInput[0].text:pdfInput}]}),
+    messages:[{role:"system",content:instruction},...history,{role:"user",content:provider.kind==="arc"?(pdfInput[0] as {type:"text";text:string}).text:pdfInput}]}),
    signal:AbortSignal.timeout(23000),
    cache:"no-store"
   });
