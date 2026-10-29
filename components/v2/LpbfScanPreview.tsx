@@ -7,7 +7,8 @@ export default function LpbfScanPreview({plan}:{plan:ScanPlan}){
  const slabs=useMemo(()=>[...new Set(plan.segments.map(s=>s.slab))].sort((a,b)=>a-b),[plan]);
  const [slab,setSlab]=useState(slabs[0]??0);
  useEffect(()=>{setSlab(slabs[0]??0)},[plan.sha256,slabs]);
- const tracks=plan.segments.filter(s=>s.slab===slab);
+ const activeSlab=slabs.includes(slab)?slab:(slabs[0]??0);
+ const tracks=plan.segments.filter(s=>s.slab===activeSlab);
  const visible=tracks.slice(0,250);
  const xs=tracks.flatMap(s=>[s.x0Mm,s.x1Mm]),ys=tracks.flatMap(s=>[s.y0Mm,s.y1Mm]);
  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
@@ -18,10 +19,10 @@ export default function LpbfScanPreview({plan}:{plan:ScanPlan}){
  const duration=tracks.reduce((t,s)=>t+Math.hypot(s.x1Mm-s.x0Mm,s.y1Mm-s.y0Mm)/s.speedMmS,0);
  return <div className="oaScanPreview" aria-label="Imported scan path preview">
   <div className="oaBuildTitle"><strong>Laser path review</strong>
-   <label>Virtual slab <select aria-label="Preview scan slab" value={slab} onChange={e=>setSlab(Number(e.target.value))}>
+   <label>Virtual slab <select aria-label="Preview scan slab" value={activeSlab} onChange={e=>setSlab(Number(e.target.value))}>
     {slabs.map(n=><option key={n} value={n}>{n}</option>)}
    </select></label></div>
-  <svg viewBox="0 0 340 220" role="img" aria-label={"2D laser scan segment paths for virtual slab "+slab}>
+  <svg viewBox="0 0 340 220" role="img" aria-label={"2D laser scan segment paths for virtual slab "+activeSlab}>
    <rect x="0" y="0" width="340" height="220" rx="8" fill="#091827"/>
    {visible.map((s,i)=><line key={i}
     x1={x(s.x0Mm)} y1={y(s.y0Mm)} x2={x(s.x1Mm)} y2={y(s.y1Mm)}
