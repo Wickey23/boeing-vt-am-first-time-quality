@@ -7,10 +7,13 @@ type Payload={
  file:ArrayBuffer;unitScale:number;partHash:string;
  inputs:MovingInputs;baseline:LpbfResult;scanPlan?:ScanPlan;
 };
-self.onmessage=(event:MessageEvent<Payload>)=>{
+self.onmessage=async(event:MessageEvent<Payload>)=>{
  try{
   const {file,unitScale,partHash,inputs,baseline,scanPlan}=event.data;
   if(!/^[a-f0-9]{64}$/.test(partHash))throw Error("Invalid part identity.");
+  const hashBytes=new Uint8Array(await crypto.subtle.digest("SHA-256",file));
+  const calculatedHash=Array.from(hashBytes).map(b=>b.toString(16).padStart(2,"0")).join("");
+  if(calculatedHash!==partHash)throw Error("Uploaded STL bytes do not match active study hash; numerical comparison withheld.");
   validateMovingInputs(inputs);
   const result:SensitivityStudy=runLpbfSensitivity(file,unitScale,inputs,baseline,scanPlan,
    (stage,done,total)=>self.postMessage({type:"progress",partHash,stage,done,total}));
