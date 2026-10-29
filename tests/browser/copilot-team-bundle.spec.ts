@@ -1,7 +1,7 @@
 import {test,expect} from "@playwright/test";
 import {readFile} from "node:fs/promises";
 test("complete project ZIP exports and restores STL, original reference bytes and context",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByLabel("Upload target STL").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm inspected dimensions and units"}).click();
  await page.getByRole("button",{name:"Open Documents stage"}).click();
@@ -34,7 +34,7 @@ test("complete project ZIP exports and restores STL, original reference bytes an
  await expect(page.getByLabel("Component role")).toHaveValue("Fixture bracket example");
 });
 test("results stage shows process-specific evidence readiness instead of a quality approval",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/advanced");
  await page.getByRole("button",{name:"Open Results stage"}).click();
  const panel=page.getByTestId("engineering-readiness");
  await expect(panel).toBeVisible();
