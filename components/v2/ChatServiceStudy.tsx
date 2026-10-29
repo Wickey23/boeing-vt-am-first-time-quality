@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import {useAnalysis} from "@/components/AnalysisProvider";
+import "../copilot.css";
 import UnifiedServiceStudy,{type ServiceStudyResults} from "@/components/UnifiedServiceStudy";
 import {activeServiceCase} from "@/lib/service-plan";
 import {currentReviewedEvidence} from "@/lib/engineering-evidence";
