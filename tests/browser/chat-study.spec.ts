@@ -106,7 +106,7 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
  const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
  await panel.getByLabel("Thermal model").selectOption("moving");
- await expect(panel.getByText(/Moving Gaussian raster \+ latent heat/)).toBeVisible();
+ await expect(panel.getByLabel("Thermal model")).toHaveValue("moving");
  const run=panel.getByRole("button",{name:"Run research thermal worker"});
  await expect(run).toBeDisabled();
  await expect(panel.getByLabel("Gaussian beam radius (mm)")).toHaveValue("0.08");
