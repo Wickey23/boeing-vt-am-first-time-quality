@@ -4,10 +4,11 @@
 import type {ProjectKnowledge} from "./copilot-context";
 import type {ReviewedEvidence} from "./engineering-evidence";
 import type {EngineeringReadiness} from "./engineering-readiness";
+import type {ApprovedParameterBinding} from "./engineering-parameter-binding";
 export type CopilotPdfInputs={
  projectName:string;partName:string;partSha256:string;process:string;
  unitsConfirmed:boolean;createdAt:string;knowledge:ProjectKnowledge;
- reviewedEvidence:ReviewedEvidence[];readiness:EngineeringReadiness;
+ reviewedEvidence:ReviewedEvidence[];approvedBindings?:ApprovedParameterBinding[];readiness:EngineeringReadiness;
  study?:{jobId:string;stressMPa?:number;displacementMm?:number;
  temperatureMinC?:number;temperatureMaxC?:number;
  structuralModel?:string;thermalModel?:string};
@@ -51,6 +52,14 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
   paragraph(e.excerpt.slice(0,450));
   paragraph("Review: "+e.reviewerNote.slice(0,350),8,[75,84,95]);
  }
+ title("Source-linked numerical inputs");
+ if(!input.approvedBindings?.length)paragraph("No current source-to-input numerical mapping is recorded. Manually entered inputs are independent engineering assumptions.");
+ for(const binding of input.approvedBindings??[]){
+  paragraph("["+binding.sourceId+" "+binding.locator+"] "+binding.target+" = "+binding.value+" "+binding.normalizedUnit+
+   "; original "+binding.rawQuantity+"; service case "+binding.serviceCaseId,9);
+  paragraph("Engineer mapping rationale: "+binding.reviewNote,8,[75,84,95]);
+ }
+ paragraph("These mapped quantities require the independent engineering review of all other numerical inputs and fixture assumptions.");
  title("Simulated original-part service response");
  if(input.study){
   meta("Study job",input.study.jobId);
