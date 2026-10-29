@@ -184,3 +184,21 @@
 .oaSensitivityCase dt{color:var(--oa-muted);font-size:11px;line-height:1.45}
 .oaSensitivityCase dd{margin:0;text-align:right;font-size:11px;font-weight:600}
 .oaSensitivityOutput>.oaSecondaryRun{margin-top:12px}
+
+/* Local experimental trace comparison; no qualification or validation badge. */
+.oaMeasurementPanel{border-top:1px solid var(--oa-border);margin-top:18px;padding-top:17px}
+.oaMeasurementPanel h3{font-size:14px;font-weight:700;margin:0 0 7px}
+.oaTraceFile{display:flex;flex-direction:column;gap:7px;margin:13px 0;font-weight:600;font-size:12px}
+.oaTraceFile input{font-size:11px;max-width:100%}
+.oaTraceMetadata{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:13px 0}
+.oaTraceMetadata label{display:flex;flex-direction:column;gap:7px;color:var(--oa-text);font-size:11px}
+.oaTraceMetadata input,.oaTraceMetadata select{min-width:0;width:100%;padding:10px;background:var(--oa-card);color:var(--oa-text);border:1px solid var(--oa-border);border-radius:9px;font-size:12px}
+.oaTraceResults{margin-top:13px;border:1px solid var(--oa-border);border-radius:11px;padding:12px}
+.oaTraceResults>.oaLpbfWarning{line-height:1.65}
+.oaTraceResults>.oaLpbfMetrics{margin:12px 0}
+.oaTraceTable{max-height:340px;overflow:auto}
+.oaTraceTable table{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap}
+.oaTraceTable th,.oaTraceTable td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--oa-border)}
+.oaTraceTable th{font-weight:700;color:var(--oa-text)}
+.oaTraceResults>.oaSecondaryRun{margin-top:12px}
+@media(max-width:750px){.oaTraceMetadata{grid-template-columns:1fr}}
