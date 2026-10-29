@@ -172,3 +172,15 @@
 .oaScanLegend span{display:inline-flex;gap:6px;align-items:center}
 .oaOnMark,.oaOffMark{display:inline-block;width:18px;height:3px;border-radius:2px;background:#ffb454}
 .oaOffMark{background:#8cabb9}
+
+/* Numerical repeatability comparisons. These are not experiment validation. */
+.oaSensitivityPanel{margin-top:17px;border-top:1px solid var(--oa-border);padding-top:17px}
+.oaSensitivityPanel h3{font-size:14px;font-weight:700;margin:0 0 7px}
+.oaSensitivityCase{background:var(--oa-card);border:1px solid var(--oa-border);border-radius:12px;padding:12px;margin:12px 0}
+.oaSensitivityCase h4{margin:0 0 6px;font-weight:650;font-size:13px}
+.oaSensitivityCase p{color:var(--oa-muted);line-height:1.5;font-size:11px;margin:4px 0 12px}
+.oaSensitivityCase dl{margin:0;display:grid;gap:7px}
+.oaSensitivityCase dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--oa-border);padding-top:7px}
+.oaSensitivityCase dt{color:var(--oa-muted);font-size:11px;line-height:1.45}
+.oaSensitivityCase dd{margin:0;text-align:right;font-size:11px;font-weight:600}
+.oaSensitivityOutput>.oaSecondaryRun{margin-top:12px}
