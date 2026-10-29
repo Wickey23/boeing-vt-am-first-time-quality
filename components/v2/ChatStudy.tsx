@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useRef,useState} from "react";
+import {useEffect,useMemo,useRef,useState,type CSSProperties} from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {useAnalysis} from "@/components/AnalysisProvider";
@@ -40,6 +40,8 @@ export default function ChatStudy(){
  const [draft,setDraft]=useState("");
  const [attachError,setAttachError]=useState("");
  const [showArtifact,setShowArtifact]=useState(false);
+ const [panelWidth,setPanelWidth]=useState(46);
+ const [resizingPanel,setResizingPanel]=useState(false);
  const [showOverhangs,setShowOverhangs]=useState(false);
  const [showSupports,setShowSupports]=useState(false);
  const [layer,setLayer]=useState(100);
@@ -62,6 +64,41 @@ export default function ChatStudy(){
  const fileInput=useRef<HTMLInputElement>(null);
  const bottom=useRef<HTMLDivElement>(null);
  const pendingRun=useRef<string|null>(null);
+ const layoutRef=useRef<HTMLDivElement>(null);
+ const previouslyLoadedFile=useRef<File|null>(null);
+ const sideToggleRef=useRef<HTMLButtonElement>(null);
+ const sideCloseRef=useRef<HTMLButtonElement>(null);
+ const closeSideView=()=>{
+  setShowArtifact(false);
+  setResizingPanel(false);
+  sideToggleRef.current?.focus({preventScroll:true});
+ };
+ // Auto-open on upload and when the existing persisted part is restored.
+ // Manual collapse remains respected for the same File object.
+ useEffect(()=>{
+  if(previouslyLoadedFile.current===a.file)return;
+  previouslyLoadedFile.current=a.file;
+  setShowArtifact(Boolean(a.file));
+ },[a.file]);
+ useEffect(()=>{
+  if(!showArtifact)return;
+  const onEscape=(e:KeyboardEvent)=>{
+   if(e.key==="Escape"&&!e.defaultPrevented){
+    e.preventDefault();
+    setShowArtifact(false);
+    setResizingPanel(false);
+    sideToggleRef.current?.focus({preventScroll:true});
+   }
+  };
+  window.addEventListener("keydown",onEscape);
+  if(window.matchMedia("(max-width: 850px)").matches)sideCloseRef.current?.focus({preventScroll:true});
+  return()=>window.removeEventListener("keydown",onEscape);
+ },[showArtifact]);
+ const setWidthFromPointer=(clientX:number)=>{
+  const bounds=layoutRef.current?.getBoundingClientRect();
+  if(!bounds||bounds.width<=0)return;
+  setPanelWidth(Math.max(32,Math.min(64,Math.round(100*(bounds.right-clientX)/bounds.width))));
+ };
  const isConfirmed=completedPart(a.journey,a.file,a.settings.unitScale);
  const canScreen=Boolean(a.file&&isConfirmed&&a.journey.process==="PBF_LB_METAL");
  const currentRun=Boolean(a.result&&partHash&&a.result.source.fileHashSha256===partHash&&
@@ -189,7 +226,7 @@ export default function ChatStudy(){
   setAttachError("");
   a.upload(file);
   a.setProjectName(file.name.replace(/\.stl$/i,""));
-  setLayer(100);setPlaying(false);setShowArtifact(false);
+  setLayer(100);setPlaying(false);setShowArtifact(true);
  };
  const doScreen=()=>{
   if(!canScreen||a.busy)return;
@@ -197,7 +234,7 @@ export default function ChatStudy(){
   a.retry();
  };
  const overlay=showOverhangs?"overhang":selected?"orientation":"geometry";
- return <div className={"oaStudy"+(showArtifact?" oaStudySplit":"")}>
+ return <div ref={layoutRef} className={"oaStudy"+(showArtifact?" oaStudySplit":"")+(resizingPanel?" oaStudyResizing":"")} style={{"--oa-panel-width":panelWidth+"%"} as CSSProperties}>
   <section className="oaStudyChat" aria-label="Engineering conversation">
    <div className="oaStudyFeed" role="log" aria-label="Engineering chat messages">
     {messages.length===0&&!a.file&&<div className="oaStudyEmpty"><h1>What should we analyze?</h1><p>Upload an STL and I'll show the model, real mesh inspection, and the supported manufacturing screening steps.</p></div>}
@@ -213,7 +250,8 @@ export default function ChatStudy(){
      </div>
     </div>)}
     {a.file&&<article className="oaInChatModel" aria-label="Uploaded STL model in chat">
-      <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button onClick={()=>setShowArtifact(v=>!v)} type="button"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
+      <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button ref={sideToggleRef} onClick={()=>showArtifact?closeSideView():setShowArtifact(true)} type="button" aria-expanded={showArtifact} aria-controls="oa-engineering-side-panel"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
+      {showArtifact&&<p className="oaSideViewHint">3D model open in side workspace. Use X or Escape to collapse; reopen it here anytime.</p>}
       {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
       <div className="oaModelMetadata">
        <span>{inspect.data?inspect.data.audit.triangles.toLocaleString()+" mesh triangles":"Inspecting mesh..."}</span>
@@ -345,8 +383,14 @@ export default function ChatStudy(){
     <small>Local research guide · External ARC AI is not enabled here. Numerical work requires engineering review.</small>
    </div>
   </section>
-  {showArtifact&&a.file&&<aside className="oaStudyArtifact" aria-label="Expanded 3D engineering model">
-   <header><span><BoxIcon size={18}/> {a.file.name}</span><button type="button" onClick={()=>setShowArtifact(false)} aria-label="Close 3D viewer"><X size={19}/></button></header>
+  {showArtifact&&a.file&&<div className="oaArtifactResize" role="separator" aria-label="Resize 3D model panel" aria-orientation="vertical" aria-valuemin={32} aria-valuemax={64} aria-valuenow={panelWidth} tabIndex={0}
+    onKeyDown={e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();setPanelWidth(v=>Math.max(32,Math.min(64,v+(e.key==="ArrowLeft"?2:-2))));}else if(e.key==="Home"){e.preventDefault();setPanelWidth(64);}else if(e.key==="End"){e.preventDefault();setPanelWidth(32);}}}
+    onPointerDown={e=>{if(e.pointerType==="mouse"&&e.button!==0)return;e.currentTarget.setPointerCapture(e.pointerId);setResizingPanel(true);}}
+    onPointerMove={e=>{if(resizingPanel)setWidthFromPointer(e.clientX);}}
+    onPointerUp={e=>{setWidthFromPointer(e.clientX);setResizingPanel(false);if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}}
+    onPointerCancel={()=>setResizingPanel(false)}><span aria-hidden="true"/></div>}
+  {showArtifact&&a.file&&<aside id="oa-engineering-side-panel" className="oaStudyArtifact" aria-label="Expanded 3D engineering model">
+   <header><span><BoxIcon size={18}/> {a.file.name}</span><button ref={sideCloseRef} type="button" onClick={closeSideView} aria-label="Close 3D viewer" title="Collapse model side panel"><X size={19}/></button></header>
    <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>
    <p>Live STL geometry · {serviceField?resultField+" calculated research field":overlay+" view · build height "+layer+"%"} · Research only</p>
    <Link href="/copilot/advanced">Open advanced numerical studies <SquareArrowOutUpRight size={14}/></Link>
