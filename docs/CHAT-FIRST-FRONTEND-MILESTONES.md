@@ -12,15 +12,16 @@ Scope:
 - Clean centered welcome state and composer, Enter sends / Shift+Enter newline
 - Local STL attachment validation (nonempty STL <=20 MB); direct handoff to existing AnalysisProvider
 - First prompt is consumed once and answered by the existing local engineering guide; no automatic remote provider call
-- Preserve legacy copilot stages for direct /copilot visits, with message-first handoffs opening the conversation
+- Preserve legacy copilot stages under /copilot/advanced; the primary /copilot route uses the new conversation view
 - Light/dark appearance and minimal responsive layout, security and research-prototype notice
 - Browser tests for home, mobile, STL handoff and no unauthorized AI call
 
 Acceptance: user can attach a supported part and send a question from /, reach /copilot with the part loaded and the message visible, without a remote AI call or numerical solve. Existing /orientation, reports and DED example routes remain available.
 
-Status: Implemented in source on main; verify CI, production build and Playwright before considering it released.
+Status: Milestone 1 implemented and verified by GitHub numerical, TypeScript, production-build and browser tests. The original controls now live at /copilot/advanced.
 
 ## Milestone 2 — Native chat transcript and study persistence
+Status: Partially implemented. The primary chat transcript, composer, localStorage persistence keyed by STL SHA-256, and active-file isolation are in source. A full multi-study selector/history service, rename/delete, and attached reference-document lifecycle remain future work.
 Scope:
 - Replace the expandable conversation section with a normal ChatGPT-style visible message feed
 - Move composer into the conversation's fixed bottom area; responsive, keyboard accessible
@@ -32,6 +33,7 @@ Scope:
 Acceptance: messages can be resumed after reload and switching studies never mixes different geometry/context. Existing analysis panel can be opened without leaving the chat.
 
 ## Milestone 3 — Artifact split viewer and structured analysis messages
+Status: Partially implemented. Real uploaded STL preview inside the conversation, optional side viewer, actual mesh worker findings, orientation worker progress, geometric risk cards and a controllable 3D build-height clipping animation are in source. Simulation-result field selection, CAD-region-specific defect mapping, and validated print thermomechanical simulation remain unimplemented.
 Scope:
 - Responsive right-side persistent Three.js model pane; chat remains visible
 - Typed cards for uploaded geometry, simulation state, engineering approval, risk findings and solver outputs
@@ -67,3 +69,11 @@ Acceptance: every visible finding ties to source, solver/model and correct geome
 - No system can guarantee prediction of every possible manufacturing failure.
 - Always read fresh GitHub main / latest commits / open PRs before editing; preserve teammate work.
 - Definition of done includes npm test, npm run typecheck, npm run build and Playwright desktop/mobile evidence plus deployment verification.
+
+## As-built behavior (2026-10-29)
+- `/` offers the initial chat composer and local STL attachment.
+- `/copilot` is the primary chat + 3D geometry + visible analysis activity workspace.
+- `/copilot/advanced` preserves the earlier five-stage engineering copilot, document evidence review and separate numerical studies.
+- The build-height animation clips the **actual geometry** as a visualization, not a generated slicer toolpath or thermal process simulation.
+- Failure findings currently come from mesh topology and geometric orientation screening. Physical print defect probabilities remain *not assessed*.
+- ARC is not configured in the new primary chat. A user-facing local-guide label prevents interpreting this deterministic guidance as model output.
