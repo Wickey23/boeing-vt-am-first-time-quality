@@ -1,3 +1,4 @@
+import {readFile} from "node:fs/promises";
 import {test,expect} from "@playwright/test";
 
 test("real uploaded STL physical layers are inspectable only after units and sampling approval",async({page})=>{
