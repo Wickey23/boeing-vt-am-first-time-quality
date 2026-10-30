@@ -63,3 +63,20 @@
 .oaLegendLaser{background:#ffaf48}.oaLegendTravel{background:#82aee9}.oaLegendPart{background:#39718b}
 .oaScanEstimate{padding:10px;border:1px solid var(--oa-border);border-radius:10px;font-size:12px;line-height:1.6}
 @media(max-width:650px){.oaScanToolpathLayout{grid-template-columns:1fr}.oaScanToolpathCanvas{max-height:340px}}
+
+/* Non-destructive LPBF model editor, shares the physical slicing transform. */
+.oaBuildEditor{border:1px solid var(--oa-border);border-radius:11px;padding:12px;margin:14px 0;background:var(--oa-card)}
+.oaBuildEditor>summary{cursor:pointer;font-size:12px;font-weight:650;line-height:1.55}
+.oaBuildEditor>summary small{color:var(--oa-muted);font-weight:400;margin-left:6px}
+.oaBuildEditor .oaLpbfApproval{display:flex;align-items:flex-start;gap:9px;line-height:1.5;margin:12px 0}
+.oaBuildEditor .oaLpbfApproval input{margin-top:3px;flex-shrink:0}
+.oaBuildEditor .oaRunActions{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+.oaBuildEditorResults{border-top:1px solid var(--oa-border);padding-top:12px;margin-top:12px;font-size:12px}
+.oaBuildEditorResults p{line-height:1.55;overflow-wrap:anywhere}
+.oaBuildEditorResults code{word-break:break-all}
+.oaBuildEditorSuggestions{display:grid;gap:10px;margin-top:13px}
+.oaBuildEditorSuggestion{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--oa-border);border-radius:9px;padding:10px}
+.oaBuildEditorSuggestion>div{min-width:0}
+.oaBuildEditorSuggestion p{margin:5px 0 0;color:var(--oa-muted);font-size:11px}
+.oaBuildEditorSuggestion button{flex-shrink:0}
+@media(max-width:650px){.oaBuildEditorSuggestion{align-items:stretch;flex-direction:column}.oaBuildEditorSuggestion button{width:100%}}
