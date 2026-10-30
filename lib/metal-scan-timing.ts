@@ -79,7 +79,7 @@ export function calculatePhysicalScanTiming(
  const blocked=registration.status==="BLOCKED"||registration.blockers.length>0||missingChronology;
  // An additive overhead estimate is impossible unless the operator confirms
  // the CSV explicitly omits those phases; never silently double-count.
- const overhead=assumptions.outsideCsvConfirmed?
+ const overhead=assumptions.outsideCsvConfirmed&&!blocked?
   slices.grid.physicalLayers*assumptions.recoatSecondsPerLayer+
   60*(assumptions.preparationMinutes+assumptions.cooldownMinutes):null;
  const warnings=[
@@ -88,9 +88,9 @@ export function calculatePhysicalScanTiming(
   "Machine acceleration, galvo dynamics, gas flow, powder handling, recoater recovery, heat treatment, build-plate exchange and interruptions are not modeled or verified.",
   "A source-hashed path linked to the part does not establish support adequacy, metal quality, actual job execution or build acceptance."
  ];
- if(blocked)warnings.unshift("Scan-to-part geometry or chronology is blocked; reported commanded times are descriptive data only, not a build estimate.");
  if(!assumptions.outsideCsvConfirmed)warnings.unshift("Total print-time estimate withheld: no confirmation that recoating/preparation/cooldown are absent from the supplied timestamps.");
- else warnings.unshift("Illustrative total adds operator-specified non-overlapping overhead to the unverified commanded duration. Treat as a scenario, not a printer quotation.");
+ else if(!blocked)warnings.unshift("Illustrative total adds operator-specified non-overlapping overhead to the unverified commanded duration. Treat as a scenario, not a printer quotation.");
+ if(blocked)warnings.unshift("Scan-to-part geometry or chronology is blocked; reported commanded times are descriptive data only, not a build estimate.");
  return {version:SCAN_TIMING_VERSION,partSha256:slices.partSha256,
   sourceSha256:registration.scanSourceSha256,confidence:"SUPPLIED_UNVERIFIED_COMMANDS",
   elapsedCommandSeconds:elapsed,laserOnSeconds:on,laserOffSeconds:off,commandedLaserJ:laserJ,
