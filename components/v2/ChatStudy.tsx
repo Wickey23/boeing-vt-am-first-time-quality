@@ -10,6 +10,7 @@ import {failureCoverage,coverageSummary} from "@/lib/failure-coverage";
 import ChatServiceStudy from "@/components/v2/ChatServiceStudy";
 import ChatLpbfStudy from "@/components/v2/ChatLpbfStudy";
 import PhysicalSliceWorkspace from "@/components/v2/PhysicalSliceWorkspace";
+import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
 import type {LpbfResult} from "@/lib/lpbf-transient";
 import type {ServiceStudyResults} from "@/components/UnifiedServiceStudy";
 import {ArrowUp,Box as BoxIcon,CheckCircle2,ChevronDown,ChevronUp,FileUp,Paperclip,Play,RotateCcw,ShieldAlert,SlidersHorizontal,SquareArrowOutUpRight,X,LoaderCircle,AlertTriangle,FileText} from "lucide-react";
@@ -128,6 +129,7 @@ export default function ChatStudy(){
  const selected=useMemo(()=>currentRun?a.result?.candidates.find(v=>v.id===a.selected)??a.result?.candidates[0]:undefined,[a.result,a.selected,currentRun]);
  const findings=useMemo(()=>selected&&a.result?screenCandidate(selected,a.result.candidates):[],[selected,a.result]);
  const meshFindings=inspect.data?.audit.findings??[];
+ const unitWarning=a.file&&inspect.data?reviewUnitsFromFilename(a.file.name,inspect.data.dimensions,a.settings.unitScale):null;
  const serviceCurrent=Boolean(serviceStudy&&a.file&&partHash&&partHash===serviceStudy.partSha256&&
   serviceStudy.unitScale===a.settings.unitScale&&serviceStudy.process===a.journey.process&&isConfirmed);
  const lpbfValid=Boolean(lpbfSession&&partHash&&lpbfSession.hash===partHash&&lpbfSession.scale===a.settings.unitScale&&
@@ -329,6 +331,7 @@ export default function ChatStudy(){
        </select></label>
        <button type="button" onClick={()=>a.confirmPart()} disabled={!inspect.data||isConfirmed}> {isConfirmed?"Units confirmed":"Confirm units & dimensions"}</button>
       </div>
+      {unitWarning&&<p className="oaUnitScaleWarning" role="alert"><AlertTriangle size={17}/><span><strong>Review apparent unit-scale mismatch.</strong> {unitWarning.message} If units are corrected, reconfirm against the source drawing.</span></p>}
       <p className="oaSubtle">STL does not encode units. Confirm against the source drawing. 3D color is geometric screening, not a predicted defect field.</p>
      </article>}
     {a.file&&<section className="oaProcessCard" aria-label="Analysis workflow">
