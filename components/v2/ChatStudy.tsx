@@ -16,7 +16,7 @@ import {ArrowUp,Box as BoxIcon,CheckCircle2,ChevronDown,ChevronUp,FileUp,Papercl
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import "./chat-study.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
-type Message={id:string;role:"user"|"assistant";text:string;createdAt:string;source:"engineer"|"local"|"run"|"service";runId?:string};
+type Message={id:string;role:"user"|"assistant";text:string;createdAt:string;source:"engineer"|"local"|"run"|"service"|"model";runId?:string};
 const keyPrefix="orientai-chat-study-v2-";
 const emptyMessages:Message[]=[];
 function makeMessage(role:Message["role"],text:string,source:Message["source"],runId?:string):Message{
@@ -27,7 +27,7 @@ function restore(value:string|null):Message[]{
   const items=JSON.parse(value??"[]");
   if(!Array.isArray(items))return [];
   return items.filter(v=>v&&typeof v.id==="string"&&typeof v.text==="string"&&
-   (v.role==="user"||v.role==="assistant")&&["engineer","local","run","service"].includes(v.source))
+   (v.role==="user"||v.role==="assistant")&&["engineer","local","run","service","model"].includes(v.source))
    .slice(-70).map(v=>({...v,text:v.text.slice(0,4000)}));
  }catch{return [];}
 }
@@ -39,6 +39,27 @@ export default function ChatStudy(){
  const [historyKey,setHistoryKey]=useState<string|null>(null);
  const [messages,setMessages]=useState<Message[]>(emptyMessages);
  const [draft,setDraft]=useState("");
+ const [aiAvailable,setAiAvailable]=useState(false);
+ const [allowAi,setAllowAi]=useState(false);
+ const [aiBusy,setAiBusy]=useState(false);
+ const aiRequest=useRef<AbortController|null>(null);
+ const aiEpoch=useRef(0);
+ useEffect(()=>{
+  let alive=true;
+  fetch("/api/engineering-copilot",{cache:"no-store"})
+   .then(r=>r.json()).then(v=>{if(alive)setAiAvailable(v?.enabled===true);})
+   .catch(()=>{if(alive)setAiAvailable(false);});
+  return()=>{alive=false;};
+ },[]);
+ // A changed part or units invalidates permission to share part-specific context.
+ useEffect(()=>{
+  aiEpoch.current++;
+  aiRequest.current?.abort();
+  aiRequest.current=null;
+  setAiBusy(false);
+  setAllowAi(false);
+ },[a.file,a.settings.unitScale]);
+ useEffect(()=>()=>{aiEpoch.current++;aiRequest.current?.abort();},[]);
  const [attachError,setAttachError]=useState("");
  const [showArtifact,setShowArtifact]=useState(false);
  const [panelWidth,setPanelWidth]=useState(46);
@@ -194,6 +215,49 @@ export default function ChatStudy(){
   const question=draft.trim();
   if(!question||historyKey!==keyPrefix+partHash)return;
   append(makeMessage("user",question,"engineer"));
+  if(aiAvailable&&allowAi){
+   const epoch=++aiEpoch.current;
+   aiRequest.current?.abort();
+   const controller=new AbortController();
+   aiRequest.current=controller;
+   setAiBusy(true);setDraft("");
+   const mesh=inspect.data;
+   // No STL bytes, drawings, document uploads, or unapproved attachments.
+   const localContext=[
+    "Client-reported mesh measurements (not independently verified by the LLM):",
+    mesh?"Dimensions in mm: "+Object.values(mesh.dimensions).map(v=>Number(v).toPrecision(5)).join(" x "):"Dimensions unavailable",
+    mesh?"Triangle count: "+mesh.audit.triangles+", open edges: "+mesh.audit.openEdges+", non-manifold edges: "+mesh.audit.nonManifoldEdges:"Mesh audit unavailable",
+    "Units confirmed by engineer: "+(isConfirmed?"yes":"no"),
+    "Source part SHA-256: "+(partHash??"unavailable"),
+    "Geometry screening: "+(currentRun?"completed locally":"not completed"),
+    "Melt-pool behavior, porosity, crack probability and aerospace qualification: NOT ASSESSED"
+   ].join("\n");
+   void (async()=>{
+    try{
+     const response=await fetch("/api/engineering-copilot",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({allowExternal:true,message:question,
+       project:{name:a.projectName,partName:a.file?.name??"",confirmed:isConfirmed,
+        process:a.journey.process,componentName:a.projectName,
+        assemblyContext:"",attachmentNotes:"",
+        requirements:localContext,hasOrientation:currentRun},
+       sources:[],history:messages.slice(-10).map(m=>({role:m.role,text:m.text}))}),
+      signal:controller.signal
+     });
+     const data=await response.json();
+     if(epoch!==aiEpoch.current)return;
+     if(!response.ok||typeof data.text!=="string")throw Error(typeof data.error==="string"?data.error:"The model did not return an answer.");
+     append(makeMessage("assistant",data.text+"\n\nAI response only · No engineering solver was run by the language model.","model"));
+    }catch(e){
+     if(epoch!==aiEpoch.current||controller.signal.aborted)return;
+     append(makeMessage("assistant","AI request failed: "+(e instanceof Error?e.message:"Model unavailable")+
+      "\nThe local guide and separately approved simulation tools remain available.","local"));
+    }finally{
+     if(epoch===aiEpoch.current){setAiBusy(false);aiRequest.current=null;}
+    }
+   })();
+   return;
+  }
   const lower=question.toLowerCase();
   let response:string;
   if(/\b(measur(?:e|ed|ement|ements)|thermograph(?:y|ic)|benchmark|validat(?:e|ion)|temperature trace|experiment(?:al)? data)\b/.test(lower)){
@@ -246,6 +310,7 @@ export default function ChatStudy(){
        <div className="oaMessageText">{m.text}</div>
        {m.source==="local"&&<small className="oaMessageSource">Local engineering guide · no external AI request</small>}
        {m.source==="run"&&<small className="oaMessageSource">Executed geometry worker · run {m.runId?.slice(0,8)}</small>}
+       {m.source==="model"&&<small className="oaMessageSource">External AI · approved text and mesh summary only · no solver execution</small>}
         {m.source==="service"&&<small className="oaMessageSource">Executed engineer-approved service workers · job {m.runId?.slice(0,8)}</small>}
       </>}
      </div>
@@ -379,10 +444,17 @@ export default function ChatStudy(){
       <input aria-label="Attach STL in conversation" ref={fileInput} type="file" accept=".stl" hidden onChange={e=>attach(e.target.files?.[0])}/>
       <button type="button" aria-label="Upload STL" title="Upload STL" onClick={()=>fileInput.current?.click()}><Paperclip size={19}/></button>
       <span>{a.file?.name??"Attach an STL to begin"}</span>
-      <button type="button" className="oaStudySend" onClick={submit} disabled={!draft.trim()||!historyKey} aria-label="Send message"><ArrowUp size={20}/></button>
+      <button type="button" className="oaStudySend" onClick={submit} disabled={!draft.trim()||!historyKey||aiBusy} aria-label="Send message"><ArrowUp size={20}/></button>
      </div>
     </div>
-    <small>Local research guide · External ARC AI is not enabled here. Numerical work requires engineering review.</small>
+    {aiAvailable&&<label className="oaStudyAiConsent">
+     <input aria-label="Authorize AI messages from main chat" type="checkbox" checked={allowAi}
+      onChange={e=>setAllowAi(e.target.checked)}/>
+     Use the configured external AI for each message while checked. I approve sharing my text, recent conversation and mesh measurements. Do not include controlled Boeing data. The STL binary is never transmitted.
+    </label>}
+    <small>{aiBusy?"Consulting approved AI model…":allowAi&&aiAvailable?
+     "AI responses are advisory and cannot inspect STL triangles directly or run physical solvers. Review independently.":
+     "Local engineering guide · External AI requires server configuration and explicit approval. Numerical work requires engineering review."}</small>
    </div>
   </section>
   {showArtifact&&a.file&&<div className="oaArtifactResize" role="separator" aria-label="Resize 3D model panel" aria-orientation="vertical" aria-valuemin={32} aria-valuemax={64} aria-valuenow={panelWidth} tabIndex={0}
