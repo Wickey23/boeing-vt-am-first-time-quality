@@ -38,10 +38,11 @@ export default function LpbfStlPartialLayerPanel({
  const [progress,setProgress]=useState({stage:"slice",done:0,total:1});
  const [result,setResult]=useState<PartialLayerResult|null>(null);
  const [frame,setFrame]=useState(0);
+ const [viewLayer,setViewLayer]=useState(0);
  const worker=useRef<Worker|null>(null),timeout=useRef<ReturnType<typeof setTimeout>|null>(null),sequence=useRef(0);
  const stop=()=>{if(timeout.current)clearTimeout(timeout.current);timeout.current=null;worker.current?.terminate();worker.current=null;};
  useEffect(()=>()=>{sequence.current++;stop()},[]);
- const invalidate=()=>{sequence.current++;stop();setStatus("idle");setApproved(false);setResult(null);setError("");setFrame(0);};
+ const invalidate=()=>{sequence.current++;stop();setStatus("idle");setApproved(false);setResult(null);setError("");setFrame(0);setViewLayer(0);};
  // Retaining partially occupied geometry would be incompatible with full-cell mass
  // and face-area assumptions in the existing numerical scheme.
  const problems:string[]=[];
@@ -55,7 +56,7 @@ export default function LpbfStlPartialLayerPanel({
  const run=async()=>{
   if(!allowed||!a.file||!approved||status==="running")return;
   const token=++sequence.current;
-  stop();setStatus("running");setError("");setResult(null);setFrame(0);setProgress({stage:"slice",done:0,total:1});
+  stop();setStatus("running");setError("");setResult(null);setFrame(0);setViewLayer(0);setProgress({stage:"slice",done:0,total:1});
   try{
    const [part,scanCsv]=await Promise.all([a.file.arrayBuffer(),scan.arrayBuffer()]);
    if(token!==sequence.current)return;
@@ -73,7 +74,7 @@ export default function LpbfStlPartialLayerPanel({
     if(msg.result.partSha256!==partHash||msg.result.sourceSha256!==registration.scanSourceSha256){
      setStatus("failed");setError("Part/scan source changed since engineer review. Research result discarded.");return;
     }
-    setResult(msg.result);setFrame(Math.max(0,msg.result.layers.length-1));setStatus("done");
+    setResult(msg.result);setFrame(Math.max(0,msg.result.layers.length-1));setViewLayer(msg.result.grid.layers-1);setStatus("done");
    };
    w.onerror=()=>{if(token===sequence.current){stop();setStatus("failed");setError("Research worker terminated without results.");}};
    w.postMessage({
@@ -95,6 +96,11 @@ export default function LpbfStlPartialLayerPanel({
   document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
  };
  const active=result?.layers[Math.min(frame,result.layers.length-1)];
+ const fieldCells=result?.finalCells.filter(c=>c.layer===viewLayer)??[];
+ const allTemps=result?.finalCells.map(c=>c.temperatureC)??[];
+ const tempMin=allTemps.length?Math.min(...allTemps):0,tempMax=allTemps.length?Math.max(...allTemps):0;
+ const range=Math.max(.001,tempMax-tempMin);
+ const gridCols=slices.grid.columns,gridRows=slices.grid.rows;
  return <section className="oaStlSolver" role="region" aria-label="Approved real STL partial-layer research solver">
   <h4>3D partial-layer research solver <small>unvalidated finite-volume approximation</small></h4>
   <p className="oaSubtle">This separate worker uses fully represented cells from the uploaded STL, the matched CSV scan order, and the reviewed values below. It does not compute a physical melt pool, phase transformation or first-time-quality probability. Reported “consolidation” is a beam-footprint heuristic, not measured melting.</p>
@@ -134,6 +140,32 @@ export default function LpbfStlPartialLayerPanel({
    <label className="oaPhysicalSliceSlider">Scan command {frame+1} / {result.layers.length}
     <input type="range" aria-label="Research scan command timeline" min={0} max={result.layers.length-1} value={frame} onChange={e=>setFrame(Number(e.target.value))}/></label>
    <p className="oaSubtle">Layer {active.layer} · simulation time {active.timeSeconds.toFixed(5)} s · activated grid cells {active.activeCells} · heuristic consolidated cells {active.consolidatedCells} · modeled maximum {active.maximumTemperatureC.toFixed(2)} °C.</p>
+   <div className="oaStlSolverField" aria-label="Computed final-cell thermal field">
+    <label className="oaPhysicalSliceSlider">Inspect final computed cell temperatures for physical layer {viewLayer+1} / {result.grid.layers}
+     <input type="range" aria-label="Final physical layer temperature field" min={0} max={result.grid.layers-1} value={viewLayer} onChange={e=>setViewLayer(Number(e.target.value))}/></label>
+    <p className="oaSubtle">Calculated final-state cross-section; this does not display intermediate beam-scale temperature frames or physical melting. The scan-command slider above displays numerical summary values only.</p>
+    <div className="oaPhysicalSliceInspect">
+     <div className="oaPhysicalSliceGrid">
+      <svg role="img" aria-label={`Research-only final calculated temperature of ${fieldCells.length} cells in physical layer ${viewLayer+1}`}
+       viewBox={`0 0 ${gridCols} ${gridRows}`}>
+       {fieldCells.map(c=><rect key={c.x+"-"+c.y} x={c.x} y={gridRows-1-c.y} width={1} height={1}
+        fill={`hsl(${(240-240*(c.temperatureC-tempMin)/range).toFixed(0)} 85% 58%)`}/>)}
+      </svg>
+     </div>
+     <div className="oaPhysicalSliceLabels">
+      <p>Final calculated field for {fieldCells.length} represented full cells</p>
+      <p><strong>Numerical global range:</strong> {tempMin.toFixed(2)} – {tempMax.toFixed(2)} °C</p>
+      <p><strong>Layer final minimum:</strong> {fieldCells.length?Math.min(...fieldCells.map(c=>c.temperatureC)).toFixed(2):"N/A"} °C</p>
+      <p><strong>Layer final maximum:</strong> {fieldCells.length?Math.max(...fieldCells.map(c=>c.temperatureC)).toFixed(2):"N/A"} °C</p>
+      <p><strong>Interpretation:</strong> color represents relative numerical temperatures. It does not indicate observed porosity, cracks, material phase, or aerospace build acceptance.</p>
+     </div>
+    </div>
+    <details><summary>Non-visual numeric cell temperatures (first 40 of this layer)</summary>
+     <div className="oaTraceTable"><table><thead><tr><th>Grid X</th><th>Grid Y</th><th>Final °C</th><th>Peak °C</th><th>Heuristic state</th></tr></thead>
+      <tbody>{fieldCells.slice(0,40).map(c=><tr key={c.x+"-"+c.y}><td>{c.x}</td><td>{c.y}</td><td>{c.temperatureC.toFixed(3)}</td><td>{c.peakTemperatureC.toFixed(3)}</td><td>{c.state}</td></tr>)}</tbody>
+     </table></div>
+    </details>
+   </div>
    <details><summary>Scope, numerical assumptions and unassessed mechanisms</summary>{result.limitations.map((s,i)=><p className="oaSubtle" key={i}>{s}</p>)}</details>
    <button className="oaSecondaryRun" type="button" onClick={exportResult}>Export numerical research JSON</button>
   </div>}
