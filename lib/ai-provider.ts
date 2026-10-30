@@ -11,7 +11,16 @@ export type CopilotProvider={
 };
 const ARC_BASE="https://llm-api.arc.vt.edu/api/v1";
 export function copilotProvider(env:Record<string,string|undefined>):CopilotProvider|null{
- const arcKey=env.ARC_API_KEY?.trim();
+ // Vercel expects a raw token; copying a notebook's quoted Python value or
+ // an entire Authorization header otherwise produces a misleading 401.
+ // Normalize only common surrounding syntax, never log the secret.
+ let arcKey=env.ARC_API_KEY?.trim();
+ if(arcKey?.startsWith("Bearer "))arcKey=arcKey.slice(7).trim();
+ if(arcKey&&arcKey.length>=2&&((arcKey[0]==='"'&&arcKey.at(-1)==='"')||(arcKey[0]==="'"&&arcKey.at(-1)==="'")))
+  arcKey=arcKey.slice(1,-1).trim();
+ if(arcKey?.startsWith("Bearer "))arcKey=arcKey.slice(7).trim();
+ if(arcKey&&/^(paste-your-key-here|sk-YOUR-API-KEY)$/i.test(arcKey))
+  throw Error("ARC_API_KEY is a placeholder, not a real token.");
  if(arcKey){
   const base=(env.ARC_API_BASE_URL||ARC_BASE).replace(/\/+$/,"");
   // ARC's documented hosted endpoint is pinned; do not accidentally transmit
