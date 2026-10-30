@@ -18,8 +18,8 @@ export default function MetalBuildEditor({file,partHash,unitScale,confirmed,reci
  const [suggestions,setSuggestions]=useState<BuildEditSuggestion[]>([]);
  const [error,setError]=useState("");
  const [exportNote,setExportNote]=useState("");
- const worker=useRef<Worker|null>(null),seq=useRef(0);
- const stop=()=>{worker.current?.terminate();worker.current=null;};
+ const worker=useRef<Worker|null>(null),seq=useRef(0),timer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const stop=()=>{if(timer.current)clearTimeout(timer.current);timer.current=null;worker.current?.terminate();worker.current=null;};
  // Never let a preview survive a changed source, units, machine or transform.
  useEffect(()=>{
   seq.current++;stop();setAssessment(null);setSuggestions([]);setError("");
@@ -45,6 +45,7 @@ export default function MetalBuildEditor({file,partHash,unitScale,confirmed,reci
    const timeout=setTimeout(()=>{
     if(id===seq.current){stop();setStatus("failed");setError("Local metal preparation exceeded 60 seconds. Use a smaller STL.");}
    },60000);
+   timer.current=timeout;
    w.onmessage=(event:MessageEvent<Reply>)=>{
     clearTimeout(timeout);
     if(id!==seq.current)return;
