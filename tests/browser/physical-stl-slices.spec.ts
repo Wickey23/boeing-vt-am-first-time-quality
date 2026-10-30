@@ -40,7 +40,7 @@ test("optional synthetic command plan is geometrically registered to source-hash
  await expect(registration).toContainText("Physical scan geometrically registered");
  await expect(registration).toContainText("0 /");
  await expect(registration).toContainText("Partial-layer solver:");
- await expect(registration).toContainText("not run");
+ await expect(registration).toContainText("no thermal solver executes during scan registration");
 });
 
 test("M06 engineer-approved synthetic 10-layer cube runs bounded real-STL FVM without claiming defect prediction",async({page})=>{
@@ -75,8 +75,8 @@ test("M02 dimensions encoded in STL file name expose scaled-unit mismatch before
   name:"coupon_10x10x10mm.stl",mimeType:"model/stl",buffer:original
  });
  await page.getByLabel("STL coordinate units").selectOption("1000");
- await expect(page.getByRole("alert")).toContainText("Review apparent unit-scale mismatch");
- await expect(page.getByRole("alert")).toContainText("Millimeters");
+ await expect(page.locator(".oaUnitScaleWarning")).toContainText("Review apparent unit-scale mismatch");
+ await expect(page.locator(".oaUnitScaleWarning")).toContainText("Millimeters");
  await page.getByLabel("STL coordinate units").selectOption("1");
  await expect(page.getByText(/Review apparent unit-scale mismatch/)).toHaveCount(0);
 });
