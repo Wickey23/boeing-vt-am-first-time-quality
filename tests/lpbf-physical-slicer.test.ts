@@ -41,10 +41,10 @@ test("M04 units, placement and build rotation are part of physical coordinate id
  assert.equal(rotated.layers[0].sampleZMm,5.5);
  assert.equal(rotated.partSha256,sha(input));
  assert.ok(Math.abs(rotated.geometry.sampledVolumeMm3-1000)<1e-6);
- const scaled=await slicePhysicalStl(input,{unitScaleToMm:25.4,xyPitchMm:20,layerThicknessMm:1});
- assert.ok(Math.abs(scaled.geometry.analyticalMeshVolumeMm3-1000*25.4**3)<1e-5);
- assert.equal(scaled.grid.physicalLayers,254);
- assert.ok(scaled.grid.originMm.z<-120);
+ const scaled=await slicePhysicalStl(input,{unitScaleToMm:10,xyPitchMm:5,layerThicknessMm:1});
+ assert.ok(Math.abs(scaled.geometry.analyticalMeshVolumeMm3-1000*10**3)<1e-5);
+ assert.equal(scaled.grid.physicalLayers,100);
+ assert.ok(scaled.grid.originMm.z<=-50);
 });
 
 test("M04 sleeve retains an actual material hole, unlike a bounding-box fill",async()=>{
