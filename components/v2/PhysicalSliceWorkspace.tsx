@@ -2,16 +2,19 @@
 import {useEffect,useRef,useState} from "react";
 import {useAnalysis} from "../AnalysisProvider";
 import LpbfStlPartialLayerPanel from "./LpbfStlPartialLayerPanel";
+import MetalScanPathPanel from "./MetalScanPathPanel";
+import type {PhysicalScanPlan} from "@/lib/lpbf-physical-schedule";
 import type {PhysicalSliceResult,SliceOptions} from "@/lib/lpbf-physical-slicer";
 import type {RegisteredPhysicalScan} from "@/lib/lpbf-slice-registration";
 import "./physical-slice-workspace.css";
 
+export type SlicePreview={partHash:string;slices:PhysicalSliceResult;registration:RegisteredPhysicalScan|null;scanPlan:PhysicalScanPlan|null;selectedLayer:number};
 type ResultMessage=
- |{type:"result";partSha256:string;result:PhysicalSliceResult;registration:RegisteredPhysicalScan|null}
+ |{type:"result";partSha256:string;result:PhysicalSliceResult;registration:RegisteredPhysicalScan|null;scanPlan:PhysicalScanPlan|null}
  |{type:"error";error:string};
 const DEFAULT_ROTATION={x:0,y:0,z:0};
 const DEFAULT_PLACEMENT={x:0,y:0,z:0};
-export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:string|null;confirmed:boolean}){
+export default function PhysicalSliceWorkspace({partHash,confirmed,onSnapshot}:{partHash:string|null;confirmed:boolean;onSnapshot?:(snapshot:SlicePreview|null)=>void}){
  const a=useAnalysis();
  const [pitch,setPitch]=useState(1);
  const [thickness,setThickness]=useState(.2);
@@ -23,6 +26,7 @@ export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:st
  const [error,setError]=useState("");
  const [slices,setSlices]=useState<PhysicalSliceResult|null>(null);
  const [registration,setRegistration]=useState<RegisteredPhysicalScan|null>(null);
+ const [scanPlan,setScanPlan]=useState<PhysicalScanPlan|null>(null);
  const [selectedLayer,setSelectedLayer]=useState(0);
  const worker=useRef<Worker|null>(null);
  const timer=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -35,13 +39,15 @@ export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:st
  };
  const invalidate=()=>{
   requestId.current++;clean();setApproved(false);setStatus("idle");setError("");
-  setSlices(null);setRegistration(null);setSelectedLayer(0);
+  setSlices(null);setRegistration(null);setScanPlan(null);setSelectedLayer(0);
+  onSnapshot?.(null);
  };
  // All dependent geometry/CSV/approval results become stale when source or units change.
  useEffect(()=>{
   requestId.current++;clean();
   setApproved(false);setStatus("idle");setError("");
-  setSlices(null);setRegistration(null);setSelectedLayer(0);
+  setSlices(null);setRegistration(null);setScanPlan(null);setSelectedLayer(0);
+  onSnapshot?.(null);
  },[a.file,a.settings.unitScale,partHash,confirmed]);
  useEffect(()=>()=>{requestId.current++;clean()},[]);
  const setRot=(axis:"x"|"y"|"z",value:number)=>{invalidate();setRotation(x=>({...x,[axis]:value}));};
@@ -60,7 +66,8 @@ export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:st
    setError("XY pitch must be 0.04–5 mm and physical layer height must be 0.01–1 mm.");return;
   }
   const token=++requestId.current;
-  clean();setError("");setStatus("running");setSlices(null);setRegistration(null);
+  clean();setError("");setStatus("running");setSlices(null);setRegistration(null);setScanPlan(null);
+  onSnapshot?.(null);
   try{
    const [part,csv]=await Promise.all([a.file.arrayBuffer(),scanFile?scanFile.arrayBuffer():Promise.resolve(undefined)]);
    if(token!==requestId.current)return;
@@ -78,7 +85,8 @@ export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:st
     if(data.partSha256!==partHash){
      setStatus("failed");setError("Part hash changed during computation; results discarded.");return;
     }
-    setSlices(data.result);setRegistration(data.registration);setStatus("done");setSelectedLayer(0);
+    setSlices(data.result);setRegistration(data.registration);setScanPlan(data.scanPlan);setStatus("done");setSelectedLayer(0);
+    onSnapshot?.({partHash,selectedLayer:0,slices:data.result,registration:data.registration,scanPlan:data.scanPlan});
    };
    w.onerror=()=>{if(token===requestId.current){clean();setStatus("failed");setError("Local physical slice worker failed. No result was published.");}};
    const transfer:ArrayBuffer[]=[part];
@@ -145,7 +153,8 @@ export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:st
    </div>
    <label className="oaPhysicalSliceSlider">Inspect physical layer {selectedLayer+1} / {slices.grid.physicalLayers}
     <input aria-label="Inspect physical STL layer" type="range" min="0" max={slices.layers.length-1} value={selectedLayer}
-     onChange={e=>setSelectedLayer(Number(e.target.value))}/></label>
+     onChange={e=>{const next=Number(e.target.value);setSelectedLayer(next);
+      if(partHash&&slices)onSnapshot?.({partHash,slices,registration,scanPlan,selectedLayer:next});}}/></label>
    <div className="oaPhysicalSliceInspect">
     <div className="oaPhysicalSliceGrid">
      {layer.cells.length<=4500?
@@ -174,6 +183,7 @@ export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:st
     <p>Scan SHA-256: <code>{registration.scanSourceSha256}</code>.</p>
     {registration.blockers.map((b,i)=><p key={i} role="alert" className="oaStudyError">{b}</p>)}
     {registration.warnings.map((w,i)=><p key={i} className="oaSubtle">{w}</p>)}
+    {scanPlan&&<MetalScanPathPanel slices={slices} scan={scanPlan} registration={registration} selectedLayer={selectedLayer} onSelectLayer={next=>{setSelectedLayer(next);if(partHash)onSnapshot?.({partHash,slices,registration,scanPlan,selectedLayer:next});}}/>}
     <p><strong>Partial-layer solver:</strong> only the separate user-approved research calculation below can run; no thermal solver executes during scan registration.</p>
     {scanFile&&<LpbfStlPartialLayerPanel key={partHash+"-"+registration.scanSourceSha256+"-"+slices.grid.xyPitchMm+"-"+slices.grid.layerThicknessMm} partHash={partHash!} scan={scanFile} slices={slices} registration={registration} options={{
      unitScaleToMm:a.settings.unitScale,xyPitchMm:pitch,layerThicknessMm:thickness,rotationDeg:rotation,translationMm:translation
