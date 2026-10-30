@@ -18,7 +18,7 @@ import {ArrowUp,Box as BoxIcon,CheckCircle2,ChevronDown,ChevronUp,FileUp,Papercl
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import "./chat-study.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
-type Message={id:string;role:"user"|"assistant";text:string;createdAt:string;source:"engineer"|"local"|"run"|"service"|"model";runId?:string};
+type Message={id:string;role:"user"|"assistant";text:string;createdAt:string;source:"engineer"|"local"|"run"|"service"|"model"|"external-error";runId?:string};
 const keyPrefix="orientai-chat-study-v2-";
 const emptyMessages:Message[]=[];
 function makeMessage(role:Message["role"],text:string,source:Message["source"],runId?:string):Message{
@@ -29,7 +29,7 @@ function restore(value:string|null):Message[]{
   const items=JSON.parse(value??"[]");
   if(!Array.isArray(items))return [];
   return items.filter(v=>v&&typeof v.id==="string"&&typeof v.text==="string"&&
-   (v.role==="user"||v.role==="assistant")&&["engineer","local","run","service","model"].includes(v.source))
+   (v.role==="user"||v.role==="assistant")&&["engineer","local","run","service","model","external-error"].includes(v.source))
    .slice(-70).map(v=>({...v,text:v.text.slice(0,4000)}));
  }catch{return [];}
 }
@@ -258,7 +258,7 @@ export default function ChatStudy(){
     }catch(e){
      if(epoch!==aiEpoch.current||controller.signal.aborted)return;
      append(makeMessage("assistant","AI request failed: "+(e instanceof Error?e.message:"Model unavailable")+
-      "\nThe local guide and separately approved simulation tools remain available.","local"));
+      "\nThe local guide and separately approved simulation tools remain available.","external-error"));
     }finally{
      if(epoch===aiEpoch.current){setAiBusy(false);aiRequest.current=null;}
     }
@@ -316,6 +316,7 @@ export default function ChatStudy(){
       {m.role==="user"?<div className="oaUserBubble">{m.text}</div>:<>
        <div className="oaMessageText">{m.text}</div>
        {m.source==="local"&&<small className="oaMessageSource">Local engineering guide · no external AI request</small>}
+        {m.source==="external-error"&&<small className="oaMessageSource">External AI attempt failed · no solver executed · local engineering tools remain available</small>}
        {m.source==="run"&&<small className="oaMessageSource">Executed geometry worker · run {m.runId?.slice(0,8)}</small>}
        {m.source==="model"&&<small className="oaMessageSource">External AI · approved text and mesh summary only · no solver execution</small>}
         {m.source==="service"&&<small className="oaMessageSource">Executed engineer-approved service workers · job {m.runId?.slice(0,8)}</small>}
@@ -465,7 +466,7 @@ export default function ChatStudy(){
      Use the configured external AI for each message while checked. I approve sharing my text, recent conversation and mesh measurements. Do not include controlled Boeing data. The STL binary is never transmitted.
     </label>}
     <small>{aiBusy?"Consulting approved AI model…":allowAi&&aiAvailable?
-     "AI responses are advisory and cannot inspect STL triangles directly or run physical solvers. Review independently.":
+     "External AI is configured, not connectivity-verified. AI answers are advisory; no physical solver runs from chat.":
      "Local engineering guide · External AI requires server configuration and explicit approval. Numerical work requires engineering review."}</small>
    </div>
   </section>
