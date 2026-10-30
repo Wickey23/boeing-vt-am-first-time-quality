@@ -9,7 +9,8 @@ import {screenCandidate} from "@/lib/part-screening";
 import {failureCoverage,coverageSummary} from "@/lib/failure-coverage";
 import ChatServiceStudy from "@/components/v2/ChatServiceStudy";
 import ChatLpbfStudy from "@/components/v2/ChatLpbfStudy";
-import PhysicalSliceWorkspace from "@/components/v2/PhysicalSliceWorkspace";
+import PhysicalSliceWorkspace,{type SlicePreview} from "@/components/v2/PhysicalSliceWorkspace";
+import MetalSlicedSidePanel from "@/components/v2/MetalSlicedSidePanel";
 import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
 import type {LpbfResult} from "@/lib/lpbf-transient";
 import type {ServiceStudyResults} from "@/components/UnifiedServiceStudy";
@@ -61,8 +62,11 @@ export default function ChatStudy(){
   setAllowAi(false);
  },[a.file,a.settings.unitScale]);
  useEffect(()=>()=>{aiEpoch.current++;aiRequest.current?.abort();},[]);
+ useEffect(()=>{setPhysicalPreview(null);setSideMode("model");},[a.file,a.settings.unitScale]);
  const [attachError,setAttachError]=useState("");
  const [showArtifact,setShowArtifact]=useState(false);
+ const [sideMode,setSideMode]=useState<"model"|"sliced">("model");
+ const [physicalPreview,setPhysicalPreview]=useState<SlicePreview|null>(null);
  const [panelWidth,setPanelWidth]=useState(46);
  const [resizingPanel,setResizingPanel]=useState(false);
  const [showOverhangs,setShowOverhangs]=useState(false);
@@ -123,6 +127,7 @@ export default function ChatStudy(){
   setPanelWidth(Math.max(32,Math.min(64,Math.round(100*(bounds.right-clientX)/bounds.width))));
  };
  const isConfirmed=completedPart(a.journey,a.file,a.settings.unitScale);
+ const activeSlicePreview=physicalPreview&&physicalPreview.partHash===partHash&&isConfirmed?physicalPreview:null;
  const canScreen=Boolean(a.file&&isConfirmed&&a.journey.process==="PBF_LB_METAL");
  const currentRun=Boolean(a.result&&partHash&&a.result.source.fileHashSha256===partHash&&
    a.result.configuration.unitScale===a.settings.unitScale);
@@ -355,7 +360,11 @@ export default function ChatStudy(){
       {a.journey.process!=="PBF_LB_METAL"&&<p className="oaSubtle">Current uploaded-part process is not LPBF; this geometric orientation screen is unavailable.</p>}
       {showMethods&&<p className="oaSubtle">Inspection uses the STL mesh-audit worker. Orientation screening runs the existing local geometry worker. Estimated down-facing areas, build height and support quantities are geometric proxies, not a time-resolved melt/print simulation.</p>}
      </section>}
-    {a.file&&a.journey.process==="PBF_LB_METAL"&&<PhysicalSliceWorkspace partHash={partHash} confirmed={isConfirmed}/>}
+    {a.file&&a.journey.process==="PBF_LB_METAL"&&<PhysicalSliceWorkspace partHash={partHash} confirmed={isConfirmed} onSnapshot={snapshot=>{
+      setPhysicalPreview(snapshot);
+      if(snapshot){setSideMode("sliced");setShowArtifact(true);}
+    }}/>}
+
     {a.file&&<section className="oaLpbfCard" aria-label="LPBF thermal process research">
       <div className="oaBuildTitle"><strong>LPBF layer heat-flow study</strong><span>{lpbfResult?"Research calculation completed":"Separate approval required"}</span></div>
       <p className="oaSubtle">This runs a coarse finite-volume transient diffusion model with virtual layer activation. It cannot predict porosity, cracking, melt-pool shape, or print-induced residual stress.</p>
@@ -468,8 +477,15 @@ export default function ChatStudy(){
     onPointerCancel={()=>setResizingPanel(false)}><span aria-hidden="true"/></div>}
   {showArtifact&&a.file&&<aside id="oa-engineering-side-panel" className="oaStudyArtifact" aria-label="Expanded 3D engineering model">
    <header><span><BoxIcon size={18}/> {a.file.name}</span><button ref={sideCloseRef} type="button" onClick={closeSideView} aria-label="Close 3D viewer" title="Collapse model side panel"><X size={19}/></button></header>
-   <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>
-   <p>Live STL geometry · {serviceField?resultField+" calculated research field":overlay+" view · build height "+layer+"%"} · Research only</p>
+   {activeSlicePreview&&<div className="oaSideModeSwitch" role="group" aria-label="Model or sliced layer view">
+     <button type="button" aria-pressed={sideMode==="model"} onClick={()=>setSideMode("model")}>3D model</button>
+     <button type="button" aria-pressed={sideMode==="sliced"} onClick={()=>setSideMode("sliced")}>Physical layers</button>
+    </div>}
+   {activeSlicePreview&&sideMode==="sliced"?
+    <MetalSlicedSidePanel preview={activeSlicePreview}/>:
+    <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>
+   <p>{activeSlicePreview&&sideMode==="sliced"?"Source-hashed sampled physical layers · geometry only · no machine program":
+     "Live STL geometry · "+(serviceField?resultField+" calculated research field":overlay+" view · build height "+layer+"%")+" · Research only"}</p>
    <Link href="/copilot/advanced">Open advanced numerical studies <SquareArrowOutUpRight size={14}/></Link>
   </aside>}
   <Link className="oaAdvancedLink" href="/copilot/advanced">Advanced engineering controls, documents and numerical studies <SquareArrowOutUpRight size={14}/></Link>
