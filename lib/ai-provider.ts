@@ -19,7 +19,7 @@ export function copilotProvider(env:Record<string,string|undefined>):CopilotProv
  if(arcKey&&arcKey.length>=2&&((arcKey[0]==='"'&&arcKey.at(-1)==='"')||(arcKey[0]==="'"&&arcKey.at(-1)==="'")))
   arcKey=arcKey.slice(1,-1).trim();
  if(arcKey?.startsWith("Bearer "))arcKey=arcKey.slice(7).trim();
- if(arcKey&&/^(paste-your-key-here|sk-YOUR-API-KEY)$/i.test(arcKey))
+ if(arcKey&&/^(paste-your-key-here|sk-YOUR-API-KEY|YOUR_ARC_API_KEY_HERE|YOUR_PRIVATE_VT_ARC_KEY|<YOUR_PRIVATE_VT_ARC_KEY>)$/i.test(arcKey))
   throw Error("ARC_API_KEY is a placeholder, not a real token.");
  if(arcKey){
   const base=(env.ARC_API_BASE_URL||ARC_BASE).replace(/\/+$/,"");
