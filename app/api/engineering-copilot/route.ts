@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {copilotProvider} from "@/lib/ai-provider";
 import {describeModelHttpFailure,describeModelTransportFailure} from "@/lib/arc-http-errors";
 import {visibleCopilotAnswer} from "@/lib/arc-response-parser";
+import {isAllowedAiRequestOrigin} from "@/lib/ai-request-origin";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const maxDuration=30;
@@ -17,6 +18,7 @@ export async function GET(){
 }
 /** Opt-in only. No uploads or chat messages are persisted on the server. */
 export async function POST(request:Request){
+ if(!isAllowedAiRequestOrigin(request))return NextResponse.json({error:"External AI requests must originate from this ORIENTAI workspace."},{status:403});
  if(process.env.AI_COPILOT_ENABLED!=="true")return NextResponse.json({error:"AI model access is disabled for this deployment. The local engineering guide remains available."},{status:503});
  let provider:ReturnType<typeof copilotProvider>;
  try{provider=copilotProvider(process.env);}
