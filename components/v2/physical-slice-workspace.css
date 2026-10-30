@@ -1,0 +1,28 @@
+/* Scoped, accessible M04/M05 geometry preflight; no styling of legacy numerical workbench. */
+.oaPhysicalSlice{border:1px solid var(--oa-border);border-radius:16px;background:var(--oa-bg);padding:14px 16px;min-width:0}
+.oaPhysicalSlice>summary{cursor:pointer;font-size:13px;font-weight:650;line-height:1.5}
+.oaPhysicalSlice>summary small{font-size:11px;color:var(--oa-muted);font-weight:400;margin-left:6px}
+.oaPhysicalSlice .oaSubtle{overflow-wrap:anywhere}
+.oaPhysicalSlice .oaSubtle code,.oaPhysicalSliceResults code{white-space:normal;overflow-wrap:anywhere}
+.oaPhysicalSliceParams{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:10px;margin:12px 0}
+.oaPhysicalSliceParams label,.oaPhysicalSliceFile{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--oa-text)}
+.oaPhysicalSliceParams input,.oaPhysicalSliceFile input{min-width:0;border:1px solid var(--oa-border);border-radius:9px;padding:9px 10px;background:var(--oa-card);color:var(--oa-text);width:100%}
+.oaPhysicalSliceAdvanced{border:1px solid var(--oa-border);border-radius:10px;padding:10px;margin:12px 0}
+.oaPhysicalSliceAdvanced>summary,.oaPhysicalSliceResults details>summary{font-size:11px;color:var(--oa-text);cursor:pointer}
+.oaPhysicalSliceFile{margin:12px 0}
+.oaPhysicalSlice a{color:var(--oa-text);text-decoration:underline}
+.oaPhysicalSlice input:focus-visible,.oaPhysicalSlice button:focus-visible,.oaPhysicalSlice summary:focus-visible{outline:2px solid var(--oa-strong);outline-offset:2px}
+.oaPhysicalSliceResults{margin-top:16px}
+.oaPhysicalSliceStats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px;margin:14px 0}
+.oaPhysicalSliceStats>div{display:grid;gap:4px;padding:11px;border:1px solid var(--oa-border);border-radius:10px;background:var(--oa-card)}
+.oaPhysicalSliceStats small{font-size:10px;color:var(--oa-muted)}.oaPhysicalSliceStats strong{font-size:14px}
+.oaPhysicalSliceSlider{display:grid;gap:7px;font-size:12px;margin:15px 0}
+.oaPhysicalSliceSlider input{width:100%;accent-color:var(--oa-strong)}
+.oaPhysicalSliceInspect{display:grid;grid-template-columns:minmax(150px,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+.oaPhysicalSliceGrid{width:100%;aspect-ratio:1;border:1px solid var(--oa-border);border-radius:12px;background:#0b1928;overflow:hidden;display:grid;place-items:center}
+.oaPhysicalSliceGrid svg{width:100%;height:100%;max-height:390px}
+.oaPhysicalSliceGrid p{color:#deedf8;padding:12px;font-size:11px}
+.oaPhysicalSliceLabels{font-size:11px;line-height:1.5;color:var(--oa-text)}
+.oaPhysicalSliceLabels p{margin:0 0 9px;overflow-wrap:anywhere}
+.oaPhysicalSliceRegistration{padding:12px;border-top:1px solid var(--oa-border);margin-top:12px;font-size:12px;overflow-wrap:anywhere}
+@media(max-width:700px){.oaPhysicalSliceInspect{grid-template-columns:1fr}.oaPhysicalSliceGrid{max-height:320px}.oaPhysicalSliceGrid svg{max-height:320px}}
