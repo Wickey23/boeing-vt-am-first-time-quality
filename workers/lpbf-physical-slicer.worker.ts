@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import {slicePhysicalStl,type PhysicalSliceResult,type SliceOptions} from "../lib/lpbf-physical-slicer";
 import {parsePhysicalScanCsv} from "../lib/lpbf-physical-schedule";
+import type {PhysicalScanPlan} from "../lib/lpbf-physical-schedule";
 import {registerPhysicalScanToSlices,type RegisteredPhysicalScan} from "../lib/lpbf-slice-registration";
 
 type Request={
@@ -8,7 +9,7 @@ type Request={
  scanCsv?:ArrayBuffer;scanFileName?:string;
 };
 type Response=
- |{type:"result";partSha256:string;result:PhysicalSliceResult;registration:RegisteredPhysicalScan|null}
+ |{type:"result";partSha256:string;result:PhysicalSliceResult;registration:RegisteredPhysicalScan|null;scanPlan:PhysicalScanPlan|null}
  |{type:"error";error:string};
 
 self.onmessage=async(event:MessageEvent<Request>)=>{
@@ -20,6 +21,7 @@ self.onmessage=async(event:MessageEvent<Request>)=>{
   if(result.partSha256!==partSha256)
    throw Error("Uploaded STL changed during physical slice preflight. Reconfirm units and rerun.");
   let registration:RegisteredPhysicalScan|null=null;
+  let scanPlan:PhysicalScanPlan|null=null;
   if(scanCsv){
    if(scanCsv.byteLength<1||scanCsv.byteLength>256*1024)
     throw Error("The optional physical scan CSV must be 1–256 KB.");
@@ -28,8 +30,9 @@ self.onmessage=async(event:MessageEvent<Request>)=>{
    const csv=new TextDecoder("utf-8",{fatal:true}).decode(scanCsv);
    const parsed=parsePhysicalScanCsv(csv,scanFileName||"physical-scan.csv");
    registration=registerPhysicalScanToSlices({slices:result,scan:parsed,scanSourceSha256});
+   scanPlan=parsed;
   }
-  const output:Response={type:"result",partSha256,result,registration};
+  const output:Response={type:"result",partSha256,result,registration,scanPlan};
   self.postMessage(output);
  }catch(e){
   const output:Response={type:"error",error:e instanceof Error?e.message:"Local physical STL slice preflight failed."};
