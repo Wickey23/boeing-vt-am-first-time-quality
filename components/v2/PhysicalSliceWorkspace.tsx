@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {useAnalysis} from "../AnalysisProvider";
+import LpbfStlPartialLayerPanel from "./LpbfStlPartialLayerPanel";
 import type {PhysicalSliceResult,SliceOptions} from "@/lib/lpbf-physical-slicer";
 import type {RegisteredPhysicalScan} from "@/lib/lpbf-slice-registration";
 import "./physical-slice-workspace.css";
@@ -173,7 +174,10 @@ export default function PhysicalSliceWorkspace({partHash,confirmed}:{partHash:st
     <p>Scan SHA-256: <code>{registration.scanSourceSha256}</code>.</p>
     {registration.blockers.map((b,i)=><p key={i} role="alert" className="oaStudyError">{b}</p>)}
     {registration.warnings.map((w,i)=><p key={i} className="oaSubtle">{w}</p>)}
-    <p><strong>Partial-layer solver:</strong> not run. Fractional-cell physics and validation remain separate milestones.</p>
+    <p><strong>Partial-layer solver:</strong> only the separate user-approved research calculation below can run; no thermal solver executes during scan registration.</p>
+    {scanFile&&<LpbfStlPartialLayerPanel key={partHash+"-"+registration.scanSourceSha256+"-"+slices.grid.xyPitchMm+"-"+slices.grid.layerThicknessMm} partHash={partHash!} scan={scanFile} slices={slices} registration={registration} options={{
+     unitScaleToMm:a.settings.unitScale,xyPitchMm:pitch,layerThicknessMm:thickness,rotationDeg:rotation,translationMm:translation
+    }}/>} 
    </div>}
    <button className="oaSecondaryRun" type="button" onClick={exportReport}>Export audited physical STL slices JSON</button>
   </section>}
