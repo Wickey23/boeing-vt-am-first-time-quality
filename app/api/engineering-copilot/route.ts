@@ -1,5 +1,6 @@
 import {NextResponse} from "next/server";
 import {copilotProvider} from "@/lib/ai-provider";
+import {describeModelHttpFailure} from "@/lib/arc-http-errors";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const maxDuration=30;
@@ -94,11 +95,7 @@ export async function POST(request:Request){
    cache:"no-store"
   });
   if(!response.ok){
-   const explanation=response.status===401||response.status===403?
-    "AI model authorization failed. Check your server-side provider credentials.":
-    response.status===429||response.status===503?
-    "The model is busy or queued at the provider (HTTP "+response.status+"). Try again later; no solver was run.":
-    "AI model request failed (HTTP "+response.status+"). Use the local engineering guide.";
+   const explanation=describeModelHttpFailure(response.status,provider.kind);
    return NextResponse.json({error:explanation},{status:502});
   }
   const result=await response.json();
