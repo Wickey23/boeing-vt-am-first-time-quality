@@ -15,3 +15,14 @@ export function describeModelHttpFailure(status:number,provider:"arc"|"gateway")
  if(status===429||status===503)return "The configured AI Gateway is busy (HTTP "+status+"). Try again later; no solver ran.";
  return "AI model request failed (HTTP "+status+"). The local engineering guide remains available.";
 }
+
+/** Transport errors are distinct from a provider's credential rejection. */
+export function describeModelTransportFailure(error:unknown,provider:"arc"|"gateway"):string{
+ const name=error&&typeof error==="object"&&"name" in error?String((error as {name:unknown}).name):"";
+ if(name==="TimeoutError"||name==="AbortError")
+  return (provider==="arc"?"VT ARC":"The configured AI model")+
+   " did not answer within the serverless request limit. The request timed out; this does not indicate an invalid API key. Try a faster supported model or a shorter question. No solver ran.";
+ if(error instanceof SyntaxError)
+  return "The configured AI provider returned data that could not be decoded. No solver ran.";
+ return "The configured AI provider could not be reached or returned an invalid response. Check its availability and try again. No solver ran.";
+}
