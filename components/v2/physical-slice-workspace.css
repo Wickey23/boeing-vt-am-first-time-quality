@@ -26,3 +26,40 @@
 .oaPhysicalSliceLabels p{margin:0 0 9px;overflow-wrap:anywhere}
 .oaPhysicalSliceRegistration{padding:12px;border-top:1px solid var(--oa-border);margin-top:12px;font-size:12px;overflow-wrap:anywhere}
 @media(max-width:700px){.oaPhysicalSliceInspect{grid-template-columns:1fr}.oaPhysicalSliceGrid{max-height:320px}.oaPhysicalSliceGrid svg{max-height:320px}}
+
+
+/* Bambu-like post-slice FUNCTIONALITY in ORIENTAI's chat-side engineering canvas. */
+.oaSideModeSwitch{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px;border-radius:10px;background:var(--oa-card);border:1px solid var(--oa-border);margin:10px 0}
+.oaSideModeSwitch button{font:inherit;font-size:12px;font-weight:600;padding:9px;border:0;border-radius:8px;background:transparent;color:var(--oa-muted);cursor:pointer}
+.oaSideModeSwitch button[aria-pressed="true"]{background:var(--oa-bg);color:var(--oa-text);box-shadow:0 0 0 1px var(--oa-border)}
+.oaSlicedSide{flex:1 1 0;overflow:auto;min-height:0;min-width:0;padding:4px 1px 12px}
+.oaSlicedTabs{display:flex;gap:5px;margin:10px 0}
+.oaSlicedTabs button{flex:1;min-width:0;background:var(--oa-bg);border:1px solid var(--oa-border);border-radius:8px;padding:9px 6px;font-size:11px;color:var(--oa-muted);cursor:pointer}
+.oaSlicedTabs button.oaSelected{border-color:var(--oa-strong);color:var(--oa-text);font-weight:700}
+.oaSlicedSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}
+.oaSlicedSummary span{min-width:0;display:flex;flex-direction:column;gap:3px;color:var(--oa-muted);font-size:10px;padding:8px;border:1px solid var(--oa-border);background:var(--oa-card);border-radius:8px}
+.oaSlicedSummary strong{font-weight:700;color:var(--oa-text);font-size:13px;overflow-wrap:anywhere}
+.oaSlicedLayerControl{display:flex;flex-direction:column;gap:8px;margin:12px 0;font-size:12px;font-weight:600}
+.oaSlicedLayerControl input{width:100%;accent-color:var(--oa-strong)}
+.oaSlicedLayerCanvas{height:auto;aspect-ratio:1;max-height:55vh;min-height:200px;min-width:0;border:1px solid var(--oa-border);border-radius:11px;overflow:hidden;background:#071625;display:grid;place-items:center}
+.oaSlicedLayerCanvas svg{display:block;width:100%;height:100%;min-height:200px}
+.oaSlicedLayerCanvas p{color:#e4eef8;text-align:center;padding:12px;font-size:12px}
+.oaSlicedSide .oaSubtle{font-size:11px;line-height:1.55}
+.oaSlicedTravel{display:flex;align-items:center;gap:8px;font-size:11px;margin:10px 0}
+.oaSlicedWarnings{padding:12px;border:1px solid var(--oa-border);border-radius:10px;background:var(--oa-card);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.oaSlicedWarnings p{margin:8px 0}
+.oaSideModeSwitch button:focus-visible,.oaSlicedTabs button:focus-visible,.oaSlicedTravel input:focus-visible,.oaSlicedLayerControl input:focus-visible{outline:2px solid var(--oa-strong);outline-offset:2px}
+.oaScanToolpath{border:1px solid var(--oa-border);border-radius:12px;margin:14px 0;padding:12px;min-width:0}
+.oaScanToolpathTitle{display:flex;flex-direction:column;gap:5px;font-size:13px}
+.oaScanToolpathTitle small{font-size:11px;color:var(--oa-muted)}
+.oaScanToolpathControls{display:flex;flex-wrap:wrap;gap:15px;margin:10px 0;font-size:11px}
+.oaScanToolpathControls label{display:flex;gap:7px;align-items:center}
+.oaScanToolpathLayout{display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,1fr);gap:12px}
+.oaScanToolpathCanvas{min-height:180px;aspect-ratio:1;border:1px solid var(--oa-border);border-radius:10px;background:#071625;overflow:hidden;display:grid;place-items:center}
+.oaScanToolpathCanvas svg{width:100%;height:100%}
+.oaScanLegend{display:flex;gap:9px;flex-wrap:wrap;font-size:10px}
+.oaScanLegend span{display:inline-flex;align-items:center;gap:5px}
+.oaScanLegend i{display:inline-block;width:9px;height:9px}
+.oaLegendLaser{background:#ffaf48}.oaLegendTravel{background:#82aee9}.oaLegendPart{background:#39718b}
+.oaScanEstimate{padding:10px;border:1px solid var(--oa-border);border-radius:10px;font-size:12px;line-height:1.6}
+@media(max-width:650px){.oaScanToolpathLayout{grid-template-columns:1fr}.oaScanToolpathCanvas{max-height:340px}}
