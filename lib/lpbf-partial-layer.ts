@@ -44,7 +44,7 @@ function assertRange(v:number,lo:number,hi:number,label:string){
  if(!Number.isFinite(v)||v<lo||v>hi)throw Error("Invalid "+label+".");
 }
 function harmonic(a:number,b:number){return 2*a*b/(a+b);}
-export function runPartialLayerResearch(input:PartialLayerInputs):PartialLayerResult{
+export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void):PartialLayerResult{
  const {cells,scan,pitchMm:p,layerHeightMm:d,originMm:o}=input;
  if(scan.version!==PHYSICAL_SCAN_VERSION||!Array.isArray(scan.commands)||!scan.commands.length||scan.commands.length>3000)
   throw Error("A nonempty, bounded physical scan chronology is required.");
@@ -134,7 +134,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs):PartialLayerRe
  const snapshots:PartialLayerResult["layers"]=[];
  const conductivity=(i:number)=>solid[i]?input.solidConductivityWmK:input.powderConductivityWmK;
  const temp=(i:number)=>input.ambientTemperatureC+enthalpy[i]/capacity;
- for(const command of scan.commands){
+ for(const [commandIndex,command] of scan.commands.entries()){
   if(command.layer!==previousLayer){
    previousLayer=command.layer;
    for(const i of byLayer[previousLayer])active[i]=1; // powder deposition, not solid activation
@@ -202,6 +202,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs):PartialLayerRe
   for(let i=0;i<cells.length;i++)if(active[i])maxTemp=Math.max(maxTemp,temp(i));
   snapshots.push({layer:command.layer,timeSeconds:elapsed,activeCells:activeCount,
    consolidatedCells:consolidated,maximumTemperatureC:maxTemp});
+  onProgress?.(commandIndex+1,scan.commands.length);
  }
  const stored=enthalpy.reduce((a,b)=>a+b,0);
  const imbalance=Math.abs(absorbed-plate-conv-stored)/
