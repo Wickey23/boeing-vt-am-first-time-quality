@@ -33,3 +33,17 @@ test("ARC destination cannot be redirected to a nonofficial host",()=>{
  assert.throws(()=>copilotProvider({ARC_API_KEY:"test",ARC_API_BASE_URL:"http://llm-api.arc.vt.edu/api/v1"}),/official VT ARC/);
  assert.throws(()=>copilotProvider({ARC_API_KEY:"test",ARC_MODEL:"../../bad config"}),/Invalid ARC_MODEL/);
 });
+
+test("notebook-style ARC keys normalize without exposing the token",()=>{
+ const p=copilotProvider({ARC_API_KEY:'  "sk-notebook-test"  '});
+ assert.equal(p?.kind,"arc");
+ assert.equal(p?.key,"sk-notebook-test");
+ const copiedHeader=copilotProvider({ARC_API_KEY:"Bearer sk-header-test"});
+ assert.equal(copiedHeader?.key,"sk-header-test");
+ const quotedHeader=copilotProvider({ARC_API_KEY:"'Bearer sk-header-test'"});
+ assert.equal(quotedHeader?.key,"sk-header-test");
+});
+test("ARC notebook placeholders are invalid credentials, not enabled providers",()=>{
+ assert.throws(()=>copilotProvider({ARC_API_KEY:"paste-your-key-here"}),/placeholder/);
+ assert.throws(()=>copilotProvider({ARC_API_KEY:'"sk-YOUR-API-KEY"'}),/placeholder/);
+});
