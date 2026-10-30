@@ -6,5 +6,5 @@ export function visibleCopilotAnswer(answer:unknown):string{
    .map(x=>x.text).join("\n"):"";
  // Some hosted thinking-model variants include textual <think> sections;
  // retain only the final answer, as in VT's Elicitron example notebook.
- return raw.replace(/<think>[\s\S]*?<\/think>/gi,"").trim();
+ return raw.replace(/<think>[\s\S]*?<\/think>/gi,"").replace(/<think>[\s\S]*$/gi,"").trim();
 }
