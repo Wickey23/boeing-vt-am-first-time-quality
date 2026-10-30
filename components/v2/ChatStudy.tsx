@@ -9,6 +9,7 @@ import {screenCandidate} from "@/lib/part-screening";
 import {failureCoverage,coverageSummary} from "@/lib/failure-coverage";
 import ChatServiceStudy from "@/components/v2/ChatServiceStudy";
 import ChatLpbfStudy from "@/components/v2/ChatLpbfStudy";
+import PhysicalSliceWorkspace from "@/components/v2/PhysicalSliceWorkspace";
 import type {LpbfResult} from "@/lib/lpbf-transient";
 import type {ServiceStudyResults} from "@/components/UnifiedServiceStudy";
 import {ArrowUp,Box as BoxIcon,CheckCircle2,ChevronDown,ChevronUp,FileUp,Paperclip,Play,RotateCcw,ShieldAlert,SlidersHorizontal,SquareArrowOutUpRight,X,LoaderCircle,AlertTriangle,FileText} from "lucide-react";
@@ -286,6 +287,7 @@ export default function ChatStudy(){
       {a.journey.process!=="PBF_LB_METAL"&&<p className="oaSubtle">Current uploaded-part process is not LPBF; this geometric orientation screen is unavailable.</p>}
       {showMethods&&<p className="oaSubtle">Inspection uses the STL mesh-audit worker. Orientation screening runs the existing local geometry worker. Estimated down-facing areas, build height and support quantities are geometric proxies, not a time-resolved melt/print simulation.</p>}
      </section>}
+    {a.file&&a.journey.process==="PBF_LB_METAL"&&<PhysicalSliceWorkspace partHash={partHash} confirmed={isConfirmed}/>}
     {a.file&&<section className="oaLpbfCard" aria-label="LPBF thermal process research">
       <div className="oaBuildTitle"><strong>LPBF layer heat-flow study</strong><span>{lpbfResult?"Research calculation completed":"Separate approval required"}</span></div>
       <p className="oaSubtle">This runs a coarse finite-volume transient diffusion model with virtual layer activation. It cannot predict porosity, cracking, melt-pool shape, or print-induced residual stress.</p>
