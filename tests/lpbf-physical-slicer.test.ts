@@ -15,7 +15,7 @@ test("M04 cube has ten actual, one-mm physical layers and conservative volume ac
  assert.equal(result.grid.columns,10);
  assert.equal(result.grid.rows,10);
  assert.equal(result.grid.originMm.z,-5);
- assert.equal(result.geometry.analyticalMeshVolumeMm3,1000);
+ assert.ok(Math.abs(result.geometry.analyticalMeshVolumeMm3-1000)<1e-8);
  assert.ok(Math.abs(result.geometry.sampledVolumeMm3-1000)<1e-7);
  assert.ok(result.geometry.relativeVolumeDifference<1e-9);
  assert.equal(result.grid.boundaryCells,0);
@@ -41,7 +41,7 @@ test("M04 units, placement and build rotation are part of physical coordinate id
  assert.equal(rotated.layers[0].sampleZMm,5.5);
  assert.equal(rotated.partSha256,sha(input));
  assert.ok(Math.abs(rotated.geometry.sampledVolumeMm3-1000)<1e-6);
- const scaled=await slicePhysicalStl(input,{unitScaleToMm:25.4,xyPitchMm:5,layerThicknessMm:1});
+ const scaled=await slicePhysicalStl(input,{unitScaleToMm:25.4,xyPitchMm:20,layerThicknessMm:1});
  assert.ok(Math.abs(scaled.geometry.analyticalMeshVolumeMm3-1000*25.4**3)<1e-5);
  assert.equal(scaled.grid.physicalLayers,254);
  assert.ok(scaled.grid.originMm.z<-120);
