@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import {useAnalysis} from "../AnalysisProvider";
 import LpbfStlPartialLayerPanel from "./LpbfStlPartialLayerPanel";
 import MetalScanPathPanel from "./MetalScanPathPanel";
+import MetalBuildEditor from "./MetalBuildEditor";
 import type {PhysicalScanPlan} from "@/lib/lpbf-physical-schedule";
 import type {PhysicalSliceResult,SliceOptions} from "@/lib/lpbf-physical-slicer";
 import type {RegisteredPhysicalScan} from "@/lib/lpbf-slice-registration";
@@ -109,6 +110,8 @@ export default function PhysicalSliceWorkspace({partHash,confirmed,onSnapshot}:{
  return <details className="oaPhysicalSlice" aria-label="Real STL physical-layer geometry">
   <summary>Physical STL layers & scan-to-part preflight <small>local geometry · no thermal simulation</small></summary>
   <p className="oaSubtle">Generate a bounded, source-hashed raster of the actual uploaded STL at physical build layers. This is different from the coarse virtual slabs in the thermal demo. Sampled XY cells can lose small walls, cavities or contours; inspect every warning.</p>
+  <MetalBuildEditor file={a.file} partHash={partHash} unitScale={a.settings.unitScale} confirmed={confirmed}
+   recipe={{rotationDeg:rotation,translationMm:translation}} onApply={next=>{invalidate();setRotation(next.rotationDeg);setTranslation(next.translationMm);}}/>
   <div className="oaPhysicalSliceParams">
    <label>Physical layer thickness (mm)
     <input aria-label="Physical STL layer thickness" type="number" min=".01" max="1" step=".01" value={thickness} disabled={status==="running"}
