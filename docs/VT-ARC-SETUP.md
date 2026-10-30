@@ -69,3 +69,13 @@ A classroom notebook sets `API_KEY = "paste-your-key-here"` as a Python string. 
 ARC upstream responses are now distinguished: HTTP **401** = credential rejection; **403** = access denied; **404** = model or endpoint not found; **429/503** = capacity/queue problem. The UI never displays the upstream response body or secret. Vercel's public GET capability check reports only configuration presence, **not** whether ARC accepts the key.
 
 The Elicitron notebook retries transient connection failures up to five times and waits as long as 900 seconds. The ORIENTAI serverless chat route has a 23-second upstream timeout and no durable queue. To support long ARC model queues in a future milestone, implement streamed responses or a durable background job instead of copying the notebook's long blocking timeout into Vercel.
+
+## 7. Production troubleshooting and deployment security
+
+- The main chat identifies replies as **local**, **external model**, or **failed external model**; an ARC failure must never be labeled "no external AI request."
+- The server reports upstream HTTP **401** and **403** distinctly, plus timeout/fetch failures. The client does not display upstream response bodies, headers or credentials.
+- `GET /api/engineering-copilot` reports only whether the service is **configured**, not whether the selected key/model completed a live request. Test from a new conversation after deploying the current main commit.
+- Same-origin browser request checks are an extra CSRF barrier. They do **not** authenticate users or protect a public endpoint from scripted traffic; the process-local 12-requests/minute throttle also is not a production quota system.
+- A publicly reachable ORIENTAI deployment should **not** expose a personal VT ARC credential as an unauthenticated AI proxy. Use university-approved access arrangements and authenticated deployment protections before shared/team use.
+- Notebook placeholders such as `YOUR_ARC_API_KEY_HERE` do not constitute credentials. Use the real ARC account-generated token privately in the appropriate Vercel environment.
+- A Vercel READY deployment only indicates a successful application build. Confirm the deployed commit, latest CI, and a real approved harmless model response before claiming successful ARC integration.
