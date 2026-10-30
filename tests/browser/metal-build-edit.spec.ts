@@ -1,0 +1,38 @@
+import {test,expect} from "@playwright/test";
+import {readFile} from "node:fs/promises";
+
+test("edited STL is physically transformed and exported without overwriting the uploaded source",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ const physical=page.locator('details[aria-label="Real STL physical-layer geometry"]');
+ await physical.locator("summary").first().click();
+ const editor=physical.locator('details[aria-label="Metal build model preparation"]');
+ await editor.locator("summary").first().click();
+ await expect(editor.getByRole("button",{name:"Inspect model placement"})).toBeDisabled();
+ await editor.getByLabel("Approve metal build editor assumptions").check();
+ await editor.getByRole("button",{name:"Inspect model placement"}).click();
+ const result=editor.getByRole("region",{name:"Metal model placement assessment"});
+ await expect(result).toContainText("Geometry outside configured bounding envelope",{timeout:40000});
+ await expect(editor.getByRole("button",{name:"Export edited STL (mm)"})).toBeDisabled();
+ await editor.getByRole("button",{name:"Apply geometry"}).first().click();
+ await expect(editor.getByLabel("Editor translation X")).toHaveValue("125");
+ await expect(editor.getByLabel("Editor translation Y")).toHaveValue("125");
+ await expect(editor.getByLabel("Editor translation Z")).toHaveValue("5");
+ await expect(editor.getByLabel("Approve metal build editor assumptions")).not.toBeChecked();
+ await editor.getByLabel("Approve metal build editor assumptions").check();
+ await editor.getByRole("button",{name:"Inspect model placement"}).click();
+ await expect(result).toContainText("Geometry fits configured bounding envelope",{timeout:40000});
+ const downloadEvent=page.waitForEvent("download");
+ await editor.getByRole("button",{name:"Export edited STL (mm)"}).click();
+ const download=await downloadEvent;
+ expect(download.suggestedFilename()).toBe("cube-10mm-ORIENTAI-edited-mm.stl");
+ const exported=await readFile((await download.path())!,"utf8");
+ expect(exported).toContain("ORIENTAI_nonqualified_edited_mm");
+ expect(exported).toContain("vertex");
+ await expect(editor.getByText(/Original SHA-256/)).toBeVisible();
+ await expect(editor.getByText(/Re-upload this separate file/)).toBeVisible();
+ await physical.getByText("Build orientation and placement — optional").click();
+ await expect(physical.getByLabel("Physical STL placement X")).toHaveValue("125");
+ await expect(physical.getByLabel("Physical STL placement Z")).toHaveValue("5");
+});
