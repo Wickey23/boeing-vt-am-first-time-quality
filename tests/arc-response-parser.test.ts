@@ -10,3 +10,8 @@ test("ARC supports text and OpenAI content-part responses",()=>{
  assert.equal(visibleCopilotAnswer([{type:"text",text:"Hello"},{type:"image",url:"x"},{type:"text",text:"world"}]),"Hello\nworld");
  assert.equal(visibleCopilotAnswer(null),"");
 });
+
+test("unfinished thinking section is suppressed rather than shown as advice",()=>{
+ assert.equal(visibleCopilotAnswer("<think>Private notes only"),"");
+ assert.equal(visibleCopilotAnswer("Visible conclusion <think>truncated hidden reasoning"),"Visible conclusion");
+});
