@@ -227,3 +227,11 @@
 .oaProbeLayerMap summary{cursor:pointer;font-size:12px;font-weight:600}
 .oaProbeResult>.oaRunActions{margin-top:13px}
 @media(max-width:600px){.oaProbeFields{grid-template-columns:1fr 1fr 1fr}}
+
+/* HCI: explicit consent boundary for external ARC chat and geometry-scale mismatch. */
+.oaStudyAiConsent{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;margin-top:8px;font-size:11px;line-height:1.5;color:var(--oa-text);border:1px solid var(--oa-border);border-radius:10px;background:var(--oa-card)}
+.oaStudyAiConsent input{flex:0 0 auto;margin-top:2px;accent-color:var(--oa-strong)}
+.oaStudyAiConsent:focus-within{outline:2px solid var(--oa-strong);outline-offset:2px}
+.oaUnitScaleWarning{display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #b77d34;border-radius:10px;color:var(--oa-text);background:rgba(195,123,33,.11);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.oaUnitScaleWarning svg{flex:0 0 auto;margin-top:2px}
+@media(prefers-reduced-motion:reduce){.oaSpin{animation:none!important}.oaStudyArtifact,.oaStudySplit{scroll-behavior:auto!important}}
