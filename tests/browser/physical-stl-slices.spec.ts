@@ -126,5 +126,6 @@ test("post-slice path tab reflects supplied scan commands, not generated printer
  await side.getByRole("button",{name:"Toolpath"}).click();
  await expect(side).toContainText("3 supplied commands on this layer");
  await expect(side).toContainText("supplied scan duration");
- await expect(side).toContainText("Actual print time cannot be inferred");
+ await expect(side).toContainText("planning scenario, not printer time");
+ await expect(side).toContainText("Never treat the two estimates as equivalent");
 });
