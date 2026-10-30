@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {copilotProvider} from "@/lib/ai-provider";
 import {describeModelHttpFailure} from "@/lib/arc-http-errors";
+import {visibleCopilotAnswer} from "@/lib/arc-response-parser";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const maxDuration=30;
@@ -100,7 +101,7 @@ export async function POST(request:Request){
   }
   const result=await response.json();
   const answer=result?.choices?.[0]?.message?.content;
-  const text=typeof answer==="string"?answer:Array.isArray(answer)?answer.filter((x:{type:string;text?:string})=>x.type==="text").map((x:{text?:string})=>x.text).join("\n"):"";
+  const text=visibleCopilotAnswer(answer);
   if(!text)return NextResponse.json({error:"The model returned no explanatory text."},{status:502});
   const referenced=[...text.matchAll(/\[(D\d+)\]/g)].map(x=>x[1]).filter(id=>citations.has(id));
   return NextResponse.json({text:text.slice(0,5500),sourceIds:[...new Set(referenced)],mode:"ai",simulationsExecuted:false});
