@@ -56,3 +56,18 @@ test("one-click synthetic cantilever example triggers a real geometric support-r
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await expect(page.getByText("Selected geometric risk-region triangles")).toBeVisible();
 });
+
+test("machine envelope changes recompute risk blockers instead of leaving stale geometry results",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
+ await expect(preflight).toContainText("No issues triggered these limited geometric screening rules",{timeout:60000});
+ await preflight.locator("details.oaPreflightAssumptions > summary").click();
+ await preflight.getByLabel("Risk preflight envelope X").fill("8");
+ await expect(preflight).toContainText("Part exceeds configured build envelope",{timeout:60000});
+ await expect(preflight).toContainText("X 10.0 mm > 8.000 mm");
+ await preflight.getByLabel("Risk preflight envelope X").fill("100");
+ await expect(preflight).toContainText("No issues triggered these limited geometric screening rules",{timeout:60000});
+ await expect(preflight).not.toContainText("Part exceeds configured build envelope");
+});
