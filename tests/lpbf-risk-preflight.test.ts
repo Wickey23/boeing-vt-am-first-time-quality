@@ -50,3 +50,17 @@ test("units and source identity are required and unsupported inputs fail closed"
  assert.throws(()=>screenLpbfPreflight(bytes,1,zero,machine,45,"wrong"),/verified STL hash/);
  assert.throws(()=>screenLpbfPreflight(bytes,1,zero,{x:0,y:100,z:100},45,hash),/build envelope/);
 });
+
+test("synthetic cantilever has watertight STL and a localized elevated downface, not a predicted crack",async()=>{
+ const r=screenLpbfPreflight(await source("public/verification/lpbf-demo-cantilever-30mm.stl"),1,zero,machine,45,hash);
+ assert.equal(r.geometry.triangles,20);
+ assert.equal(r.audit.openEdges,0);
+ assert.equal(r.audit.nonManifoldEdges,0);
+ assert.equal(r.findings.some(x=>x.severity==="blocker"),false);
+ assert.ok(Math.abs(r.geometry.bedContactAreaProxyMm2-80)<1e-6);
+ const f=r.findings.find(x=>x.code==="ELEVATED_DOWNFACES");
+ assert.ok(f);
+ assert.ok(Math.abs(r.geometry.elevatedDownFacingAreaMm2-160)<1e-6);
+ assert.ok(f!.triangleIds.length>=2);
+ assert.match(f!.evidence,/geometric, not unsupported-span verification/);
+});
