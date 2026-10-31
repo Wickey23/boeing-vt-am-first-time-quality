@@ -312,6 +312,14 @@ export default function ChatStudy(){
   a.setProjectName(file.name.replace(/\.stl$/i,""));
   setLayer(100);setPlaying(false);setShowArtifact(true);
  };
+ const loadSyntheticDemo=async()=>{
+  try{
+   const response=await fetch("/verification/lpbf-demo-cantilever-30mm.stl",{cache:"no-store"});
+   if(!response.ok)throw Error("The synthetic reference STL could not be loaded.");
+   const bytes=await response.arrayBuffer();
+   attach(new File([bytes],"lpbf-demo-cantilever-30mm.stl",{type:"model/stl"}));
+  }catch(e){setAttachError(e instanceof Error?e.message:"Unable to open synthetic part.");}
+ };
  const doScreen=()=>{
   if(!canScreen||a.busy)return;
   pendingRun.current=null;
@@ -321,7 +329,7 @@ export default function ChatStudy(){
  return <div ref={layoutRef} className={"oaStudy"+(showArtifact?" oaStudySplit":"")+(resizingPanel?" oaStudyResizing":"")} style={{"--oa-panel-width":panelWidth+"%"} as CSSProperties}>
   <section className="oaStudyChat" aria-label="Engineering conversation">
    <div className="oaStudyFeed" role="log" aria-label="Engineering chat messages">
-    {messages.length===0&&!a.file&&<div className="oaStudyEmpty"><h1>What should we analyze?</h1><p>Upload an STL and I'll show the model, real mesh inspection, and the supported manufacturing screening steps.</p></div>}
+    {messages.length===0&&!a.file&&<div className="oaStudyEmpty"><h1>What should we analyze?</h1><p>Upload an STL and I'll show the model, real mesh inspection, and the supported manufacturing screening steps.</p><button type="button" className="oaSecondaryRun" onClick={()=>void loadSyntheticDemo()}>Try synthetic cantilever bracket · known support-review geometry</button><small>Illustrative, non-qualified STL in millimeters. No Boeing data or external AI request.</small></div>}
     {messages.map(m=><div key={m.id} className={"oaStudyMessage "+(m.role==="user"?"oaEngineer":"oaAssistant")}>
      {m.role==="assistant"&&<div className="oaAssistantMark" aria-hidden="true">O</div>}
      <div className="oaMessageBody">
