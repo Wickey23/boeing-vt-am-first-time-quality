@@ -5,10 +5,11 @@ import type {Axis3,LpbfPreflight} from "@/lib/lpbf-risk-preflight";
 
 type WorkerReply={type:"result";result:LpbfPreflight}|{type:"error";error:string};
 export default function RiskPreflight({file,partHash,unitScale,confirmed,rotationDeg,
- envelopeMm,overhangThresholdDeg,onFocus,onSummary}:{
+ envelopeMm,overhangThresholdDeg,onFocus,onSummary,onEnvelopeChange,onAngleChange}:{
  file:File|null;partHash:string|null;unitScale:number;confirmed:boolean;
  rotationDeg:Axis3;envelopeMm:Axis3;overhangThresholdDeg:number;
  onFocus:(triangles:number[])=>void;onSummary?:(result:LpbfPreflight|null)=>void;
+ onEnvelopeChange?:(axis:"x"|"y"|"z",value:number)=>void;onAngleChange?:(degrees:number)=>void;
 }){
  const [state,setState]=useState<{result:LpbfPreflight|null;error:string;status:"idle"|"running"|"done"|"failed"}>({
   result:null,error:"",status:"idle"});
@@ -80,6 +81,18 @@ export default function RiskPreflight({file,partHash,unitScale,confirmed,rotatio
   <header><span><ShieldAlert size={18}/> Automatic part risk preflight</span>
    <small>{!confirmed?"Awaiting confirmed STL units":state.status==="running"?"Inspecting triangles…":state.status==="done"?
     blockers.length+" blockers · "+alerts.length+" review items":"Research geometry screen"}</small></header>
+  <details className="oaPreflightAssumptions"><summary>Review configured machine envelope and geometric screening angle</summary>
+   <p className="oaSubtle">These are study inputs, not qualified machine capabilities. Confirm against the actual machine build dimensions and material/process limits.</p>
+   <div className="oaPreflightAssumptionsGrid">
+    {(["x","y","z"] as const).map(axis=><label key={axis}>Envelope {axis.toUpperCase()} (mm)
+     <input type="number" aria-label={"Risk preflight envelope "+axis.toUpperCase()} min="1" max="20000" step="1" value={envelopeMm[axis]}
+      onChange={e=>{const n=Number(e.target.value);if(Number.isFinite(n)&&n>=1&&n<=20000)onEnvelopeChange?.(axis,n);}}/></label>)}
+    <label>Down-facing screening angle (°)
+     <input type="number" aria-label="Risk preflight overhang angle" min="0" max="89" step="1" value={overhangThresholdDeg}
+      onChange={e=>{const n=Number(e.target.value);if(Number.isFinite(n)&&n>=0&&n<=89)onAngleChange?.(n);}}/></label>
+   </div>
+   <p className="oaSubtle">Changing a value invalidates the prior geometry screen and runs a fresh source-hashed preflight. The angle is a review threshold, not a universal support rule.</p>
+  </details>
   {!confirmed&&<p className="oaSubtle">Mesh topology is inspected automatically. Confirm the STL units and dimensions above to calculate location-specific down-facing regions and build-frame constraints. No external AI call is made.</p>}
   {state.status==="running"&&<p role="status" className="oaSubtle">Analyzing real STL triangle normals, topology, build envelope and potential support regions locally…</p>}
   {state.error&&<p role="alert" className="oaStudyError">{state.error}</p>}
