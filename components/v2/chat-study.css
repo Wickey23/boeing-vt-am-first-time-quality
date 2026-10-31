@@ -235,3 +235,26 @@
 .oaUnitScaleWarning{display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #b77d34;border-radius:10px;color:var(--oa-text);background:rgba(195,123,33,.11);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .oaUnitScaleWarning svg{flex:0 0 auto;margin-top:2px}
 @media(prefers-reduced-motion:reduce){.oaSpin{animation:none!important}.oaStudyArtifact,.oaStudySplit{scroll-behavior:auto!important}}
+
+/* Evidence-led automatic LPBF preflight; alert severity refers only to geometry screening. */
+.oaAutoPreflight{border:1px solid var(--oa-border);border-radius:16px;background:var(--oa-bg);padding:15px 16px;min-width:0}
+.oaAutoPreflight>header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:650}
+.oaAutoPreflight>header>span{display:flex;gap:8px;align-items:center}
+.oaAutoPreflight>header small{color:var(--oa-muted);font-size:11px;font-weight:400}
+.oaPreflightSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0}
+.oaPreflightSummary>div{padding:10px 12px;border:1px solid var(--oa-border);border-radius:10px;background:var(--oa-card);display:flex;flex-direction:column;gap:2px;min-width:0}
+.oaPreflightSummary strong{font-size:20px;line-height:1.4}
+.oaPreflightSummary small{color:var(--oa-muted);font-size:10px}
+.oaPreflightIssue{padding:14px 0;border-top:1px solid var(--oa-border)}
+.oaPreflightIssueHead{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.oaPreflightIssueHead strong{font-size:12px;flex:1;min-width:140px}
+.oaPreflightIssueHead span{font-size:10px;color:var(--oa-muted);background:var(--oa-card);padding:4px 7px;border-radius:7px}
+.oaPreflightIssue p{font-size:12px;line-height:1.5;margin:7px 0;overflow-wrap:anywhere}
+.oaPreflightIssue small{display:block;color:var(--oa-muted);line-height:1.55;margin-top:5px;overflow-wrap:anywhere}
+.oaPreflightIssue button{margin-top:10px;display:inline-flex;align-items:center;gap:7px;max-width:100%;white-space:normal;text-align:left}
+.oaPreflightUnassessed{border-top:1px solid var(--oa-border);padding:12px 0;font-size:11px}
+.oaPreflightUnassessed summary{cursor:pointer;font-weight:650;line-height:1.5}
+.oaPreflightUnassessed p{line-height:1.65;color:var(--oa-muted)}
+.oaAutoPreflight .oaRunActions{margin-top:9px}
+.oaAutoPreflight .oaRunActions button{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:500px){.oaPreflightSummary{grid-template-columns:repeat(3,minmax(0,1fr))}.oaPreflightSummary strong{font-size:17px}}
