@@ -42,3 +42,17 @@ test("tilted closed geometry produces a selectable 3D face warning, not defect p
  await preflight.getByRole("button",{name:"Clear 3D highlight"}).click();
  await expect(page.getByText("Selected geometric risk-region triangles")).toHaveCount(0);
 });
+
+test("one-click synthetic cantilever example triggers a real geometric support-review finding",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByRole("button",{name:/Try synthetic cantilever bracket/}).click();
+ await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toContainText("lpbf-demo-cantilever-30mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
+ await expect(preflight).toContainText("Elevated down-facing surfaces require support/process review",{timeout:60000});
+ await expect(preflight).toContainText("160.0 mm²");
+ await expect(preflight).toContainText("not unsupported-span verification");
+ await preflight.getByRole("button",{name:/Highlight .*relevant STL triangles in 3D/}).click();
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ await expect(page.getByText("Selected geometric risk-region triangles")).toBeVisible();
+});
