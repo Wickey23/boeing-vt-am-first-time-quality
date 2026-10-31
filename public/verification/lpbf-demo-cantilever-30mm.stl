@@ -1,0 +1,142 @@
+solid ORIENTAI_synthetic_cantilever_nonqualified_mm
+facet normal 0 -1 0
+ outer loop
+  vertex 0 0 0
+  vertex 10 0 0
+  vertex 10 0 6
+ endloop
+endfacet
+facet normal 0 1 0
+ outer loop
+  vertex 10 8 6
+  vertex 10 8 0
+  vertex 0 8 0
+ endloop
+endfacet
+facet normal 0 -1 0
+ outer loop
+  vertex 0 0 0
+  vertex 10 0 6
+  vertex 0 0 9
+ endloop
+endfacet
+facet normal 0 1 0
+ outer loop
+  vertex 0 8 9
+  vertex 10 8 6
+  vertex 0 8 0
+ endloop
+endfacet
+facet normal 0 -1 0
+ outer loop
+  vertex 10 0 6
+  vertex 30 0 6
+  vertex 30 0 9
+ endloop
+endfacet
+facet normal 0 1 0
+ outer loop
+  vertex 30 8 9
+  vertex 30 8 6
+  vertex 10 8 6
+ endloop
+endfacet
+facet normal 0 -1 0
+ outer loop
+  vertex 10 0 6
+  vertex 30 0 9
+  vertex 0 0 9
+ endloop
+endfacet
+facet normal 0 1 0
+ outer loop
+  vertex 0 8 9
+  vertex 30 8 9
+  vertex 10 8 6
+ endloop
+endfacet
+facet normal 0 0 -1
+ outer loop
+  vertex 0 0 0
+  vertex 0 8 0
+  vertex 10 8 0
+ endloop
+endfacet
+facet normal 0 0 -1
+ outer loop
+  vertex 0 0 0
+  vertex 10 8 0
+  vertex 10 0 0
+ endloop
+endfacet
+facet normal 1 0 0
+ outer loop
+  vertex 10 0 0
+  vertex 10 8 0
+  vertex 10 8 6
+ endloop
+endfacet
+facet normal 1 0 0
+ outer loop
+  vertex 10 0 0
+  vertex 10 8 6
+  vertex 10 0 6
+ endloop
+endfacet
+facet normal 0 0 -1
+ outer loop
+  vertex 10 0 6
+  vertex 10 8 6
+  vertex 30 8 6
+ endloop
+endfacet
+facet normal 0 0 -1
+ outer loop
+  vertex 10 0 6
+  vertex 30 8 6
+  vertex 30 0 6
+ endloop
+endfacet
+facet normal 1 0 0
+ outer loop
+  vertex 30 0 6
+  vertex 30 8 6
+  vertex 30 8 9
+ endloop
+endfacet
+facet normal 1 0 0
+ outer loop
+  vertex 30 0 6
+  vertex 30 8 9
+  vertex 30 0 9
+ endloop
+endfacet
+facet normal 0 0 1
+ outer loop
+  vertex 30 0 9
+  vertex 30 8 9
+  vertex 0 8 9
+ endloop
+endfacet
+facet normal 0 0 1
+ outer loop
+  vertex 30 0 9
+  vertex 0 8 9
+  vertex 0 0 9
+ endloop
+endfacet
+facet normal -1 0 0
+ outer loop
+  vertex 0 0 9
+  vertex 0 8 9
+  vertex 0 8 0
+ endloop
+endfacet
+facet normal -1 0 0
+ outer loop
+  vertex 0 0 9
+  vertex 0 8 0
+  vertex 0 0 0
+ endloop
+endfacet
+endsolid ORIENTAI_synthetic_cantilever_nonqualified_mm
