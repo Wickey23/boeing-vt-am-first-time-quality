@@ -363,6 +363,7 @@ export default function ChatStudy(){
     {a.file&&a.journey.process==="PBF_LB_METAL"&&<RiskPreflight file={a.file} partHash={partHash} confirmed={isConfirmed}
       unitScale={a.settings.unitScale} rotationDeg={selected?.rotation??{x:0,y:0,z:0}}
       envelopeMm={{x:a.settings.x,y:a.settings.y,z:a.settings.z}} overhangThresholdDeg={a.settings.overhangDeg}
+      onEnvelopeChange={(axis,value)=>a.update(axis,value)} onAngleChange={value=>a.update("overhangDeg",value)}
       onFocus={ids=>{setRiskFocus(ids);if(ids.length){setShowArtifact(true);setResultField("geometry");}}}
       onSummary={setPreflight}/>}
     {a.file&&<section className="oaProcessCard" aria-label="Analysis workflow">
