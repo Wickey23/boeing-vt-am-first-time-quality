@@ -52,6 +52,8 @@ test("one-click synthetic cantilever example triggers a real geometric support-r
  await expect(preflight).toContainText("Elevated down-facing surfaces require support/process review",{timeout:60000});
  await expect(preflight).toContainText("160.0 mm²");
  await expect(preflight).toContainText("not unsupported-span verification");
+ await expect(page.getByText(/Automatic STL geometry review identified/)).toBeVisible();
+ await expect(page.getByText(/source-derived screening observations, not simulated metal-print defects/)).toBeVisible();
  await preflight.getByRole("button",{name:/Highlight .*relevant STL triangles in 3D/}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await expect(page.getByText("Selected geometric risk-region triangles")).toBeVisible();
