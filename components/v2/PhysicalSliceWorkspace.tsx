@@ -1,8 +1,9 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import {useAnalysis} from "../AnalysisProvider";
 import LpbfStlPartialLayerPanel from "./LpbfStlPartialLayerPanel";
 import MetalScanPathPanel from "./MetalScanPathPanel";
+import {reviewPhysicalLayerIslands} from "@/lib/lpbf-layer-island-review";
 import MetalBuildEditor from "./MetalBuildEditor";
 import type {PhysicalScanPlan} from "@/lib/lpbf-physical-schedule";
 import type {PhysicalSliceResult,SliceOptions} from "@/lib/lpbf-physical-slicer";
@@ -100,6 +101,7 @@ export default function PhysicalSliceWorkspace({partHash,confirmed,onSnapshot}:{
   if(!slices||!partHash)return;
   const record={schema:"orientai.physical-stl-slice.v1",createdAt:new Date().toISOString(),
    name:a.file?.name,sourceSha256:partHash,slices,registration,
+   islandReview:reviewPhysicalLayerIslands(slices),
    claim:"Research-only sampled real-STL physical layer geometry and optional CSV geometric audit. No machine/thermal solver or print-quality prediction."};
   const url=URL.createObjectURL(new Blob([JSON.stringify(record,null,2)],{type:"application/json"}));
   const link=document.createElement("a");link.href=url;
@@ -107,6 +109,7 @@ export default function PhysicalSliceWorkspace({partHash,confirmed,onSnapshot}:{
   document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
  };
  const layer=slices?.layers[Math.min(selectedLayer,slices.layers.length-1)];
+ const islandReview=useMemo(()=>slices?reviewPhysicalLayerIslands(slices):null,[slices]);
  return <details className="oaPhysicalSlice" aria-label="Real STL physical-layer geometry">
   <summary>Physical STL layers & scan-to-part preflight <small>local geometry · no thermal simulation</small></summary>
   <p className="oaSubtle">Generate a bounded, source-hashed raster of the actual uploaded STL at physical build layers. This is different from the coarse virtual slabs in the thermal demo. Sampled XY cells can lose small walls, cavities or contours; inspect every warning.</p>
@@ -154,6 +157,14 @@ export default function PhysicalSliceWorkspace({partHash,confirmed,onSnapshot}:{
     <div><small>Sampled volume difference</small><strong>{(slices.geometry.relativeVolumeDifference*100).toFixed(2)}%</strong></div>
     <div><small>Partial boundary cells</small><strong>{slices.grid.boundaryCells}</strong></div>
    </div>
+   {islandReview&&<section className="oaPhysicalSliceIslandReview" role="region" aria-label="Potential disconnected physical-layer islands">
+    <strong>{islandReview.candidateCount} candidate new-layer islands require geometric support review</strong>
+    <p className="oaSubtle">Components sampled on a layer with no cell overlap in the previous layer. The 4-ray raster can miss narrow connections. Actual supports and layer adhesion have not been modeled.</p>
+    {islandReview.islands.slice(0,12).map((item,i)=><button className="oaSecondaryRun" type="button" key={i}
+      onClick={()=>{setSelectedLayer(item.layer);if(partHash)onSnapshot?.({partHash,slices,registration,scanPlan,selectedLayer:item.layer});}}>
+      View layer {item.layer+1}: {item.sampledCellCount} cells · {item.areaMm2.toFixed(2)} mm²</button>)}
+    {islandReview.candidateCount>12&&<p className="oaSubtle">More candidates are recorded in the exported JSON. Validate at higher resolution.</p>}
+   </section>}
    <label className="oaPhysicalSliceSlider">Inspect physical layer {selectedLayer+1} / {slices.grid.physicalLayers}
     <input aria-label="Inspect physical STL layer" type="range" min="0" max={slices.layers.length-1} value={selectedLayer}
      onChange={e=>{const next=Number(e.target.value);setSelectedLayer(next);
