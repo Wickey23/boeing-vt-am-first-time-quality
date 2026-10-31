@@ -262,3 +262,10 @@
 /* Synthetic onboarding fixture is intentionally labeled as nonqualified. */
 .oaStudyEmpty>.oaSecondaryRun{margin:16px auto 8px;display:inline-flex;text-align:center;justify-content:center;align-items:center;font-size:12px}
 .oaStudyEmpty>small{display:block;font-size:11px;color:var(--oa-muted);line-height:1.5}
+
+/* Screened machine envelope is visible near alerts, never sold as a qualified preset. */
+.oaPreflightAssumptions{margin:12px 0;padding:10px;border:1px solid var(--oa-border);border-radius:10px}
+.oaPreflightAssumptions>summary{cursor:pointer;font-size:11px;font-weight:650}
+.oaPreflightAssumptionsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin-top:12px}
+.oaPreflightAssumptionsGrid label{display:grid;gap:5px;font-size:11px}
+.oaPreflightAssumptionsGrid input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--oa-border);background:var(--oa-card);color:var(--oa-text);min-width:0}
