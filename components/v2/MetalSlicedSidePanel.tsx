@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import type {SlicePreview} from "./PhysicalSliceWorkspace";
 import {calculatePhysicalScanTiming} from "@/lib/metal-scan-timing";
+import {reviewPhysicalLayerIslands} from "@/lib/lpbf-layer-island-review";
 import {estimateLayerBuildTime,previewIllustrativeLayerHatches,type LayerPlanAssumptions} from "@/lib/metal-layer-planning";
 
 type Mode="layers"|"paths"|"warnings";
@@ -17,10 +18,12 @@ export default function MetalSlicedSidePanel({preview}:{preview:SlicePreview}){
   secondsPerRecoat:8,setupSeconds:1200,cooldownSeconds:3600
  });
  const scenario=useMemo(()=>estimateLayerBuildTime(slices,assumptions),[slices,assumptions]);
+ const islandReview=useMemo(()=>reviewPhysicalLayerIslands(slices),[slices]);
  useEffect(()=>setLayerIndex(preview.selectedLayer),[preview.selectedLayer,preview.partHash]);
  const index=Math.min(layerIndex,slices.layers.length-1);
  const active=slices.layers[index];
  const cellLookup=useMemo(()=>new Set(active.cells.map(c=>c.y*slices.grid.columns+c.x)),[active,slices.grid.columns]);
+ const islandLookup=useMemo(()=>new Set(islandReview.islands.filter(v=>v.layer===index).flatMap(v=>v.cells.map(c=>c.y*slices.grid.columns+c.x))),[islandReview,index,slices.grid.columns]);
  const outline=useMemo(()=>{
   if(active.cells.length>4500)return [];
   const path:{x1:number;y1:number;x2:number;y2:number}[]=[];
@@ -46,7 +49,7 @@ export default function MetalSlicedSidePanel({preview}:{preview:SlicePreview}){
  const x=(mm:number)=>(mm-slices.grid.originMm.x)/slices.grid.xyPitchMm;
  const y=(mm:number)=>slices.grid.rows-(mm-slices.grid.originMm.y)/slices.grid.xyPitchMm;
  const limited=commands.slice(0,350);
- const warningCount=(registration?.blockers.length??0)+slices.diagnostics.length;
+ const warningCount=(registration?.blockers.length??0)+slices.diagnostics.length+islandReview.candidateCount;
  const formatTime=(seconds:number)=>seconds>=3600?(seconds/3600).toFixed(2)+" h":seconds>=60?(seconds/60).toFixed(2)+" min":seconds.toFixed(2)+" s";
  return <div className="oaSlicedSide" role="region" aria-label="Post-slice layer inspection">
   <div className="oaSlicedTabs" role="group" aria-label="Post-slice display mode">
@@ -71,7 +74,7 @@ export default function MetalSlicedSidePanel({preview}:{preview:SlicePreview}){
        "User-supplied scan path over STL physical layer "+(index+1)}
       viewBox={`0 0 ${slices.grid.columns} ${slices.grid.rows}`} preserveAspectRatio="xMidYMid meet">
       {active.cells.map(c=><rect key={"cell-"+c.x+"-"+c.y} x={c.x} y={slices.grid.rows-1-c.y}
-       width={1} height={1} fill={mode==="layers"?"#285771":"#204252"} opacity={Math.max(.2,c.coverage)}/>)}
+       width={1} height={1} fill={islandLookup.has(c.y*slices.grid.columns+c.x)?"#ee8a28":mode==="layers"?"#285771":"#204252"} opacity={Math.max(.2,c.coverage)}/>)}
       {outline.map((e,i)=><line key={"edge-"+i} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
        stroke={mode==="layers"?"#9de5f9":"#729dae"} strokeWidth=".065"
        vectorEffect="non-scaling-stroke"/>)}
@@ -91,7 +94,7 @@ export default function MetalSlicedSidePanel({preview}:{preview:SlicePreview}){
      </svg>:<p>Too many occupied cells to display layer-line edges. Export the audited raster for inspection.</p>}
    </div>
    {mode==="layers"?<>
-    <p className="oaSubtle"><strong>Sampled cross-section:</strong> {pretty(active.areaMm2)} mm² represented area; {active.partialCells} partial XY cells; {outline.length} displayed boundary segments.</p>
+    <p className="oaSubtle"><strong>Sampled cross-section:</strong> {pretty(active.areaMm2)} mm² represented area; {active.partialCells} partial XY cells; {outline.length} displayed boundary segments. <strong>Orange cells</strong> are candidate disconnected new-layer regions, not confirmed print defects.</p>
     <label className="oaSlicedTravel"><input type="checkbox" aria-label="Show conceptual hatch lines" checked={showConceptHatches}
       onChange={e=>setShowConceptHatches(e.target.checked)}/> Show conceptual hatches (not executable machine paths)</label>
     <p className="oaSubtle">These are <strong>raster-derived layer edges</strong>, not exact CAD contours or printable laser hatch paths. Dashed gold lines, when enabled, illustrate a coverage concept only. Thin features below sampling resolution may be lost.</p>
@@ -128,6 +131,9 @@ export default function MetalSlicedSidePanel({preview}:{preview:SlicePreview}){
   </>:<>
    <div className="oaSlicedWarnings">
     <p><strong>Geometry-vs-volume difference:</strong> {(100*slices.geometry.relativeVolumeDifference).toFixed(2)}%</p>
+    <p><strong>Candidate new-layer islands:</strong> {islandReview.candidateCount}. These raster components have no exact cell overlap in the previous layer; independent support/process assessment is required.</p>
+    {islandReview.islands.slice(0,20).map((item,i)=><button key={"island"+i} className="oaSecondaryRun" type="button" onClick={()=>{setLayerIndex(item.layer);setMode("layers");}}>
+      View layer {item.layer+1} candidate {i+1}: {pretty(item.areaMm2)} mm²</button>)}
     <p><strong>Fractional sampled boundary cells:</strong> {slices.grid.boundaryCells}</p>
     {registration?.status==="BLOCKED"&&<strong role="alert">Scan registration blocked; do not treat this as a valid metal build plan.</strong>}
     {registration?.blockers.map((w,i)=><p className="oaStudyError" key={"b"+i}>{w}</p>)}
