@@ -11,6 +11,8 @@ import ChatServiceStudy from "@/components/v2/ChatServiceStudy";
 import ChatLpbfStudy from "@/components/v2/ChatLpbfStudy";
 import PhysicalSliceWorkspace,{type SlicePreview} from "@/components/v2/PhysicalSliceWorkspace";
 import MetalSlicedSidePanel from "@/components/v2/MetalSlicedSidePanel";
+import RiskPreflight from "@/components/v2/RiskPreflight";
+import type {LpbfPreflight} from "@/lib/lpbf-risk-preflight";
 import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
 import type {LpbfResult} from "@/lib/lpbf-transient";
 import type {ServiceStudyResults} from "@/components/UnifiedServiceStudy";
@@ -67,6 +69,8 @@ export default function ChatStudy(){
  const [showArtifact,setShowArtifact]=useState(false);
  const [sideMode,setSideMode]=useState<"model"|"sliced">("model");
  const [physicalPreview,setPhysicalPreview]=useState<SlicePreview|null>(null);
+ const [preflight,setPreflight]=useState<LpbfPreflight|null>(null);
+ const [riskFocus,setRiskFocus]=useState<number[]>([]);
  const [panelWidth,setPanelWidth]=useState(46);
  const [resizingPanel,setResizingPanel]=useState(false);
  const [showOverhangs,setShowOverhangs]=useState(false);
@@ -158,6 +162,9 @@ export default function ChatStudy(){
   hasSteadyThermalStudy:serviceCurrent&&Boolean(serviceStudy?.thermal),
   hasLpbfTransient:Boolean(lpbfResult),lpbfMethod:lpbfResult?.engine.includes("imported")?"imported":lpbfResult?.engine.includes("raster")?"moving":"uniform",process:a.journey.process});
  const coverageCounts=coverageSummary(coverage);
+ const preflightCurrent=preflight?.sourceSha256===partHash&&preflight.unitScaleToMm===a.settings.unitScale&&
+  preflight.rotationDeg.x===(selected?.rotation.x??0)&&preflight.rotationDeg.y===(selected?.rotation.y??0)&&
+  preflight.rotationDeg.z===(selected?.rotation.z??0)?preflight:null;
  const append=(message:Message)=>setMessages(old=>[...old,message].slice(-70));
  useEffect(()=>{
   if(!a.file){setFingerprint({file:null,hash:"no-part"});return;}
@@ -237,6 +244,9 @@ export default function ChatStudy(){
     "Units confirmed by engineer: "+(isConfirmed?"yes":"no"),
     "Source part SHA-256: "+(partHash??"unavailable"),
     "Geometry screening: "+(currentRun?"completed locally":"not completed"),
+     "Automatic LPBF geometry preflight: "+(preflightCurrent?
+      preflightCurrent.findings.filter(f=>f.severity!=="unassessed").map(f=>f.code+": "+f.observation).join(" | "):
+      "not yet completed for confirmed orientation"),
     "Melt-pool behavior, porosity, crack probability and aerospace qualification: NOT ASSESSED"
    ].join("\n");
    void (async()=>{
@@ -278,6 +288,8 @@ export default function ChatStudy(){
    }else if(/\b(service|fea|finite.element|structural|stress|displacement|steady.conduction|thermal study)\b/.test(lower)){
     response=a.file?"Open the Engineer-approved numerical studies card below. Confirm actual service loads, fixtures, elastic material properties and thermal boundary conditions before running the real workers. Stress and steady temperature are not print-induced defects.":"Upload the part, then review engineering boundary conditions in the service study card.";
     setShowService(true);
+   }else if(/\b(risks?|issues?|failures?|defects?|overhang|support|build.?plate|manufacturab)/.test(lower)){
+    response=a.file?"Review the Automatic part risk preflight above for source-derived geometry issues, highlighted triangle regions, and actions. Confirm units first. This geometric evidence cannot predict cracking, porosity, recoater strikes or print quality; those require machine/process data and validated models.":"Upload an STL first. I will flag topology and elevated down-facing geometry after units are confirmed.";
    }else if(/run|simulat|predict|screen|analy[sz]|failure|risk|print/.test(lower)){
    response=!a.file?"Upload an STL to start local mesh inspection. I cannot simulate a part that has not been provided.":
    !isConfirmed?"First confirm the STL units and actual dimensions below. This prevents invalid physical scaling.":
@@ -326,7 +338,7 @@ export default function ChatStudy(){
     {a.file&&<article className="oaInChatModel" aria-label="Uploaded STL model in chat">
       <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button ref={sideToggleRef} onClick={()=>showArtifact?closeSideView():setShowArtifact(true)} type="button" aria-expanded={showArtifact} aria-controls="oa-engineering-side-panel"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
       {showArtifact&&<p className="oaSideViewHint">3D model open in side workspace. Use X or Escape to collapse; reopen it here anytime.</p>}
-      {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
+      {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary><ModelViewer highlightTriangles={!serviceField?riskFocus:undefined} url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
       <div className="oaModelMetadata">
        <span>{inspect.data?inspect.data.audit.triangles.toLocaleString()+" mesh triangles":"Inspecting mesh..."}</span>
        <span>{inspect.data?Object.values(inspect.data.dimensions).map(n=>n.toFixed(1)).join(" × ")+" mm (selected units)":"Dimensions pending"}</span>
@@ -340,6 +352,11 @@ export default function ChatStudy(){
       {unitWarning&&<p className="oaUnitScaleWarning" role="alert"><AlertTriangle size={17}/><span><strong>Review apparent unit-scale mismatch.</strong> {unitWarning.message} If units are corrected, reconfirm against the source drawing.</span></p>}
       <p className="oaSubtle">STL does not encode units. Confirm against the source drawing. 3D color is geometric screening, not a predicted defect field.</p>
      </article>}
+    {a.file&&a.journey.process==="PBF_LB_METAL"&&<RiskPreflight file={a.file} partHash={partHash} confirmed={isConfirmed}
+      unitScale={a.settings.unitScale} rotationDeg={selected?.rotation??{x:0,y:0,z:0}}
+      envelopeMm={{x:a.settings.x,y:a.settings.y,z:a.settings.z}} overhangThresholdDeg={a.settings.overhangDeg}
+      onFocus={ids=>{setRiskFocus(ids);if(ids.length){setShowArtifact(true);setResultField("geometry");}}}
+      onSummary={setPreflight}/>}
     {a.file&&<section className="oaProcessCard" aria-label="Analysis workflow">
       <header><span><SlidersHorizontal size={17}/> Engineering analysis activity</span><span className="oaProcessLabel">{a.busy?"Analyzing":currentRun?"Screening complete":"Preflight"}</span></header>
       <div className="oaProcessSteps">
@@ -484,7 +501,7 @@ export default function ChatStudy(){
     </div>}
    {activeSlicePreview&&sideMode==="sliced"?
     <MetalSlicedSidePanel preview={activeSlicePreview}/>:
-    <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
+    <div className="oaArtifactCanvas"><ViewerErrorBoundary><ModelViewer highlightTriangles={!serviceField?riskFocus:undefined} url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
    <p>{activeSlicePreview&&sideMode==="sliced"?"Source-hashed sampled physical layers · geometry only · no machine program":
      "Live STL geometry · "+(serviceField?resultField+" calculated research field":overlay+" view · build height "+layer+"%")+" · Research only"}</p>
    <Link href="/copilot/advanced">Open advanced numerical studies <SquareArrowOutUpRight size={14}/></Link>
