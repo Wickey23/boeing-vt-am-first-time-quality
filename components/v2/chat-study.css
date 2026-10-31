@@ -258,3 +258,7 @@
 .oaAutoPreflight .oaRunActions{margin-top:9px}
 .oaAutoPreflight .oaRunActions button{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:500px){.oaPreflightSummary{grid-template-columns:repeat(3,minmax(0,1fr))}.oaPreflightSummary strong{font-size:17px}}
+
+/* Synthetic onboarding fixture is intentionally labeled as nonqualified. */
+.oaStudyEmpty>.oaSecondaryRun{margin:16px auto 8px;display:inline-flex;text-align:center;justify-content:center;align-items:center;font-size:12px}
+.oaStudyEmpty>small{display:block;font-size:11px;color:var(--oa-muted);line-height:1.5}
