@@ -166,6 +166,28 @@ export default function ChatStudy(){
   preflight.rotationDeg.x===(selected?.rotation.x??0)&&preflight.rotationDeg.y===(selected?.rotation.y??0)&&
   preflight.rotationDeg.z===(selected?.rotation.z??0)?preflight:null;
  const append=(message:Message)=>setMessages(old=>[...old,message].slice(-70));
+
+ const preflightNotice=useRef<string|null>(null);
+ useEffect(()=>{
+  if(!preflightCurrent||!partHash||historyKey!==keyPrefix+partHash)return;
+  const flagged=preflightCurrent.findings.filter(f=>f.severity!=="unassessed");
+  if(!flagged.length)return;
+  const identity="preflight:"+partHash+":"+a.settings.unitScale+":"+
+   Object.values(preflightCurrent.rotationDeg).join(",")+":"+
+   Object.values(preflightCurrent.assumedEnvelopeMm).join(",")+":"+
+   preflightCurrent.overhangThresholdDeg;
+  if(preflightNotice.current===identity||messages.some(m=>m.runId===identity))return;
+  preflightNotice.current=identity;
+  const blockers=flagged.filter(f=>f.severity==="blocker");
+  const review=flagged.filter(f=>f.severity==="attention");
+  append(makeMessage("assistant","Automatic STL geometry review identified "+
+   blockers.length+" geometric blockers and "+review.length+" review items: "+
+   flagged.slice(0,3).map(f=>f.title).join("; ")+
+   (flagged.length>3?"; and additional findings.":".")+
+   " These are source-derived screening observations, not simulated metal-print defects or a failure probability. Review the evidence, selected 3D faces and recommended engineering actions in the Automatic part risk preflight panel.",
+   "run",identity));
+ },[preflightCurrent,partHash,historyKey,messages]);
+
  useEffect(()=>{
   if(!a.file){setFingerprint({file:null,hash:"no-part"});return;}
   let active=true;
