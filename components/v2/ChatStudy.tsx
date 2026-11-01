@@ -192,6 +192,24 @@ export default function ChatStudy(){
    "run",identity));
  },[preflightCurrent,partHash,historyKey,messages]);
 
+ const processQualityNotice=useRef<string|null>(null);
+ useEffect(()=>{
+  if(!processQualityCurrent?.assessment.reviewedReference||!partHash||historyKey!==keyPrefix+partHash)return;
+  const blockers=processQualityCurrent.assessment.findings.filter(f=>f.severity==="blocker");
+  if(!blockers.length)return;
+  const source=JSON.stringify({input:processQualityCurrent.input,partHash});
+  let digest=2166136261;
+  for(let i=0;i<source.length;i++){digest^=source.charCodeAt(i);digest=Math.imul(digest,16777619);}
+  const identity="process-quality:"+partHash+":"+(digest>>>0).toString(16);
+  if(processQualityNotice.current===identity||messages.some(m=>m.runId===identity))return;
+  processQualityNotice.current=identity;
+  append(makeMessage("assistant","The reviewed LPBF parameter settings triggered "+blockers.length+
+   " deterministic process-window blocker(s): "+blockers.slice(0,3).map(f=>f.title).join("; ")+
+   ". Stop process approval until the machine/material-specific limits and planned settings are reconciled. "+
+   "These are configuration violations against engineer-entered bounds, not simulations of porosity, cracking or a print-failure probability. Review the Process quality preflight evidence.",
+   "run",identity));
+ },[processQualityCurrent,partHash,historyKey,messages]);
+
  useEffect(()=>{
   if(!a.file){setFingerprint({file:null,hash:"no-part"});return;}
   let active=true;
