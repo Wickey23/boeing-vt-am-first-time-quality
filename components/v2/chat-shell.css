@@ -92,3 +92,15 @@
  .oaHomeError{color:#ff9494}
 }
 @media(prefers-reduced-motion:reduce){.oaSidebar,.oaAdvancedArrow{transition:none}}
+
+
+/* Persistent code-change ticker: not a quality score or a prediction. */
+.oaBuildTicker{display:flex;align-items:center;gap:9px;min-width:0;margin:14px 3px 4px;padding:10px 9px;border:1px solid var(--oa-border);border-radius:10px;background:var(--oa-card);font-variant-numeric:tabular-nums}
+.oaBuildTickerPulse{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#188a78}
+.oaBuildTickerText{display:grid;min-width:0;gap:2px;flex:1}
+.oaBuildTickerText strong{font-size:9px;letter-spacing:.065em;color:var(--oa-text);line-height:1.25}
+.oaBuildTickerText small{font-size:9px;color:var(--oa-muted);line-height:1.25}
+.oaBuildTickerValue{font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--oa-text)}
+.oaRoot.oaIsCollapsed .oaBuildTicker{justify-content:center;padding:8px 4px;margin:10px 0}
+.oaRoot.oaIsCollapsed .oaBuildTickerText,.oaRoot.oaIsCollapsed .oaBuildTickerValue{display:none}
+@media(max-width:780px){.oaRoot.oaIsCollapsed .oaBuildTicker{justify-content:flex-start;padding:10px 9px;margin:14px 3px 4px}.oaRoot.oaIsCollapsed .oaBuildTickerText{display:grid}.oaRoot.oaIsCollapsed .oaBuildTickerValue{display:block}}
