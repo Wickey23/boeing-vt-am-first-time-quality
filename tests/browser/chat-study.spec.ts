@@ -9,7 +9,8 @@ test("uploaded STL appears in chat with inspected mesh, geometric build preview 
  await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toBeVisible();
  await expect(page.getByText(/mesh triangles/)).toBeVisible();
  await expect(page.getByRole("region",{name:"Analysis workflow"})).toContainText("Mesh topology and dimensions");
- await expect(page.getByText("Print thermal history / residual stress / defect models")).toBeVisible();
+ await expect(page.getByText("Machine/material process-window review")).toBeVisible();
+ await expect(page.getByText("Calibrated defect probability / residual stress / fatigue")).toBeVisible();
  await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Run geometry screening"}).click();
