@@ -14,6 +14,7 @@ import MetalSlicedSidePanel from "@/components/v2/MetalSlicedSidePanel";
 import RiskPreflight from "@/components/v2/RiskPreflight";
 import ProcessQualityReview,{type QualitySnapshot} from "@/components/v2/ProcessQualityReview";
 import type {LpbfPreflight} from "@/lib/lpbf-risk-preflight";
+import {reviewPhysicalLayerIslands} from "@/lib/lpbf-layer-island-review";
 import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
 import type {LpbfResult} from "@/lib/lpbf-transient";
 import type {ServiceStudyResults} from "@/components/UnifiedServiceStudy";
@@ -134,6 +135,8 @@ export default function ChatStudy(){
  };
  const isConfirmed=completedPart(a.journey,a.file,a.settings.unitScale);
  const activeSlicePreview=physicalPreview&&physicalPreview.partHash===partHash&&isConfirmed?physicalPreview:null;
+ const sliceData=activeSlicePreview?.slices;
+ const sliceIslandReview=useMemo(()=>sliceData?reviewPhysicalLayerIslands(sliceData):null,[sliceData]);
  const canScreen=Boolean(a.file&&isConfirmed&&a.journey.process==="PBF_LB_METAL");
  const currentRun=Boolean(a.result&&partHash&&a.result.source.fileHashSha256===partHash&&
    a.result.configuration.unitScale===a.settings.unitScale);
@@ -209,6 +212,22 @@ export default function ChatStudy(){
    "These are configuration violations against engineer-entered bounds, not simulations of porosity, cracking or a print-failure probability. Review the Process quality preflight evidence.",
    "run",identity));
  },[processQualityCurrent,partHash,historyKey,messages]);
+
+ const islandNotice=useRef<string|null>(null);
+ useEffect(()=>{
+  if(!sliceIslandReview||!sliceData||!partHash||historyKey!==keyPrefix+partHash)return;
+  const candidates=sliceIslandReview.candidateCount;
+  const resolutionConcern=sliceData.geometry.relativeVolumeDifference>0.08;
+  if(!candidates&&!resolutionConcern)return;
+  const identity="physical-layer-review:"+partHash+":"+sliceData.grid.xyPitchMm+":"+sliceData.grid.layerThicknessMm+":"+
+   Object.values(sliceData.geometry.rotationDeg).join(",")+":"+Object.values(sliceData.geometry.translationMm).join(",");
+  if(islandNotice.current===identity||messages.some(m=>m.runId===identity))return;
+  islandNotice.current=identity;
+  const lead=candidates?candidates+" candidate physical-layer islands found without raster-cell overlap in the preceding sampled layer. ":"";
+  const accuracy=resolutionConcern?"Sampled volume differs by more than 8% from the STL enclosed-volume estimate; refine raster resolution and re-run. ":"";
+  append(makeMessage("assistant","Physical STL layer review: "+lead+accuracy+
+   "Inspect the flagged layers and actual support connectivity in the slicing panel. These are resolution-dependent geometric observations, not predicted print defects or recoater events.","run",identity));
+ },[sliceIslandReview,sliceData,partHash,historyKey,messages]);
 
  useEffect(()=>{
   if(!a.file){setFingerprint({file:null,hash:"no-part"});return;}
