@@ -113,8 +113,10 @@ export function assessLpbfProcessWindow(input:ProcessQualityInput):ProcessWindow
   "No calibrated porosity, lack-of-fusion, keyhole, crack, distortion or recoater-collision model was run.",
   "Process-window checks and energy-density arithmetic are not experimental defect predictors.",
   "Collect validated process monitoring, material qualification and inspection outcomes.");
+ // A one-sided limit can flag a violation, but cannot establish that a
+ // complete four-parameter interval review has been performed.
  const missing=PROCESS_PARAMETERS.some(p=>input.values[p.id]===null||
-  input.windows[p.id].min===null&&input.windows[p.id].max===null);
+  input.windows[p.id].min===null||input.windows[p.id].max===null);
  const decision=invalid?"invalid-configuration":outsideCount>0?"outside-declared-range":
   reviewed&&!missing&&checksCompleted===PROCESS_PARAMETERS.length?"inside-declared-ranges":"insufficient-evidence";
  return {version:PROCESS_QUALITY_VERSION,basis:"engineer-entered-unverified",decision,
