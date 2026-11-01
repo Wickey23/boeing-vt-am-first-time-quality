@@ -269,3 +269,32 @@
 .oaPreflightAssumptionsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin-top:12px}
 .oaPreflightAssumptionsGrid label{display:grid;gap:5px;font-size:11px}
 .oaPreflightAssumptionsGrid input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--oa-border);background:var(--oa-card);color:var(--oa-text);min-width:0}
+
+
+/* Deterministic process-window review. A configuration check, not a physical defect forecast. */
+.oaProcessQuality{border:1px solid var(--oa-border);border-radius:16px;background:var(--oa-bg);padding:15px 16px;min-width:0}
+.oaProcessQualityHeading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.oaProcessQualityHeading>div{display:flex;align-items:center;gap:8px;font-size:13px}
+.oaProcessQualityHeading>small{font-size:11px;color:var(--oa-muted)}
+.oaProcessQuality>.oaSubtle{margin-top:11px}
+.oaProcessQualityCounts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0}
+.oaProcessQualityCounts>div{display:flex;flex-direction:column;gap:3px;min-width:0;padding:10px;border-radius:10px;border:1px solid var(--oa-border);background:var(--oa-card)}
+.oaProcessQualityCounts strong{font-size:18px;line-height:1.3;font-variant-numeric:tabular-nums}
+.oaProcessQualityCounts small{font-size:10px;color:var(--oa-muted)}
+.oaProcessQualityInputs{border-top:1px solid var(--oa-border);padding-top:12px;margin:12px 0}
+.oaProcessQualityInputs>summary{font-size:12px;font-weight:650;cursor:pointer}
+.oaProcessQualityFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:13px 0}
+.oaProcessQualityFields label{display:grid;gap:5px;min-width:0;font-size:11px}
+.oaProcessQualityFields input,.oaProcessQualityTable input{display:block;width:100%;min-width:0;padding:8px 9px;border:1px solid var(--oa-border);border-radius:8px;background:var(--oa-card);color:var(--oa-text);font-size:12px}
+.oaProcessQualityTableWrap{overflow-x:auto;max-width:100%}
+.oaProcessQualityTable{width:100%;border-collapse:collapse;min-width:510px}
+.oaProcessQualityTable th,.oaProcessQualityTable td{padding:8px 6px;border-bottom:1px solid var(--oa-border);font-size:11px;text-align:left}
+.oaProcessQualityTable th:first-child{min-width:130px}
+.oaProcessQualityTable th small{font-weight:400;color:var(--oa-muted)}
+.oaProcessQualityApproval{display:flex;gap:9px;align-items:flex-start;margin:14px 0;font-size:11px;line-height:1.5}
+.oaProcessQualityApproval>input{flex:0 0 auto;margin-top:2px}
+.oaProcessQualityIndicators{display:grid;gap:4px;background:var(--oa-card);border-radius:10px;border:1px solid var(--oa-border);padding:11px;font-size:11px}
+.oaProcessQualityIndicators small{font-size:10px;color:var(--oa-muted)}
+.oaProcessQuality .oaRunActions{margin-top:12px}
+.oaProcessQuality .oaRunActions button{display:flex;align-items:center;gap:7px}
+@media(max-width:550px){.oaProcessQualityFields{grid-template-columns:1fr}.oaProcessQualityCounts strong{font-size:16px}}
