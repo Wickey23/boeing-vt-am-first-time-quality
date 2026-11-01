@@ -12,6 +12,7 @@ import ChatLpbfStudy from "@/components/v2/ChatLpbfStudy";
 import PhysicalSliceWorkspace,{type SlicePreview} from "@/components/v2/PhysicalSliceWorkspace";
 import MetalSlicedSidePanel from "@/components/v2/MetalSlicedSidePanel";
 import RiskPreflight from "@/components/v2/RiskPreflight";
+import ProcessQualityReview,{type QualitySnapshot} from "@/components/v2/ProcessQualityReview";
 import type {LpbfPreflight} from "@/lib/lpbf-risk-preflight";
 import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
 import type {LpbfResult} from "@/lib/lpbf-transient";
@@ -70,6 +71,7 @@ export default function ChatStudy(){
  const [sideMode,setSideMode]=useState<"model"|"sliced">("model");
  const [physicalPreview,setPhysicalPreview]=useState<SlicePreview|null>(null);
  const [preflight,setPreflight]=useState<LpbfPreflight|null>(null);
+ const [processQuality,setProcessQuality]=useState<QualitySnapshot|null>(null);
  const [riskFocus,setRiskFocus]=useState<number[]>([]);
  const [panelWidth,setPanelWidth]=useState(46);
  const [resizingPanel,setResizingPanel]=useState(false);
@@ -165,6 +167,8 @@ export default function ChatStudy(){
  const preflightCurrent=preflight?.sourceSha256===partHash&&preflight.unitScaleToMm===a.settings.unitScale&&
   preflight.rotationDeg.x===(selected?.rotation.x??0)&&preflight.rotationDeg.y===(selected?.rotation.y??0)&&
   preflight.rotationDeg.z===(selected?.rotation.z??0)?preflight:null;
+ const processQualityCurrent=processQuality?.partHash===partHash&&
+  processQuality.unitScale===a.settings.unitScale?processQuality:null;
  const append=(message:Message)=>setMessages(old=>[...old,message].slice(-70));
 
  const preflightNotice=useRef<string|null>(null);
@@ -388,6 +392,9 @@ export default function ChatStudy(){
       onEnvelopeChange={(axis,value)=>a.update(axis,value)} onAngleChange={value=>a.update("overhangDeg",value)}
       onFocus={ids=>{setRiskFocus(ids);if(ids.length){setShowArtifact(true);setResultField("geometry");}}}
       onSummary={setPreflight}/>}
+    {a.file&&a.journey.process==="PBF_LB_METAL"&&
+     <ProcessQualityReview partHash={partHash} confirmed={isConfirmed}
+      unitScale={a.settings.unitScale} onSummary={setProcessQuality}/>}
     {a.file&&<section className="oaProcessCard" aria-label="Analysis workflow">
       <header><span><SlidersHorizontal size={17}/> Engineering analysis activity</span><span className="oaProcessLabel">{a.busy?"Analyzing":currentRun?"Screening complete":"Preflight"}</span></header>
       <div className="oaProcessSteps">
@@ -395,7 +402,14 @@ export default function ChatStudy(){
        <div>{inspect.data?<CheckCircle2 size={16} className="oaStepDone"/>:inspect.error?<AlertTriangle size={16} className="oaStepWarn"/>:<LoaderCircle size={16} className="oaSpin"/>}<span>Mesh topology and dimensions</span><small>{inspect.error?"Failed":inspect.data?"Complete":"Running"}</small></div>
        <div>{isConfirmed?<CheckCircle2 size={16} className="oaStepDone"/>:<AlertTriangle size={16} className="oaStepWarn"/>}<span>Engineer confirms units</span><small>{isConfirmed?"Confirmed":"Required"}</small></div>
        <div>{a.busy?<LoaderCircle size={16} className="oaSpin"/>:currentRun?<CheckCircle2 size={16} className="oaStepDone"/>:<span className="oaStepDot"/>}<span>Orientation sweep & geometric support screening</span><small>{a.busy?Math.round(a.progress*100)+"%":currentRun?"Complete":"Not run"}</small></div>
-       <div><span className="oaStepDot"/><span>Print thermal history / residual stress / defect models</span><small>Not implemented</small></div>
+       <div>{processQualityCurrent?.assessment.decision==="outside-declared-range"?
+        <AlertTriangle size={16} className="oaStepWarn"/>:
+        processQualityCurrent?.assessment.decision==="inside-declared-ranges"?
+        <CheckCircle2 size={16} className="oaStepDone"/>:<span className="oaStepDot"/>}
+        <span>Machine/material process-window review</span>
+        <small>{processQualityCurrent?.assessment.decision==="outside-declared-range"?"Outside supplied limits":
+         processQualityCurrent?.assessment.decision==="inside-declared-ranges"?"Within supplied limits · not qualified":"Evidence needed"}</small></div>
+       <div><span className="oaStepDot"/><span>Calibrated defect probability / residual stress / fatigue</span><small>Not validated</small></div>
       </div>
       {a.busy&&<progress className="oaRunProgress" max={100} value={Math.round(a.progress*100)} aria-label="Geometry screening progress"/>}
       {inspect.error&&<p className="oaStudyError" role="alert">{inspect.error}</p>}
