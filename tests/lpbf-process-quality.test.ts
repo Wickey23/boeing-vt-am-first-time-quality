@@ -61,3 +61,15 @@ test("boundary values compare inclusively; zero and unknown limits remain distin
  input.windows.powerW.min=0;
  assert.equal(assessLpbfProcessWindow(input).decision,"invalid-configuration");
 });
+
+test("a one-sided bound can flag violations but cannot yield full in-range review",()=>{
+ const input=reviewed();
+ input.windows.powerW.max=null;
+ const result=assessLpbfProcessWindow(input);
+ assert.equal(result.decision,"insufficient-evidence");
+ assert.equal(result.checksCompleted,4);
+ input.values.powerW=100;
+ const violation=assessLpbfProcessWindow(input);
+ assert.equal(violation.decision,"outside-declared-range");
+ assert.equal(violation.outsideCount,1);
+});
