@@ -5,6 +5,7 @@ import {useState} from "react";
 import {useAnalysis} from "@/components/AnalysisProvider";
 import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck} from "lucide-react";
 import "./chat-shell.css";
+import EngineeringBuildTicker from "./EngineeringBuildTicker";
 
 /** The chat-first shell is intentionally isolated from the legacy engineering dashboard.
  * Older research routes retain their current shell until their workflows are migrated. */
@@ -64,6 +65,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
      <Link href="/how-it-works" onClick={()=>setMobileOpen(false)}><BookOpen size={14}/> Technical guide</Link>
     </div>
    </details>
+   <EngineeringBuildTicker/>
    <div className="oaSidebarFooter">
     <ShieldCheck size={17}/><span className="oaNavText">Virginia Tech · Research prototype</span>
    </div>
