@@ -312,3 +312,17 @@
 .oaMetalEngineeringTools input{width:100%;accent-color:#188a78}
 .oaMetalEngineeringTools small{font-size:10px;color:var(--oa-muted);line-height:1.4}
 @media(max-width:850px){.oaStudyQuickbar{position:sticky;top:0;padding:8px;gap:5px}.oaStudyQuickbar strong{display:none}.oaStudyQuickbar button{font-size:10px;padding:6px}.oaMetalEngineeringTools{padding:8px}}
+
+/* Desktop workbench: independent conversation scroll with a continuously visible CAD viewport. */
+@media(min-width:851px){
+ .oaRoot{height:100dvh;min-height:0;overflow:hidden}
+ .oaBody{height:100dvh;min-height:0;overflow:hidden}
+ .oaRoot .oaMain{min-height:0;overflow:hidden}
+ .oaStudy{height:100%;min-height:0;padding-bottom:0;overflow:hidden}
+ .oaStudyChat{height:100%;min-height:0;overflow:hidden}
+ .oaStudyFeed{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;min-height:0}
+ .oaStudyComposerArea{position:relative;bottom:auto;flex-shrink:0;box-shadow:0 -5px 18px #0000000a}
+ .oaStudyArtifact{position:relative;top:auto;height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+ .oaArtifactCanvas{min-height:240px;flex:1 1 0}
+ .oaStudyQuickbar{position:relative;flex-shrink:0}
+}
