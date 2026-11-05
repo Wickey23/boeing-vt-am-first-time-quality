@@ -36,7 +36,7 @@ test("focused part screen keeps the real viewer, geometric screening and build p
 test("guided context persists source evidence and connects to traceable report export",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
- await expect(page.getByRole("banner",{name:"Three-stage engineering assessment"})).toBeVisible();
+ await expect(page.getByRole("region",{name:"Three-stage engineering assessment"})).toBeVisible();
  await page.getByRole("button",{name:"Open engineering context stage"}).click();
  await expect(page.getByRole("heading",{name:"Understand the part in its assembly"})).toBeVisible();
  await page.getByLabel("Upload assembly documents").setInputFiles({
