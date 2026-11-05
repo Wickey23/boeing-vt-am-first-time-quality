@@ -1,0 +1,195 @@
+/* Fit-screen density for ORIENTAI professional workbench.
+   Geometry and source data are unchanged; the UI allocates space to the task,
+   not to repeated headers, tall controls, or nested scrollbars.
+   Removing psFit restores the comfortable spacing. */
+@media (min-width:1101px){
+ .psRoot.psFit{grid-template-columns:minmax(0,1fr) minmax(400px,43%);}
+ .oaRoot:has(.psRoot.psFit) .oaBody{height:100dvh;min-height:0;overflow:hidden}
+ .oaRoot:has(.psRoot.psFit) .oaMain{flex:1 1 0;min-height:0;overflow:hidden}
+ .oaRoot:not(.oaIsCollapsed):has(.psRoot.psFit) .oaSidebar{
+  width:202px;flex-basis:202px;padding:12px 8px 9px;gap:6px;overflow-y:auto
+ }
+ .oaRoot:has(.psRoot.psFit) .oaSidebarTop{height:30px;padding:0 5px}
+ .oaRoot:has(.psRoot.psFit) .oaBrand{gap:8px;font-size:14px}
+ .oaRoot:has(.psRoot.psFit) .oaBrandSymbol{width:26px;height:26px;font-size:13px}
+ .oaRoot:has(.psRoot.psFit) .oaNewChat,
+ .oaRoot:has(.psRoot.psFit) .oaNavItem,
+ .oaRoot:has(.psRoot.psFit) .oaAdvanced summary,
+ .oaRoot:has(.psRoot.psFit) .oaCurrentStudy{
+  min-height:35px;padding:7px 9px;border-radius:8px;font-size:12px;gap:9px
+ }
+ .oaRoot:has(.psRoot.psFit) .oaSidebarSection{margin-top:8px}
+ .oaRoot:has(.psRoot.psFit) .oaSidebarSectionTitle{font-size:9px;padding:0 9px 5px}
+ .oaRoot:has(.psRoot.psFit) .oaAdvanced{margin-top:1px}
+ .oaRoot:has(.psRoot.psFit) .oaBuildTicker{padding:8px;margin:7px 1px 3px;gap:6px}
+ .oaRoot:has(.psRoot.psFit) .oaBuildTickerText strong,
+ .oaRoot:has(.psRoot.psFit) .oaBuildTickerText small{font-size:8px;line-height:1.2}
+ .oaRoot:has(.psRoot.psFit) .oaBuildTickerValue{font-size:13px}
+ .oaRoot:has(.psRoot.psFit) .oaSidebarFooter{font-size:10px}
+ .oaRoot:has(.psRoot.psFit) .oaTopbar{
+  flex:0 0 48px;height:48px!important;padding:0 17px!important;min-height:48px!important
+ }
+ .oaRoot:has(.psRoot.psFit) .oaTopLeft{gap:7px}
+ .oaRoot:has(.psRoot.psFit) .oaIconButton{width:29px;height:29px}
+ .oaRoot:has(.psRoot.psFit) .oaModelName{font-size:14px}
+ .oaRoot:has(.psRoot.psFit) .oaModelSuffix{font-size:12px}
+ .oaRoot:has(.psRoot.psFit) .oaBottomDisclaimer{padding:4px 8px 5px;font-size:9px;line-height:1.3}
+}
+/* Density button deliberately sits in the workbench, not global app settings. */
+.psDensityButton{
+ display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
+ padding:6px 9px;background:#183044;border:1px solid #4a6b87;
+ color:#d1e6f6;border-radius:7px;font-size:10px;line-height:1.25;white-space:nowrap
+}
+.psDensityButton[aria-pressed=true]{background:#224968;border-color:#6a9ac3}
+.psDensityButton:hover{background:#2b5474}
+.psRoot.psFit{font-size:12px}
+.psFit .psWorkingColumn{min-width:0;min-height:0}
+.psFit .psWorkspaceHeader{
+ padding:10px 18px 9px!important;gap:8px!important;
+ border-bottom:1px solid #2c4155;flex:0 0 auto;
+}
+.psFit .psHeadline{min-height:27px;gap:8px}
+.psFit .psHeadline>div:first-child{gap:9px}
+.psFit .psHeadline h1{font-size:15px;letter-spacing:-.02em}
+.psFit .psEyebrow{font-size:9px;letter-spacing:.06em}
+.psFit .psHeaderMeta{gap:7px}
+.psFit .psFileName{font-size:10px;max-width:110px}
+.psFit .psResearch{display:none}
+.psFit .psStepper{gap:7px}
+.psFit .psStep{
+ min-height:45px;padding:7px 9px;gap:8px;border-radius:8px;
+ display:flex;align-items:center;justify-content:flex-start;flex-direction:row
+}
+.psFit .psStepCount{
+ width:25px;height:25px;flex:0 0 25px;font-size:11px;border-radius:6px;
+}
+.psFit .psStepContent{gap:0}
+.psFit .psStepContent strong{font-size:11px;line-height:1.22;white-space:nowrap}
+.psFit .psStepContent small{font-size:9px;line-height:1.25;margin-top:2px}
+.psFit .psStep>svg{width:13px;height:13px;flex:0 0 13px}
+.psFit .psNextAction{padding:6px 10px;min-height:36px;gap:8px;border-radius:8px}
+.psFit .psNextAction>div{gap:8px}
+.psFit .psNextAction strong{font-size:10px}
+.psFit .psNextAction span{font-size:10px}
+.psFit .psNextAction button{padding:7px 10px;min-height:28px;font-size:10px}
+.psFit .psStageScroll{
+ flex:1 1 0;min-height:0;padding:13px 18px 18px;
+ overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior:contain
+}
+.psFit .psStage{gap:10px}
+.psFit .psSectionHead{padding-bottom:9px;margin:0}
+.psFit .psSectionHead>span{font-size:9px}
+.psFit .psSectionHead h2{font-size:21px;line-height:1.22;margin:4px 0}
+.psFit .psSectionHead p{font-size:11px;line-height:1.45}
+.psFit .psPanel{padding:12px;border-radius:10px}
+.psFit .psPanelHeading{margin-bottom:8px;gap:7px}
+.psFit .psPanelHeading>strong{font-size:11px;gap:6px}
+.psFit .psPanelHeading>span{font-size:9px}
+.psFit .psPanelHeading svg{width:15px;height:15px}
+.psFit .psEmptyCard{min-height:182px;padding:16px;gap:7px;border-radius:10px}
+.psFit .psEmptyCard>svg{width:24px;height:24px}
+.psFit .psEmptyCard h3{font-size:14px;margin:0}
+.psFit .psEmptyCard p{font-size:11px;line-height:1.4;max-width:420px}
+.psFit .psEmptyCard button{padding:8px 12px;font-size:11px}
+.psFit .psEmptyCard small{font-size:9px}
+.psFit .psPartCard{padding:0}
+.psFit .psPartCard>.psPanelHeading{padding:10px 12px}
+.psFit .psPartDetails{margin:10px 12px;gap:9px}
+.psFit .psPartIcon{width:32px;height:32px}
+.psFit .psFactGrid{padding:0 12px 10px;gap:8px}
+.psFit .psFactBlock{padding:10px}
+.psFit .psFactTitle{margin-bottom:7px;font-size:11px}
+.psFit .psFactBlock dl>div{padding:4px 0}
+.psFit .psFactBlock dt,.psFit .psFactBlock dd{font-size:10px}
+.psFit .psFactBlock>small{margin-top:6px}
+.psFit .psDimensions{padding-bottom:7px;margin-bottom:7px}
+.psFit .psUnitRow select,.psFit .psUnitRow button{min-height:29px;padding:5px 7px}
+.psFit .psPartCard>.psCaveat{padding:0 12px 10px}
+.psFit .psActivityRows{gap:4px}
+.psFit .psActivityRows>div{padding:7px 9px;font-size:10px}
+.psFit .psActionRow{margin-top:10px;gap:7px}
+.psFit .psPrimary,.psFit .psSecondary,.psFit .psSubtleButton{padding:7px 10px;font-size:10px}
+.psFit .psContextFields{gap:8px}
+.psFit .psContextPanel .psDocumentDrop{min-height:100px;padding:10px;gap:5px}
+.psFit .psDocumentDrop>svg{width:20px;height:20px}
+.psFit .psDocumentDrop>strong{font-size:11px}
+.psFit .psSummaryGrid{gap:7px}
+.psFit .psSummaryGrid>div{padding:8px}
+.psFit .psSummaryGrid strong{font-size:18px}
+.psFit .psRiskItem>summary{padding:8px 0}
+.psFit .psAskBox{padding:7px 9px;border-radius:9px}
+.psFit .psAskBox textarea{min-height:28px!important;max-height:95px;font-size:11px!important;padding:2px 3px!important}
+.psFit .psAskBox>div button{width:29px;height:29px;border-radius:7px}
+.psFit .psAssistant{padding:8px 18px 6px;flex:0 0 auto}
+.psFit .psAssistant>small{display:none}
+.psFit .psThread{max-height:160px}
+.psFit .psViewerColumn{
+ min-width:0;min-height:0;overflow:hidden;gap:7px;padding:10px 11px;
+}
+.psFit .psViewerHeader{min-height:24px!important}
+.psFit .psViewerHeader>strong{font-size:11px;gap:7px}
+.psFit .psViewerHeader>span{font-size:9px}
+.psFit .psViewerFrame{
+ flex:1 1 0;min-height:180px;height:0;max-height:none;
+ border-radius:10px;overflow:hidden;
+}
+.psFit .psViewerControls{
+ flex:0 0 auto;display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ gap:6px 12px;padding:9px 10px;border-radius:10px;
+}
+.psFit .psViewerControls .psPanelHeading{grid-column:1/-1;min-height:16px;margin:0}
+.psFit .psViewerControls .psPanelHeading>strong{font-size:11px}
+.psFit .psToggleRow{grid-column:1/-1;flex-wrap:nowrap;gap:5px}
+.psFit .psToggleRow button{font-size:10px;padding:6px 8px;white-space:nowrap}
+.psFit .psBuildRow{grid-column:1;grid-row:3;align-self:end;font-size:10px;gap:6px}
+.psFit .psViewerControls input[type="range"]{grid-column:1;grid-row:4;width:100%;height:7px;margin:0}
+.psFit .psPlayback{grid-column:2;grid-row:3 / span 2;align-items:end;align-self:center;display:flex;gap:5px}
+.psFit .psPlayback button{font-size:10px;padding:6px 8px;gap:5px}
+.psFit .psViewerControls>small{grid-column:1/-1;font-size:9px;line-height:1.35;display:block}
+.psFit .psViewerBottom{flex:0 0 auto;padding:7px 10px;border-radius:8px;gap:6px}
+.psFit .psViewerBottom .psEyebrow{font-size:9px}
+.psFit .psViewerBottom p{font-size:9px;line-height:1.2;margin:2px 0 0}
+.psFit .psViewerBottom button{font-size:9px;padding:6px 8px}
+@media (min-width:1260px){
+ .psFit .psFactGrid,.psFit .psRiskColumns{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:1101px) and (max-width:1360px){
+ .psFit .psStep>svg{display:none}
+ .psFit .psStepContent small{display:none}
+ .psFit .psViewerControls{gap:6px 8px}
+ .psFit .psPlayback button{padding:5px 6px}
+}
+@media (min-width:1101px) and (max-height:720px){
+ .psFit .psWorkspaceHeader{padding:7px 15px 6px!important;gap:5px!important}
+ .psFit .psStep{min-height:36px}
+ .psFit .psStepContent small,.psFit .psHeadline .psEyebrow{display:none}
+ .psFit .psNextAction{min-height:29px;padding:4px 7px}
+ .psFit .psStageScroll{padding-top:9px}
+ .psFit .psSectionHead h2{font-size:18px}
+ .psFit .psViewerFrame{min-height:130px}
+ .psFit .psViewerControls>small{display:none}
+ .psFit .psViewerBottom{display:none}
+}
+@media (max-width:1100px){
+ .psRoot.psFit{grid-template-columns:minmax(0,1fr)}
+ .psFit .psViewerColumn{overflow:visible}
+ .psFit .psViewerFrame{min-height:300px;height:350px;flex:0 0 auto}
+ .psFit .psWorkingColumn{height:calc(100dvh - 96px)}
+}
+@media(max-width:780px){
+ .psFit .psWorkspaceHeader{padding:10px 12px!important}
+ .psFit .psStep{gap:5px;padding:7px 5px;min-height:43px}
+ .psFit .psStepCount{flex-basis:20px;width:20px;height:22px}
+ .psFit .psStepContent strong{font-size:10px;white-space:normal}
+ .psFit .psStepContent small,.psFit .psStep>svg{display:none}
+ .psFit .psNextAction{flex-wrap:wrap}
+ .psFit .psNextAction button{width:auto}
+ .psFit .psStageScroll{padding:12px}
+ .psFit .psAssistant{padding:8px 12px}
+ .psFit .psViewerControls{grid-template-columns:minmax(0,1fr)}
+ .psFit .psBuildRow,.psFit .psViewerControls input[type="range"],
+ .psFit .psPlayback{grid-column:1;grid-row:auto}
+ .psFit .psViewerControls>small{grid-column:1}
+}
