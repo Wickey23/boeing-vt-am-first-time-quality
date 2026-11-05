@@ -2,12 +2,13 @@
  * This is not an LLM, not a trained defect predictor, and does not assign probabilities.
  */
 import type {FailureCoverage} from "./failure-coverage";
+import type {PrebuildAssessment} from "./prebuild-assessment";
 export type PartScreenFinding={code:string;message:string;basis?:string};
 export function explainPartFailureModes(input:{
  partName:string;unitsConfirmed:boolean;hasOrientation:boolean;
  meshFindings:PartScreenFinding[];orientationFindings:PartScreenFinding[];
  coverage:FailureCoverage[];assemblyKnown:boolean;requirementsKnown:boolean;
- documentCount:number;reviewedCount:number;
+ documentCount:number;reviewedCount:number;prebuild?:PrebuildAssessment;
 }):string{
  const out:string[]=[
   "PART-SPECIFIC PRE-BUILD RISK REVIEW - geometry and evidence rules only.",
@@ -23,6 +24,16 @@ export function explainPartFailureModes(input:{
   for(const f of findings.slice(0,7))
    out.push("- "+f.code+": "+f.message+" [Basis: "+f.source+"]");
  }else out.push("No current part-specific flags are available from the completed screens. This does not mean the part is safe to print.");
+ if(input.prebuild){
+  out.push("INTEGRATED RULE ASSESSMENT: "+input.prebuild.disposition.replace(/-/g," ")+" - "+input.prebuild.dispositionReason);
+  const candidateActions=input.prebuild.actions.filter(x=>x.priority!=="information").slice(0,5);
+  if(candidateActions.length){
+   out.push("CORRECTIVE ACTIONS:");
+   for(const action of candidateActions)out.push("- ["+action.priority+"] "+action.title+" (Evidence: "+action.why+")");
+  }
+  out.push("OPEN INFORMATION ITEMS: "+input.prebuild.counts.unassessed+
+   " missing or unassessed checks, including service and print-process mechanisms.");
+ }
  if(!input.hasOrientation)out.push("Run the geometric orientation screen to assess down-facing area, build height, support proxy and plate contact.");
  const unassessed=input.coverage.filter(c=>c.state==="not-assessed"&&c.category==="print-process");
  if(unassessed.length)out.push("NOT PREDICTED: "+unassessed.map(c=>c.name).join("; ")+". These mechanisms remain unknown, not low risk.");
