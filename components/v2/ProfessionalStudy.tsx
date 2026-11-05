@@ -164,7 +164,7 @@ export default function ProfessionalStudy(){
    });
    const approvedBindings=activeParameterBindings(k.parameterBindings,ctx.sources,ctx.reviewed,activeServiceCase(a.servicePlan));
    const pdf=await createCopilotReviewPDF({
-    projectName:a.projectName,partName:a.file.name,partSha256:partHash,process:a.journey.process,
+    projectName:a.projectName,partName:a.file.name,partSha256:partHash,process:a.journey.process,modelFile:a.file,
     unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),knowledge:k,
     reviewedEvidence:ctx.reviewed,approvedBindings,readiness,
     coverage,
