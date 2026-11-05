@@ -348,7 +348,7 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
     "These are manual reviewed-source entries, not independently verified measurements or model training.");
    table(["Build / source","Linked finding / outcome","Observation"],[52,50,74],
     input.feedbackRecords.slice(0,25).map(f=>[
-     f.buildId+" / "+f.sourceReference,f.findingId??"Not linked"+" / "+f.outcome,
+     f.buildId+" / "+f.sourceReference,(f.findingId??"Not linked")+" / "+f.outcome,
      f.testMethod+": "+f.observation+" (reviewer "+f.reviewedBy+")"
     ]));
   }
