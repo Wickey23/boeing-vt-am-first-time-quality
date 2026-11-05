@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
- ArrowRight,ArrowUp,Box,Check,CheckCircle2,ChevronDown,ClipboardCheck,
+ ArrowRight,ArrowUp,Box,Check,CheckCircle2,ChevronDown,ClipboardCheck,Maximize2,MoreHorizontal,Compass,Hand,Eye,
  Download,FileText,FileUp,Info,Layers,MessageSquare,Pause,Play,RotateCcw,Minimize2,
  Search,ShieldAlert,ShieldCheck,SlidersHorizontal,SquareArrowOutUpRight,X
 } from "lucide-react";
@@ -20,9 +20,11 @@ import {activeParameterBindings} from "@/lib/engineering-parameter-binding";
 import {activeServiceCase} from "@/lib/service-plan";
 import {useStudioContext} from "./useStudioContext";
 import StudioCanvasFallback from "./StudioCanvasFallback";
+import ProfessionalGeometryStage from "./ProfessionalGeometryStage";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import "./professional-study.css";
 import "./professional-density.css";
+import "./professional-reference.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
@@ -35,7 +37,12 @@ export default function ProfessionalStudy(){
  const a=useAnalysis();
  const inspect=usePartInspection(a.file,a.settings.unitScale);
  const [stage,setStage]=useState<Stage>("geometry");
- const [fitScreen,setFitScreen]=useState(true);
+ const [fitScreen]=useState(true);
+ const [viewerExpanded,setViewerExpanded]=useState(false);
+ const [cameraView,setCameraView]=useState("iso");
+ const [previewYaw,setPreviewYaw]=useState(0);
+ const [viewerReset,setViewerReset]=useState(0);
+ const [showBuildDirection,setShowBuildDirection]=useState(false);
  const [partHash,setPartHash]=useState<string|null>(null);
  const [url,setUrl]=useState<string|undefined>();
  const [showOverhangs,setShowOverhangs]=useState(false);
@@ -146,101 +153,31 @@ export default function ProfessionalStudy(){
   finally{setExportBusy(false);}
  };
  const projectName=a.file?.name??"No model uploaded";
- return <div className={"psRoot"+(fitScreen?" psFit":"")} aria-label="ORIENTAI professional engineering workbench">
+ const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
+ return <div className={"psRoot psFit psReferenceRoot"+(viewerExpanded?" psViewerExpanded":"")} aria-label="ORIENTAI professional engineering workbench">
   <div className="psWorkingColumn">
    <header className="psWorkspaceHeader">
-    <div className="psHeadline">
-     <div><span className="psEyebrow">ENGINEERING WORKSPACE</span><h1>Pre-build assessment</h1></div>
-     <div className="psHeaderMeta"><span className="psFileName" title={projectName}>{projectName}</span><button type="button" className="psDensityButton" aria-pressed={fitScreen} title="Fit the workbench to the available screen without browser zoom" onClick={()=>setFitScreen(v=>!v)}><Minimize2 size={14}/>{fitScreen?"Fit screen":"Compact view"}</button><span className="psResearch">Research prototype</span></div>
-    </div>
     <nav className="psStepper" aria-label="Assessment stages">
-     {stageEntries.map(({id,label,detail,Icon},i)=><button type="button" key={id}
+     {stageEntries.map(({id,label},i)=><button type="button" key={id}
       className={"psStep"+(stage===id?" psActive":"")}
       aria-current={stage===id?"step":undefined}
       onClick={()=>setStage(id)}>
       <span className="psStepCount">{i+1}</span>
-      <span className="psStepContent"><strong>{label}</strong><small>{detail}</small></span>
-      <Icon size={16} aria-hidden="true"/>
+      <span className="psStepContent"><strong>{label}</strong></span>
      </button>)}
     </nav>
-    <div className="psNextAction">
-     <div><strong>Next step</strong><span>{next.detail}</span></div>
-     <button type="button" onClick={()=>{
-      if(!a.file)partFileInput.current?.click();
-      else setStage(next.to);
-     }}>{next.action}<ArrowRight size={15}/></button>
-    </div>
    </header>
    <div className="psStageScroll" ref={stageScroll} role="region" aria-label="Active assessment stage">
-    {stage==="geometry"&&<section className="psStage" aria-label="Part geometry stage">
-     <div className="psSectionHead"><span>STAGE 01 / PART GEOMETRY</span><h2>Inspect and confirm the model</h2><p>Review the actual mesh and dimensional scale before performing a metal-AM screening.</p></div>
-     {!a.file?<div className="psEmptyCard" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();attach(e.dataTransfer.files[0]);}}>
-      <Box size={34}/><h3>Upload the part you want to evaluate</h3><p>STL geometry is processed locally in your browser. Confirm its dimensions before the first analysis.</p>
-      <button type="button" onClick={()=>partFileInput.current?.click()}><FileUp size={16}/> Upload STL</button>
-      <small>Supported: STL, up to 20 MB</small></div>:
-     <>
-      <article className="psPanel psPartCard">
-       <div className="psPanelHeading"><strong><Box size={17}/> Uploaded model</strong><span className="psGoodStatus"><CheckCircle2 size={14}/> Loaded locally</span></div>
-       <div className="psPartDetails"><div className="psPartIdentity"><span className="psPartIcon"><Box size={21}/></span>
-        <div><strong>{a.file.name}</strong><small>{(a.file.size/1024).toFixed(0)} KB · STL mesh</small></div></div>
-        <button type="button" className="psSubtleButton" onClick={()=>partFileInput.current?.click()}>Replace model</button>
-       </div>
-       <div className="psFactGrid">
-        <section className="psFactBlock" aria-label="Mesh inspection">
-         <div className="psFactTitle"><ShieldCheck size={16}/><strong>Geometry validation</strong></div>
-         <dl>
-          <div><dt>Triangles</dt><dd>{inspect.data?.audit.triangles.toLocaleString()??"Inspecting…"}</dd></div>
-          <div><dt>Open edges</dt><dd>{inspect.data?.audit.openEdges.toLocaleString()??"—"}</dd></div>
-          <div><dt>Disconnected shells</dt><dd>{inspect.data?.audit.disconnectedShells.toLocaleString()??"—"}</dd></div>
-         </dl>
-         <small>{meshFindings.length?meshFindings.length+" mesh finding(s) need review":inspect.data?"No edge-topology findings detected":"Awaiting mesh inspection"}</small>
-        </section>
-        <section className="psFactBlock" aria-label="Dimensions and units">
-         <div className="psFactTitle"><SlidersHorizontal size={16}/><strong>Dimensions & units</strong></div>
-         <div className="psDimensions"><span>X × Y × Z</span><strong>{inspect.data?Object.values(inspect.data.dimensions).map(v=>v.toFixed(1)).join(" × ")+" mm":"Calculating…"}</strong></div>
-         <div className="psUnitRow"><label>STL coordinate units
-          <select aria-label="STL coordinate units" value={a.settings.unitScale} onChange={e=>a.update("unitScale",Number(e.target.value))}>
-           <option value={1}>Millimeters</option><option value={25.4}>Inches</option><option value={1000}>Meters</option>
-          </select></label>
-          <button type="button" disabled={!inspect.data||isConfirmed} onClick={a.confirmPart}>{isConfirmed?"Confirmed":"Confirm units & dimensions"}</button>
-         </div>
-        </section>
-       </div>
-       {meshFindings.length>0&&<details className="psMeshIssues"><summary>{meshFindings.length} mesh findings to investigate <ChevronDown size={15}/></summary>
-        {meshFindings.map(f=><p key={f.code}><strong>{f.level} · {f.code}</strong> — {f.message}</p>)}</details>}
-       <p className="psCaveat">STL files don't contain physical units. Geometry screening does not establish printability or mechanical strength.</p>
-      </article>
-      <article className="psPanel">
-       <div className="psPanelHeading"><strong><Layers size={17}/> Engineering analysis activity</strong><span>{a.busy?"Running":currentRun?"Completed":"Preflight"}</span></div>
-       <div className="psActivityRows">
-        <div><CheckCircle2 size={16}/><span>STL loaded locally</span><small>Complete</small></div>
-        <div><CheckCircle2 size={16}/><span>Mesh topology & dimensions</span><small>{inspect.data?"Complete":"Pending"}</small></div>
-        <div><span className="psStepBubble">3</span><span>LPBF orientation screening</span><small>{currentRun?"Complete":a.busy?"Running":isConfirmed?"Ready":"Units needed"}</small></div>
-       </div>
-       {a.busy&&<div className="psProgress"><div style={{width:Math.round(a.progress*100)+"%"}}/><span>{Math.round(a.progress*100)}% · Analyzing geometric orientations</span></div>}
-       <div className="psActionRow">
-        <button type="button" className="psPrimary" onClick={a.retry} disabled={!isConfirmed||a.busy||!a.file}>
-         {a.busy?"Analyzing…":currentRun?"Rerun screening":"Run geometry screening"}<ArrowRight size={15}/>
-        </button>
-        <button type="button" className="psSecondary" onClick={()=>setStage("context")}>Continue to context</button>
-       </div>
-       {a.error&&<p role="alert" className="psError">{a.error}</p>}
-      </article>
-      {currentRun&&selected&&<article className="psPanel psOrientationResults">
-       <div className="psPanelHeading"><strong>Selected orientation · {selected.id}</strong><span>Geometry-only estimate</span></div>
-       <div className="psThreeStats"><div><span>Build height</span><strong>{selected.buildHeightMm.toFixed(1)} mm</strong></div>
-        <div><span>Down-facing area</span><strong>{selected.downFacingAreaMm2.toFixed(1)} mm²</strong></div>
-        <div><span>Support proxy</span><strong>{selected.supportProxyMm3.toFixed(1)} mm³</strong></div></div>
-       {findings.map(f=><p key={f.code} className="psFinding"><ShieldAlert size={16}/><span>{f.message}</span></p>)}
-       <small>Support volumes are geometric proxies; the viewer does not simulate laser physics.</small>
-      </article>}
-      <details className="psTechnicalDisclosure"><summary><SlidersHorizontal size={15}/> Advanced engineering tools <ChevronDown size={15}/></summary>
-       <p>Keep existing numerical stress, thermal research, LPBF slicing and process checks in the dedicated technical workspace.</p>
-       <Link href="/copilot/advanced">Open numerical engineering studies <SquareArrowOutUpRight size={14}/></Link>
-       <Link href="/copilot">Open original full engineering study <SquareArrowOutUpRight size={14}/></Link>
-      </details>
-     </>}
-    </section>}
+    {stage==="geometry"&&<ProfessionalGeometryStage
+     file={a.file} url={url} inspection={inspect.data} inspectionError={inspect.error}
+     unitScale={a.settings.unitScale} unitsConfirmed={isConfirmed} meshFindings={meshFindings}
+     selected={selected} findings={findings} hasRun={currentRun}
+     busy={a.busy} progress={a.progress} analysisError={a.error}
+     onUpload={()=>partFileInput.current?.click()}
+     onAttachFile={attach}
+     onChangeUnits={v=>a.update("unitScale",v)} onConfirm={a.confirmPart}
+     onRun={a.retry} onContinue={()=>setStage("context")} onQuickView={()=>setViewerExpanded(true)}
+    />}
     {stage==="context"&&<section className="psStage" aria-label="Engineering context stage">
      <div className="psSectionHead"><span>STAGE 02 / ENGINEERING CONTEXT</span><h2>What must this part do?</h2><p>Combine the part geometry with reviewed assembly context. Do not assume loads or fixtures from an STL alone.</p></div>
      {!a.file?<p className="psNotice">Upload an STL in Part Geometry before attaching part-specific requirements.</p>:<>
