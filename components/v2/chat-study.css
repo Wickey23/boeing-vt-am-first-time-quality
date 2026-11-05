@@ -519,3 +519,8 @@
 }
 @media(max-width:400px){.oaAssessmentMetrics{grid-template-columns:1fr}.oaAssessmentStep{padding:7px 6px}}
 @media(prefers-reduced-motion:reduce){.oaAssessmentStep{transition:none}}
+
+.oaViewerContextNote{display:grid;gap:5px;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:9px;padding:11px 12px}
+.oaViewerContextNote strong{font-size:12px}
+.oaViewerContextNote span{font-size:11px;color:var(--oa-text)}
+.oaViewerContextNote small{font-size:10px;line-height:1.45;color:var(--oa-muted)}
