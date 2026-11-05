@@ -1,5 +1,6 @@
 "use client";
 import {useState} from "react";
+import Link from "next/link";
 import {AlertTriangle,ArrowRight,CheckCircle2,ChevronDown,ClipboardList,FileText,GitBranch,Info,ShieldAlert,Table2} from "lucide-react";
 import type {PrebuildAssessment,PrebuildFinding,PrebuildAction} from "@/lib/prebuild-assessment";
 import type {ManufacturingFlowStep} from "@/lib/manufacturing-process-flow";
@@ -8,13 +9,14 @@ import type {FeedbackDraft,InspectionFeedback} from "@/lib/part-inspection-feedb
 import ProfessionalFeedbackPanel from "./ProfessionalFeedbackPanel";
 type Tab="findings"|"actions"|"workflow"|"coverage";
 const rank:Record<string,number>={critical:0,high:1,medium:2,information:3};
-export default function ProfessionalAssessmentPanel({assessment,flow,coverage,hasPart,canExport,hasGeometry,exportBusy,feedback,feedbackError,onAddFeedback,onRemoveFeedback,onExport,onGeometryExport,onJsonExport,onNavigate}:{
+export default function ProfessionalAssessmentPanel({assessment,flow,coverage,hasPart,canExport,hasGeometry,exportBusy,feedback,feedbackError,onAddFeedback,onRemoveFeedback,onExport,onGeometryExport,onJsonExport,onNavigate,onInspectOverhangs}:{
  assessment:PrebuildAssessment;flow:ManufacturingFlowStep[];coverage:FailureCoverage[];
  hasPart:boolean;canExport:boolean;hasGeometry:boolean;exportBusy:boolean;
  feedback:InspectionFeedback[];feedbackError:string;
  onAddFeedback:(draft:FeedbackDraft)=>void;onRemoveFeedback:(id:string)=>void;
  onExport:()=>void;onGeometryExport:()=>void;onJsonExport:()=>void;
  onNavigate:(stage:"geometry"|"context"|"assessment")=>void;
+ onInspectOverhangs:()=>void;
 }){
  const [tab,setTab]=useState<Tab>("findings");
  const [domain,setDomain]=useState<"all"|"manufacturing"|"service">("all");
@@ -74,7 +76,7 @@ export default function ProfessionalAssessmentPanel({assessment,flow,coverage,ha
     </div>
    </div>
    {!hasPart&&<p className="psNotice">Upload an STL to start a part-specific assessment.</p>}
-   <div className="psDecisionFindings">{filtered.map(f=><FindingRow key={f.id} finding={f}/>)}</div>
+   <div className="psDecisionFindings">{filtered.map(f=><FindingRow key={f.id} finding={f} onInspectOverhangs={onInspectOverhangs}/>)}</div>
    {current.length===0&&<p className="psCaveat">No screening rows in this view. This does not establish low risk.</p>}
    {current.length>8&&<button type="button" className="psTextButton" onClick={()=>setShowAll(v=>!v)}>
     {showAll?"Show fewer":"Show all "+current.length+" failure scenarios"}<ChevronDown size={14}/></button>}
@@ -93,7 +95,10 @@ export default function ProfessionalAssessmentPanel({assessment,flow,coverage,ha
      <button type="button" onClick={()=>onNavigate(a.stage==="geometry"?"geometry":a.stage==="context"?"context":"assessment")}>
       Open step <ArrowRight size={13}/></button>
     </li>)}</ol>}
-   <p className="psCaveat">External structural, thermal, testing and release actions require independent qualified engineering review.</p>
+   <Link className="psSecondary psAdvancedStudyLink" href="/copilot/advanced">
+    Open reviewed structural / thermal research tools <ArrowRight size={14}/>
+   </Link>
+   <p className="psCaveat">Numerical studies require verified loads, fixtures and material properties; service response does not predict LPBF residual stress or fatigue.</p>
   </div>}
   {tab==="workflow"&&<div className="psDecisionView">
    <div className="psDecisionSectionBar"><div><strong>Manufacturing process flow</strong>
@@ -128,7 +133,7 @@ export default function ProfessionalAssessmentPanel({assessment,flow,coverage,ha
   <p className="psCaveat">Research prototype. An unassessed mechanism is unknown, not low risk. A reviewer must independently approve any manufacturing or service design decision.</p>
  </section>;
 }
-function FindingRow({finding:f}:{finding:PrebuildFinding}){
+function FindingRow({finding:f,onInspectOverhangs}:{finding:PrebuildFinding;onInspectOverhangs:()=>void}){
  return <details className="psDecisionFinding">
   <summary><span className={"psPriority psPriority-"+f.priority}>{f.priority}</span>
    <span className="psDecisionFindingTitle"><strong>{f.title}</strong><small>{f.observation}</small></span>
@@ -142,6 +147,10 @@ function FindingRow({finding:f}:{finding:PrebuildFinding}){
    <p><b>Recommended action:</b> {f.recommendedAction}</p>
    <p><b>Needed to verify:</b> {f.requiredEvidence}</p>
    {f.location!=="unknown"&&<small>Region of interest: {f.location.replace(/-/g," ")}. No localized physical defect predicted.</small>}
+   {f.location==="down-facing-surfaces"&&f.status==="screened"&&
+    <button type="button" className="psTextButton" onClick={onInspectOverhangs}>
+     Show down-facing surfaces on actual STL <ArrowRight size={13}/>
+    </button>}
   </div>
  </details>;
 }
