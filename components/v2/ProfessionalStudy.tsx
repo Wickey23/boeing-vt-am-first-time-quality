@@ -308,7 +308,7 @@ export default function ProfessionalStudy(){
     </header>
     <div className="psViewerFrame psReferenceViewport">
      {a.file?<ViewerErrorBoundary fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
-      <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation}
+      <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
        buildFraction={layer/100}/>
