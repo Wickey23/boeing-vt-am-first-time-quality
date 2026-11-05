@@ -13,7 +13,10 @@ import PhysicalSliceWorkspace,{type SlicePreview} from "@/components/v2/Physical
 import MetalSlicedSidePanel from "@/components/v2/MetalSlicedSidePanel";
 import RiskPreflight from "@/components/v2/RiskPreflight";
 import ProcessQualityReview,{type QualitySnapshot} from "@/components/v2/ProcessQualityReview";
-import EngineeringAssessmentJourney from "@/components/v2/EngineeringAssessmentJourney";
+import EngineeringAssessmentJourney,{type AssessmentStage} from "@/components/v2/EngineeringAssessmentJourney";
+import EngineeringContextStage from "@/components/v2/EngineeringContextStage";
+import EngineeringAssessmentResults from "@/components/v2/EngineeringAssessmentResults";
+import {usePartKnowledge} from "@/components/v2/usePartKnowledge";
 import type {LpbfPreflight} from "@/lib/lpbf-risk-preflight";
 import {reviewPhysicalLayerIslands} from "@/lib/lpbf-layer-island-review";
 import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
@@ -43,6 +46,9 @@ export default function ChatStudy(){
  const inspect=usePartInspection(a.file,a.settings.unitScale);
  const [fingerprint,setFingerprint]=useState<{file:File|null;hash:string}|null>(null);
  const partHash=fingerprint?.file===a.file?fingerprint.hash:null;
+ const context=usePartKnowledge(partHash);
+ const [activeStage,setActiveStage]=useState<AssessmentStage>("part");
+ useEffect(()=>setActiveStage("part"),[a.file]);
  const [historyKey,setHistoryKey]=useState<string|null>(null);
  const [messages,setMessages]=useState<Message[]>(emptyMessages);
  const [draft,setDraft]=useState("");
@@ -81,7 +87,7 @@ export default function ChatStudy(){
  const [showSupports,setShowSupports]=useState(false);
  const [layer,setLayer]=useState(100);
  const [playing,setPlaying]=useState(false);
- const [showMethods,setShowMethods]=useState(true);
+ const [showMethods,setShowMethods]=useState(false);
  const [showService,setShowService]=useState(false);
  const [showLpbf,setShowLpbf]=useState(false);
  const [lpbfSession,setLpbfSession]=useState<{hash:string;scale:number;result:LpbfResult}|null>(null);
@@ -400,24 +406,16 @@ export default function ChatStudy(){
  const overlay=showOverhangs?"overhang":selected?"orientation":"geometry";
  return <div ref={layoutRef} className={"oaStudy"+(showArtifact?" oaStudySplit":"")+(resizingPanel?" oaStudyResizing":"")} style={{"--oa-panel-width":panelWidth+"%"} as CSSProperties}>
   <section className="oaStudyChat" aria-label="Engineering conversation">
-   {a.file&&<EngineeringAssessmentJourney partHash={partHash} fileName={a.file.name} unitsConfirmed={isConfirmed} hasGeometryRun={currentRun} onViewPart={()=>{setShowArtifact(true);setSideMode("model");setResultField("geometry");}} onReviewPart={()=>document.querySelector(".oaProcessCard")?.scrollIntoView({behavior:"smooth",block:"start"})}/>}
+   {a.file&&<EngineeringAssessmentJourney fileName={a.file.name} unitsConfirmed={isConfirmed} hasGeometryRun={currentRun}
+     sourceCount={context.sources.length} reviewedCount={context.reviewed.length} activeStage={activeStage}
+     onStageChange={setActiveStage} onReviewPart={()=>setActiveStage("part")}/>}
+
 
    <div className="oaStudyFeed" role="log" aria-label="Engineering chat messages">
     {messages.length===0&&!a.file&&<div className="oaStudyEmpty"><h1>What should we analyze?</h1><p>Upload an STL and I'll show the model, real mesh inspection, and the supported manufacturing screening steps.</p><button type="button" className="oaSecondaryRun" onClick={()=>void loadSyntheticDemo()}>Try synthetic cantilever bracket · known support-review geometry</button><small>Illustrative, non-qualified STL in millimeters. No Boeing data or external AI request.</small></div>}
-    {messages.map(m=><div key={m.id} className={"oaStudyMessage "+(m.role==="user"?"oaEngineer":"oaAssistant")}>
-     {m.role==="assistant"&&<div className="oaAssistantMark" aria-hidden="true">O</div>}
-     <div className="oaMessageBody">
-      {m.role==="user"?<div className="oaUserBubble">{m.text}</div>:<>
-       <div className="oaMessageText">{m.text}</div>
-       {m.source==="local"&&<small className="oaMessageSource">Local engineering guide · no external AI request</small>}
-        {m.source==="external-error"&&<small className="oaMessageSource">External AI attempt failed · no solver executed · local engineering tools remain available</small>}
-       {m.source==="run"&&<small className="oaMessageSource">Executed geometry worker · run {m.runId?.slice(0,8)}</small>}
-       {m.source==="model"&&<small className="oaMessageSource">External AI · approved text and mesh summary only · no solver execution</small>}
-        {m.source==="service"&&<small className="oaMessageSource">Executed engineer-approved service workers · job {m.runId?.slice(0,8)}</small>}
-      </>}
-     </div>
-    </div>)}
-    <div ref={messageAnchor} aria-hidden="true"/>
+
+    {activeStage==="part"&&<>
+     <div className="oaStageIntro oaPartIntro"><span className="oaStageEyebrow">STAGE 01 / PART GEOMETRY</span><h1>Inspect and confirm the model</h1><p>Review the uploaded geometry, verify scale, and run the supported manufacturing screens before making engineering decisions.</p></div>
     {a.file&&<article className="oaInChatModel" aria-label="Uploaded STL model in chat">
       <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button ref={sideToggleRef} onClick={()=>showArtifact?closeSideView():setShowArtifact(true)} type="button" aria-expanded={showArtifact} aria-controls="oa-engineering-side-panel"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
       {showArtifact&&<p className="oaSideViewHint">3D model open in side workspace. Use X or Escape to collapse; reopen it here anytime.</p>}
@@ -435,15 +433,7 @@ export default function ChatStudy(){
       {unitWarning&&<p className="oaUnitScaleWarning" role="alert"><AlertTriangle size={17}/><span><strong>Review apparent unit-scale mismatch.</strong> {unitWarning.message} If units are corrected, reconfirm against the source drawing.</span></p>}
       <p className="oaSubtle">STL does not encode units. Confirm against the source drawing. 3D color is geometric screening, not a predicted defect field.</p>
      </article>}
-    {a.file&&a.journey.process==="PBF_LB_METAL"&&<RiskPreflight file={a.file} partHash={partHash} confirmed={isConfirmed}
-      unitScale={a.settings.unitScale} rotationDeg={selected?.rotation??{x:0,y:0,z:0}}
-      envelopeMm={{x:a.settings.x,y:a.settings.y,z:a.settings.z}} overhangThresholdDeg={a.settings.overhangDeg}
-      onEnvelopeChange={(axis,value)=>a.update(axis,value)} onAngleChange={value=>a.update("overhangDeg",value)}
-      onFocus={ids=>{setRiskFocus(ids);if(ids.length){setShowArtifact(true);setResultField("geometry");}}}
-      onSummary={setPreflight}/>}
-    {a.file&&a.journey.process==="PBF_LB_METAL"&&
-     <ProcessQualityReview partHash={partHash} confirmed={isConfirmed}
-      unitScale={a.settings.unitScale} onSummary={setProcessQuality}/>}
+
     {a.file&&<section className="oaProcessCard" aria-label="Analysis workflow">
       <header><span><SlidersHorizontal size={17}/> Engineering analysis activity</span><span className="oaProcessLabel">{a.busy?"Analyzing":currentRun?"Screening complete":"Preflight"}</span></header>
       <div className="oaProcessSteps">
@@ -472,6 +462,20 @@ export default function ChatStudy(){
       {a.journey.process!=="PBF_LB_METAL"&&<p className="oaSubtle">Current uploaded-part process is not LPBF; this geometric orientation screen is unavailable.</p>}
       {showMethods&&<p className="oaSubtle">Inspection uses the STL mesh-audit worker. Orientation screening runs the existing local geometry worker. Estimated down-facing areas, build height and support quantities are geometric proxies, not a time-resolved melt/print simulation.</p>}
      </section>}
+
+     {a.file&&<div className="oaStageContinue"><button type="button" onClick={()=>setActiveStage("context")}>Continue to engineering context <SquareArrowOutUpRight size={15}/></button></div>}
+     <details className="oaAdvancedToolsDisclosure"><summary><SlidersHorizontal size={16}/> Additional engineering tools <ChevronDown size={16}/></summary>
+      <div className="oaAdvancedToolsBody">
+    {a.file&&a.journey.process==="PBF_LB_METAL"&&<RiskPreflight file={a.file} partHash={partHash} confirmed={isConfirmed}
+      unitScale={a.settings.unitScale} rotationDeg={selected?.rotation??{x:0,y:0,z:0}}
+      envelopeMm={{x:a.settings.x,y:a.settings.y,z:a.settings.z}} overhangThresholdDeg={a.settings.overhangDeg}
+      onEnvelopeChange={(axis,value)=>a.update(axis,value)} onAngleChange={value=>a.update("overhangDeg",value)}
+      onFocus={ids=>{setRiskFocus(ids);if(ids.length){setShowArtifact(true);setResultField("geometry");}}}
+      onSummary={setPreflight}/>}
+    {a.file&&a.journey.process==="PBF_LB_METAL"&&
+     <ProcessQualityReview partHash={partHash} confirmed={isConfirmed}
+      unitScale={a.settings.unitScale} onSummary={setProcessQuality}/>}
+
     {a.file&&a.journey.process==="PBF_LB_METAL"&&<PhysicalSliceWorkspace partHash={partHash} confirmed={isConfirmed} onSnapshot={snapshot=>{
       setPhysicalPreview(snapshot);
       if(snapshot){setSideMode("sliced");setShowArtifact(true);}
@@ -525,28 +529,41 @@ export default function ChatStudy(){
        <p className="oaSubtle">Fields are mapped to the original STL. Orientation rotation and geometric layer clipping are disabled while a service result field is selected.</p>
       </div>}
      </section>}
-    {a.file&&<section className="oaFindingsCard" aria-label="Risk assessment results">
-     <header><ShieldAlert size={18}/><strong>Failure-risk assessment</strong><span>{meshFindings.length+findings.length} screening findings</span></header>
-     {!inspect.data&&!inspect.error&&<p>Waiting for actual mesh inspection...</p>}
-     {inspect.data&&meshFindings.map((f,i)=><div className="oaFinding" key={f.code+i}><strong>{f.code} · {f.level==="blocker"?"Mesh blocker":"Review"}</strong><p>{f.message}</p><small>Source: uploaded mesh topology audit</small></div>)}
-     {currentRun&&findings.map((f,i)=><div className="oaFinding" key={f.code+i}><strong>{f.code} · {f.severity==="blocker"?"Geometric blocker":"Review"}</strong><p>{f.message}</p><small>Basis: {f.basis}</small></div>)}
-     {inspect.data&&!meshFindings.length&&<p className="oaSubtle">No edge-topology warnings from this limited mesh audit. Self-intersections, defects, material behavior and print feasibility have not been established.</p>}
-     {currentRun&&findings.length===0&&<p className="oaSubtle">No additional findings under the current geometric screening rules. This is not a claim of first-time quality.</p>}
-     <details className="oaUnavailable"><summary>Failure mechanisms not assessed <ChevronDown size={15}/></summary>
-      <p>Porosity, melt-pool instability, cracking, fatigue, anisotropic strength, print thermal history, residual stress and distortion require process-specific calibrated models, material data and experimental verification.</p>
-      <p>Steady heat conduction and idealized service-load FEM are available only as separate, approved studies and do not predict the print's defect formation.</p>
-     </details>
-    </section>}
-    {a.file&&<section className="oaCoverageCard" aria-label="Failure mode assessment coverage">
-      <div className="oaBuildTitle"><strong>Failure-mode coverage</strong><span>{coverageCounts.screened} screened · {coverageCounts.calculated} calculated · {coverageCounts.notAssessed} unassessed</span></div>
-      <p className="oaSubtle">These statuses show which checks actually ran. Service stress and heat-conduction results do not qualify any print-related failure mechanism as assessed.</p>
-      <details className="oaCoverageDisclosure"><summary>Show individual failure mechanisms and evidence gaps <ChevronDown size={15}/></summary>
-      <div className="oaCoverageRows">{coverage.map(item=><details key={item.id} className="oaCoverageRow">
-       <summary><span className="oaCoverageName">{item.name}</span><span className={"oaCoverageStatus oaState-"+item.state}>{item.state==="screened"?"Screened":item.state==="calculated"?"Calculated":"Not assessed"}</span></summary>
-       <p><strong>Method:</strong> {item.method}</p><p><strong>Limitations:</strong> {item.limitations}</p><p><strong>Next inputs:</strong> {item.nextInput}</p>
-      </details>)}</div></details>
-     </section>}
 
+      </div>
+     </details>
+    </>}
+    {activeStage==="context"&&a.file&&<EngineeringContextStage knowledge={context.knowledge} sources={context.sources} reviewed={context.reviewed}
+      unitsConfirmed={isConfirmed} busy={context.busy} notice={context.notice} error={context.error}
+      onAddDocuments={context.addDocuments} onFieldChange={context.updateField}
+      onSourceNotes={context.updateNotes} onRemoveSource={context.removeSource}
+      onReviewEvidence={context.reviewEvidence} onContinue={()=>setActiveStage("assessment")}/>}
+    {activeStage==="assessment"&&a.file&&<EngineeringAssessmentResults fileName={a.file.name}
+     unitsConfirmed={isConfirmed} hasGeometryRun={currentRun} coverage={coverage}
+     findings={[
+      ...meshFindings.map(f=>({code:f.code,message:f.message,basis:"Uploaded STL mesh-topology audit",level:f.level==="blocker"?"blocker" as const:"review" as const})),
+      ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis,level:f.severity==="blocker"?"blocker" as const:"review" as const})):[])
+     ]}
+     canRun={canScreen} busy={a.busy} onRunGeometry={doScreen} onOpenGeometry={()=>setActiveStage("part")} onOpenContext={()=>setActiveStage("context")}
+     selectedOrientation={selected?{id:selected.id,buildHeightMm:selected.buildHeightMm,supportProxyMm3:selected.supportProxyMm3}:undefined}/>}
+    <section className="oaStudyTranscript" aria-label="Engineering conversation history">
+     <div className="oaTranscriptHeading"><FileText size={16}/><strong>Engineering conversation</strong><span>{messages.length} messages</span></div>
+    {messages.map(m=><div key={m.id} className={"oaStudyMessage "+(m.role==="user"?"oaEngineer":"oaAssistant")}>
+     {m.role==="assistant"&&<div className="oaAssistantMark" aria-hidden="true">O</div>}
+     <div className="oaMessageBody">
+      {m.role==="user"?<div className="oaUserBubble">{m.text}</div>:<>
+       <div className="oaMessageText">{m.text}</div>
+       {m.source==="local"&&<small className="oaMessageSource">Local engineering guide · no external AI request</small>}
+        {m.source==="external-error"&&<small className="oaMessageSource">External AI attempt failed · no solver executed · local engineering tools remain available</small>}
+       {m.source==="run"&&<small className="oaMessageSource">Executed geometry worker · run {m.runId?.slice(0,8)}</small>}
+       {m.source==="model"&&<small className="oaMessageSource">External AI · approved text and mesh summary only · no solver execution</small>}
+        {m.source==="service"&&<small className="oaMessageSource">Executed engineer-approved service workers · job {m.runId?.slice(0,8)}</small>}
+      </>}
+     </div>
+    </div>)}
+    <div ref={messageAnchor} aria-hidden="true"/>
+
+    </section>
    </div>
    <div className="oaStudyComposerArea">
     {attachError&&<p role="alert" className="oaStudyError">{attachError}</p>}
