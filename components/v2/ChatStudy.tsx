@@ -392,7 +392,7 @@ export default function ChatStudy(){
  const overlay=showOverhangs?"overhang":selected?"orientation":"geometry";
  return <div ref={layoutRef} className={"oaStudy"+(showArtifact?" oaStudySplit":"")+(resizingPanel?" oaStudyResizing":"")} style={{"--oa-panel-width":panelWidth+"%"} as CSSProperties}>
   <section className="oaStudyChat" aria-label="Engineering conversation">
-   {a.file&&<EngineeringAssessmentJourney partHash={partHash} fileName={a.file.name} unitsConfirmed={isConfirmed} hasGeometryRun={currentRun} onViewPart={()=>{setShowArtifact(true);setSideMode("model");setResultField("geometry");}}/>}
+   {a.file&&<EngineeringAssessmentJourney partHash={partHash} fileName={a.file.name} unitsConfirmed={isConfirmed} hasGeometryRun={currentRun} onViewPart={()=>{setShowArtifact(true);setSideMode("model");setResultField("geometry");}} onReviewPart={()=>document.querySelector(".oaProcessCard")?.scrollIntoView({behavior:"smooth",block:"start"})}/>}
 
    <div className="oaStudyFeed" role="log" aria-label="Engineering chat messages">
     {messages.length===0&&!a.file&&<div className="oaStudyEmpty"><h1>What should we analyze?</h1><p>Upload an STL and I'll show the model, real mesh inspection, and the supported manufacturing screening steps.</p><button type="button" className="oaSecondaryRun" onClick={()=>void loadSyntheticDemo()}>Try synthetic cantilever bracket · known support-review geometry</button><small>Illustrative, non-qualified STL in millimeters. No Boeing data or external AI request.</small></div>}
