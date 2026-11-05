@@ -37,6 +37,7 @@ test("guided context persists source evidence and connects to traceable report e
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("region",{name:"Three-stage engineering assessment"})).toBeVisible();
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Open engineering context stage"}).click();
  await expect(page.getByRole("heading",{name:"Understand the part in its assembly"})).toBeVisible();
  await page.getByLabel("Upload assembly documents").setInputFiles({
