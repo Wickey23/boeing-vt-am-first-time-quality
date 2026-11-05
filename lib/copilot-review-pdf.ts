@@ -7,12 +7,17 @@ import type {ReviewedEvidence} from "./engineering-evidence";
 import type {EngineeringReadiness} from "./engineering-readiness";
 import type {ApprovedParameterBinding} from "./engineering-parameter-binding";
 import type {FailureCoverage} from "./failure-coverage";
+import type {PrebuildAssessment} from "./prebuild-assessment";
+import type {ManufacturingFlowStep} from "./manufacturing-process-flow";
+import type {ProcessWindowAssessment} from "./lpbf-process-quality";
 
 export type CopilotPdfInputs={
  projectName:string;partName:string;partSha256:string;process:string;
  modelFile?:File;
  unitsConfirmed:boolean;createdAt:string;knowledge:ProjectKnowledge;
  reviewedEvidence:ReviewedEvidence[];approvedBindings?:ApprovedParameterBinding[];
+ prebuild?:PrebuildAssessment;manufacturingFlow?:ManufacturingFlowStep[];
+ processWindow?:ProcessWindowAssessment|null;
  readiness:EngineeringReadiness;coverage?:FailureCoverage[];
  geometricConcerns?:{code:string;message:string;basis:string;severity?:string}[];
  geometry?:{dimensionsMm:{x:number;y:number;z:number};triangles:number;
@@ -149,6 +154,11 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
   {label:"Review items",value:String(input.geometricConcerns?.length??0)}
  ]);
  section("Executive decision");
+ if(input.prebuild){
+  text("Rule-based disposition: "+input.prebuild.disposition.replace(/-/g," ").toUpperCase(),{size:10,bold:true,color:navy});
+  text(input.prebuild.dispositionReason,{size:8.5,after:3});
+  text("Ruleset "+input.prebuild.version+" / "+input.prebuild.scope,{size:8,color:muted});
+ }
  text("No manufacturing release decision can be made from this report. Identified geometric concerns are screening flags, not observed print failures. Unknown mechanisms are not low-risk mechanisms.",{bold:true,size:9});
  const actionGates=input.readiness.gates.filter(g=>g.status!=="ready");
  if(actionGates.length){
@@ -278,6 +288,60 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
   text("Limitations: "+c.limitations,{size:8,color:muted,after:1});
   if(c.state==="not-assessed")text("Needed before assessment: "+c.nextInput,{size:8,color:amber,after:1});
   rule();
+ }
+ if(input.prebuild){
+  beginPage();
+  section("06  Part-specific pre-build risk scenarios",
+   "Measured geometry, bounded process rules and engineering uncertainty; no failure probability or physical defect prediction.");
+  columns([
+   {label:"Critical flags",value:String(input.prebuild.counts.critical)},
+   {label:"High concerns",value:String(input.prebuild.counts.high)},
+   {label:"Screened evidence",value:String(input.prebuild.counts.screened)},
+   {label:"Unassessed",value:String(input.prebuild.counts.unassessed)}
+  ]);
+  const significant=input.prebuild.findings.filter(f=>f.priority!=="information");
+  if(significant.length)table(["Priority / scenario","Part observation","Recommended next step"],[48,66,62],
+   significant.slice(0,24).map(f=>[f.priority.toUpperCase()+" / "+f.title,
+    f.observation+" ["+f.status+"]",f.recommendedAction]));
+  else text("No critical or high-priority rule flags supplied. This is not qualified build approval.");
+  section("Prioritized engineering actions");
+  for(const [i,a] of input.prebuild.actions.entries()){
+   text((i+1)+". ["+a.priority.toUpperCase()+"] "+a.title,{size:8.4,bold:true,after:1});
+   text("Basis: "+a.why+" / Workflow stage: "+a.stage,{size:7.8,color:muted,after:2});
+  }
+  section("Unassessed mechanisms and needed evidence");
+  for(const f of input.prebuild.findings.filter(f=>f.status==="unassessed").slice(0,28))
+   text("- "+f.title+": "+f.requiredEvidence,{size:8.1,color:muted,after:1});
+ }
+ if(input.processWindow){
+  beginPage();
+  section("07  Engineer-entered LPBF process window",
+   "Single-variable limits are not a validated joint processing region or proof of final part density.");
+  const p=input.processWindow;
+  kv("Process review",p.decision.replace(/-/g," "));
+  kv("Reference applicability reviewed",p.reviewedReference?"Yes (user confirmed)":"No");
+  kv("Values compared",String(p.checksCompleted)+" / 4");
+  kv("Outside entered bounds",String(p.outsideCount));
+  kv("Line energy proxy",fmt(p.indicators.lineEnergyJMm??undefined,3)+" J/mm");
+  kv("Area energy proxy",fmt(p.indicators.areaEnergyJMm2??undefined,3)+" J/mm2");
+  kv("Volumetric energy proxy",fmt(p.indicators.volumeEnergyJMm3??undefined,3)+" J/mm3");
+  text("Energy density arithmetic does not establish keyholing, lack of fusion or acceptable part quality.",{size:8.2,color:amber});
+  for(const item of p.findings.slice(0,25)){
+   text("["+item.severity.toUpperCase()+"] "+item.title,{size:8.5,bold:true,after:1});
+   text(item.observation+" / "+item.action,{size:8,color:muted,after:1});
+  }
+ }
+ if(input.manufacturingFlow?.length){
+  beginPage();
+  section("08  Manufacturing lifecycle and testing feedback",
+   "ORIENTAI participates in pre-build screening. Machine execution, inspection and qualification are external.");
+  table(["Manufacturing phase","State","Output / owner"],[67,35,74],
+   input.manufacturingFlow.map(f=>[f.name,f.status.toUpperCase(),f.output+" / "+f.owner]));
+  section("Proposed future verification plan");
+  text("1. Preserve a controlled drawing, STL fingerprint, machine setup and physical build identity.",{size:8.5});
+  text("2. Compare rule-based concerns with actual slicer records, as-built inspection and service tests.",{size:8.5});
+  text("3. Record observed false positives/negatives separately from unvalidated screening predictions.",{size:8.5});
+  text("4. Validate any future statistical or physical defect model against independent held-out production data.",{size:8.5});
  }
  section("Limits and engineering disposition");
  for(const c of input.readiness.caveats)text("- "+c,{size:8.5,after:1});
