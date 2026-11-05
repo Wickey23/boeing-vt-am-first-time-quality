@@ -73,8 +73,8 @@ test("fit-screen mode uses the desktop viewport for engineering work instead of 
  expect(geometry.stageHeader.height).toBeLessThan(95);
  expect(geometry.viewer.height).toBeGreaterThan(365);
  expect(geometry.composer.height).toBeLessThan(115);
- expect(geometry.sidebar.width).toBeGreaterThan(225);
- expect(geometry.sidebar.width).toBeLessThan(270);
+ expect(geometry.sidebar.width).toBeGreaterThan(199);
+ expect(geometry.sidebar.width).toBeLessThan(236);
  expect(geometry.docWidth).toBeLessThanOrEqual(geometry.windowWidth+2);
  expect(geometry.bodyScroll).toBeLessThanOrEqual(geometry.windowHeight+3);
  await expect(page.getByRole("heading",{name:"Upload the part you want to evaluate"})).toBeInViewport();
@@ -105,10 +105,38 @@ test("reference geometry layout uses two card rows, recommendation and persisten
  expect(cards.model.bottom).toBeLessThan(cards.dimensions.y);
  expect(cards.units.bottom).toBeLessThan(cards.recommendation.y);
  expect(cards.viewer.height).toBeGreaterThan(365);
- expect(cards.sidebar.width).toBeGreaterThan(220);
+ expect(cards.sidebar.width).toBeGreaterThan(199);
  await expect(page.getByRole("button",{name:"Quick view"})).toBeVisible();
  await page.getByRole("button",{name:"Quick view"}).click();
  await expect(page.locator(".psRoot")).toHaveClass(/psViewerExpanded/);
  await page.getByRole("button",{name:"Close expanded viewer"}).click();
  await expect(page.locator(".psRoot")).not.toHaveClass(/psViewerExpanded/);
+});
+
+
+test("CAD viewport owns the right pane, with secondary controls collapsed by default",async({page})=>{
+ await page.setViewportSize({width:1707,height:855});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const viewer=page.getByRole("complementary",{name:"Persistent engineering model viewer"});
+ const inspector=viewer.locator("details.psEngineeringInspector");
+ await expect(inspector).not.toHaveAttribute("open");
+ await expect(viewer.getByRole("toolbar",{name:"3D model navigation"})).toBeVisible();
+ await expect(viewer.getByRole("combobox",{name:"Geometry display mode"})).toBeVisible();
+ const v=await page.evaluate(()=>{
+  const a=document.querySelector(".psViewerFrame")?.getBoundingClientRect();
+  const b=document.querySelector(".psReferenceViewerCard")?.getBoundingClientRect();
+  if(!a||!b)throw Error("Missing viewer");
+  return {viewerHeight:a.height,cardHeight:b.height,ratio:a.height/b.height,
+   pageWidth:document.documentElement.scrollWidth,clientWidth:window.innerWidth};
+ });
+ expect(v.viewerHeight).toBeGreaterThan(370);
+ expect(v.ratio).toBeGreaterThan(.68);
+ expect(v.pageWidth).toBeLessThanOrEqual(v.clientWidth+2);
+ await inspector.locator("summary").first().click();
+ await expect(inspector).toHaveAttribute("open","");
+ await viewer.getByRole("checkbox",{name:"Preview geometric overhang overlay"}).check();
+ await expect(viewer.getByRole("combobox",{name:"Geometry display mode"})).toHaveValue("overhangs");
+ await viewer.getByRole("combobox",{name:"Geometry display mode"}).selectOption("solid");
+ await expect(viewer.getByRole("checkbox",{name:"Preview geometric overhang overlay"})).not.toBeChecked();
 });
