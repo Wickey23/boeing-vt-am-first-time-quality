@@ -6,6 +6,7 @@ test("real uploaded STL physical layers are inspectable only after units and sam
  page.on("request",r=>{if(r.method()==="POST"&&/engineering-copilot|llm-api|ai-gateway/.test(r.url()))outbound.push(r.url());});
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  const section=page.getByRole("group",{name:"Real STL physical-layer geometry"});
  await section.locator("summary").first().click();
  await expect(section.getByRole("button",{name:"Calculate physical STL layers"})).toBeDisabled();
@@ -28,6 +29,7 @@ test("real uploaded STL physical layers are inspectable only after units and sam
 test("optional synthetic command plan is geometrically registered to source-hashed cube slices",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const section=page.getByRole("group",{name:"Real STL physical-layer geometry"});
  await section.locator("summary").first().click();
@@ -46,6 +48,7 @@ test("optional synthetic command plan is geometrically registered to source-hash
 test("M06 engineer-approved synthetic 10-layer cube runs bounded real-STL FVM without claiming defect prediction",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const section=page.getByRole("group",{name:"Real STL physical-layer geometry"});
  await section.locator("summary").first().click();
@@ -84,6 +87,7 @@ test("M02 dimensions encoded in STL file name expose scaled-unit mismatch before
 test("post-slice functions appear in the ChatGPT-style side view, not a replacement slicer page",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const section=page.getByRole("group",{name:"Real STL physical-layer geometry"});
  await section.locator("summary").first().click();
@@ -115,6 +119,7 @@ test("post-slice functions appear in the ChatGPT-style side view, not a replacem
 test("post-slice path tab reflects supplied scan commands, not generated printer instructions",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const section=page.getByRole("group",{name:"Real STL physical-layer geometry"});
  await section.locator("summary").first().click();
