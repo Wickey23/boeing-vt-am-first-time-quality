@@ -164,6 +164,7 @@ test("desktop navigation collapses into accessible icon rail and persists after 
  await expect(sidebar).toHaveCSS("width","58px");
  await page.getByRole("button",{name:"Expand navigation"}).click();
  await expect(page.getByRole("button",{name:"Collapse navigation"})).toBeVisible();
+ await expect(sidebar).toHaveCSS("width","218px");
  const again=await sidebar.boundingBox();expect(again!.width).toBeGreaterThan(190);
 });
 
