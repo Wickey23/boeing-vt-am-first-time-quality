@@ -7,6 +7,7 @@ type Props={
  fileName:string;unitsConfirmed:boolean;hasGeometryRun:boolean;
  coverage:FailureCoverage[];findings:Finding[];
  canRun:boolean;busy:boolean;onRunGeometry:()=>void;onOpenGeometry:()=>void;onOpenContext:()=>void;
+ onExportReport:()=>void;reportBusy:boolean;reportError:string;
  selectedOrientation?:{id:string;buildHeightMm:number;supportProxyMm3:number};
 };
 const label=(state:FailureCoverage["state"])=>state==="screened"?"Screened":state==="calculated"?"Calculated":"Not assessed";
@@ -65,7 +66,7 @@ export default function EngineeringAssessmentResults(props:Props){
    <div><span className="oaStageEyebrow">ENGINEERING DELIVERABLE</span><h2>Evidence-backed assessment report</h2>
     <p>Includes available results, reference provenance, assumptions, missing analysis and recommended next checks. No flight or manufacturing qualification is asserted.</p>
    </div>
-   <Link href="/copilot/advanced?stage=results"><FileDown size={17}/> Review & export PDF <ArrowRight size={15}/></Link>
+   <div className="oaReportActions"><button type="button" onClick={props.onExportReport} disabled={!props.unitsConfirmed||props.reportBusy}><FileDown size={17}/>{props.reportBusy?"Preparing PDF…":"Export evidence PDF"}</button><Link href="/copilot/advanced?stage=results">Advanced report details <ArrowRight size={14}/></Link>{props.reportError&&<p role="alert" className="oaStudyError">{props.reportError}</p>}</div>
   </div>
   <p className="oaStageFootnote">Research prototype. An unassessed mechanism is not a low-risk mechanism; a screened geometry condition is not a validated print-failure prediction.</p>
  </section>;
