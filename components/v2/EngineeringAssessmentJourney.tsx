@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
-import {FileCheck2,FileText,FileUp,Box as BoxIcon,ClipboardList,ArrowRight} from "lucide-react";
+import {FileCheck2,FileUp} from "lucide-react";
 import {addProjectSource,blankKnowledge,restoreKnowledge,type ProjectKnowledge} from "@/lib/copilot-context";
 import {currentReviewedEvidence} from "@/lib/engineering-evidence";
 
@@ -60,26 +60,27 @@ export default function EngineeringAssessmentJourney({partHash,fileName,unitsCon
   }finally{setBusy(false);}
  };
  return <section className="oaAssessmentJourney" aria-label="Three-stage engineering assessment" data-testid="assessment-journey">
-  <div className="oaAssessmentHeading"><div><small>GUIDED ENGINEERING STUDY</small><h2>From part geometry to failure assessment</h2></div><span>Research only · engineer review required</span></div>
+  <div className="oaAssessmentHeading"><strong>Engineering assessment</strong><small>Research prototype · engineer review required</small></div>
   <nav className="oaAssessmentStages" aria-label="Assessment stages">
    <button type="button" className="oaAssessmentStep" onClick={onViewPart} aria-label="Open part geometry view">
-    <span className="oaAssessmentStepIcon"><BoxIcon size={17}/></span><span><strong>01 · Part geometry</strong><small>{unitsConfirmed?"Dimensions confirmed":fileName+" · confirm units"}</small></span><span className="oaAssessmentStepState">{unitsConfirmed?"✓":"Review"}</span>
+    <span className="oaAssessmentStepNumber">01</span><span className="oaAssessmentStepText"><strong>Part geometry</strong><small>{unitsConfirmed?"Units confirmed":"Confirm dimensions"}</small></span>
    </button>
    <Link className="oaAssessmentStep" href="/copilot/advanced?stage=documents" aria-label="Open engineering context stage">
-    <span className="oaAssessmentStepIcon"><FileText size={17}/></span><span><strong>02 · Engineering context</strong><small>{sources.length?sources.length+" reference(s) · "+reviewed+" reviewed passage(s)":"Add assembly and requirements"}</small></span><ArrowRight size={15}/>
+    <span className="oaAssessmentStepNumber">02</span><span className="oaAssessmentStepText"><strong>Engineering context</strong><small>{sources.length?sources.length+" document(s) · "+reviewed+" reviewed":"Assembly and loads"}</small></span>
    </Link>
    <Link className="oaAssessmentStep" href="/copilot/advanced?stage=results" aria-label="Open failure assessment and export stage">
-    <span className="oaAssessmentStepIcon"><ClipboardList size={17}/></span><span><strong>03 · Assessment & export</strong><small>{hasGeometryRun?"Geometry screening available":"Run supported checks"}</small></span><ArrowRight size={15}/>
+    <span className="oaAssessmentStepNumber">03</span><span className="oaAssessmentStepText"><strong>Failure assessment</strong><small>{hasGeometryRun?"Geometry screening ready":"Analyze and export"}</small></span>
    </Link>
   </nav>
-  <div className="oaAssessmentNext"><FileCheck2 size={17}/><span><strong>Recommended next action</strong>{next}</span>{!unitsConfirmed?<button type="button" onClick={onReviewPart}>Review dimensions</button>:sources.length>0?<Link href={reviewed===0?"/copilot/advanced?stage=documents":"/copilot/advanced?stage=requirements"}>{reviewed===0?"Review evidence":"Confirm requirements"}</Link>:null}</div>
-  <div className="oaAssessmentUpload">
-   <div><strong>Add assembly / requirements document</strong><small>PDF, DOCX, XLSX and text references. Documents are kept local to this browser; no automatic AI transmission.</small></div>
-   <label className="oaAssessmentUploadButton"><FileUp size={16}/>{busy?"Reading…":"Upload documents"}<input type="file" aria-label="Upload assembly documents" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.csv,.json,.log" disabled={!partHash||busy} onChange={e=>{void attach(e.target.files);e.currentTarget.value="";}}/></label>
+  <div className="oaAssessmentNext">
+   <FileCheck2 size={16} aria-hidden="true"/>
+   <span><strong>Next:</strong> {next}</span>
+   {!unitsConfirmed?<button type="button" onClick={onReviewPart}>Review dimensions</button>:sources.length>0?<Link href={reviewed===0?"/copilot/advanced?stage=documents":"/copilot/advanced?stage=requirements"}>{reviewed===0?"Review evidence":"Confirm requirements"}</Link>:null}
+   <label className="oaAssessmentUploadButton"><FileUp size={15}/>{busy?"Reading…":"Add documents"}<input type="file" aria-label="Upload assembly documents" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.csv,.json,.log" disabled={!partHash||busy} onChange={e=>{void attach(e.target.files);e.currentTarget.value="";}}/></label>
   </div>
-  {sources.length>0&&<div className="oaAssessmentSources">{sources.slice(0,4).map(source=><span key={source.id} title={source.name}>{source.id} · {source.name} · {source.extraction==="not_extracted"?"Needs excerpt":"Text available"}</span>)}{sources.length>4&&<small>+{sources.length-4} more</small>}<Link href="/copilot/advanced?stage=documents">Review sources & requirements</Link></div>}
+  {sources.length>0&&<div className="oaAssessmentSources">{sources.slice(0,3).map(source=><span key={source.id} title={source.name}>{source.id} · {source.name} · {source.extraction==="not_extracted"?"Needs excerpt":"Text available"}</span>)}{sources.length>3&&<small>+{sources.length-3} more</small>}<Link href="/copilot/advanced?stage=documents">Review sources & requirements</Link></div>}
   {notice&&<p className="oaAssessmentNotice" role="status">{notice}</p>}
   {error&&<p className="oaStudyError" role="alert">{error}</p>}
-  <small className="oaAssessmentCaveat">Text extraction does not validate a requirement. Loads, fixtures, material properties and acceptance criteria require explicit engineering confirmation before numerical analysis.</small>
+  <details className="oaAssessmentLimitations"><summary>Document and engineering limitations</summary><p>Documents stay in this browser; they are not transmitted to an external AI automatically. Local extraction covers supported text and Office formats, not PDF content or scanned drawings. Any interpreted load, fixture, material or acceptance criterion requires engineer confirmation before numerical analysis.</p></details>
  </section>;
 }
