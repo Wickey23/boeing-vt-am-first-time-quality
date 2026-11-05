@@ -150,7 +150,8 @@ export default function ProfessionalStudy(){
   }).catch(()=>{if(active)setError("Could not identify the uploaded STL.");});
   return()=>{active=false;URL.revokeObjectURL(object);};
  },[a.file]);
- useEffect(()=>{setStage("geometry");setLayer(100);setPlaying(false);setThread([]);},[a.file]);
+ useEffect(()=>{const requested=new URLSearchParams(window.location.search).get("stage");setStage(requested==="assessment"||requested==="context"?requested:"geometry");setLayer(100);setPlaying(false);setThread([]);},[a.file]);
+ useEffect(()=>{try{const pending=sessionStorage.getItem("orientai-pending-message-v1");if(pending){setDraft(pending);setShowThread(true);sessionStorage.removeItem("orientai-pending-message-v1");}}catch{}},[]);
  useEffect(()=>{
   if(!playing)return;
   const id=setInterval(()=>setLayer(n=>Math.min(100,n+1)),95);
