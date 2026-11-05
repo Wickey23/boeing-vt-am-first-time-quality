@@ -298,3 +298,31 @@
 .oaProcessQuality .oaRunActions{margin-top:12px}
 .oaProcessQuality .oaRunActions button{display:flex;align-items:center;gap:7px}
 @media(max-width:550px){.oaProcessQualityFields{grid-template-columns:1fr}.oaProcessQualityCounts strong{font-size:16px}}
+
+/* Persistent workflow actions and an immediately accessible metal-AM engineering viewport. */
+.oaStudyQuickbar{position:sticky;top:0;z-index:18;display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:var(--oa-bg);border-bottom:1px solid var(--oa-border);box-shadow:0 3px 12px #0000000a}
+.oaStudyQuickbar strong{font-size:11px;color:var(--oa-muted);margin-right:4px}
+.oaStudyQuickbar button,.oaMetalEngineeringTools button{border:1px solid var(--oa-border);border-radius:9px;padding:7px 9px;background:var(--oa-card);color:var(--oa-text);font-size:11px}
+.oaStudyQuickbar button:hover,.oaMetalEngineeringTools button:hover{border-color:var(--oa-strong)}
+.oaMetalEngineeringTools{display:grid;gap:8px;padding:11px 12px;border:1px solid var(--oa-border);border-radius:10px;margin:7px 0 10px;background:var(--oa-bg)}
+.oaMetalEngineeringTools strong{font-size:12px}
+.oaMetalEngineeringTools>div{display:flex;gap:6px;flex-wrap:wrap}
+.oaMetalEngineeringTools button[aria-pressed=true]{border-color:#188a78;box-shadow:inset 0 0 0 1px #188a78}
+.oaMetalEngineeringTools label{display:grid;gap:3px;font-size:11px}
+.oaMetalEngineeringTools input{width:100%;accent-color:#188a78}
+.oaMetalEngineeringTools small{font-size:10px;color:var(--oa-muted);line-height:1.4}
+@media(max-width:850px){.oaStudyQuickbar{position:sticky;top:0;padding:8px;gap:5px}.oaStudyQuickbar strong{display:none}.oaStudyQuickbar button{font-size:10px;padding:6px}.oaMetalEngineeringTools{padding:8px}}
+
+/* Desktop workbench: independent conversation scroll with a continuously visible CAD viewport. */
+@media(min-width:851px){
+ .oaRoot{height:100dvh;min-height:0;overflow:hidden}
+ .oaBody{height:100dvh;min-height:0;overflow:hidden}
+ .oaRoot .oaMain{min-height:0;overflow:hidden}
+ .oaStudy{height:100%;min-height:0;padding-bottom:0;overflow:hidden}
+ .oaStudyChat{height:100%;min-height:0;overflow:hidden}
+ .oaStudyFeed{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;min-height:0}
+ .oaStudyComposerArea{position:relative;bottom:auto;flex-shrink:0;box-shadow:0 -5px 18px #0000000a}
+ .oaStudyArtifact{position:relative;top:auto;height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+ .oaArtifactCanvas{min-height:240px;flex:1 1 0}
+ .oaStudyQuickbar{position:relative;flex-shrink:0}
+}
