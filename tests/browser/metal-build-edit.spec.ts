@@ -2,7 +2,7 @@ import {test,expect} from "@playwright/test";
 import {readFile} from "node:fs/promises";
 
 test("edited STL is physically transformed and exported without overwriting the uploaded source",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const physical=page.locator('details[aria-label="Real STL physical-layer geometry"]');
