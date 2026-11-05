@@ -12,8 +12,8 @@ const steps=[
 ];
 export default function HowItWorks(){return <AppShell title="How ORIENTAI Works">
  <section className="studioCard"><h2>One part. One workflow. Seven decisions.</h2>
- <p>Start in the Engineering Workspace and move through each step. The selected part stays visible; inputs and named service cases are saved locally and retained between steps.</p>
- <Link className="studioAction primary" href="/orientation">Open guided workspace →</Link>
+ <p>Start in the current ORIENTAI workbench and move through each stage. The selected part stays visible; inputs and named service cases are saved locally and retained between steps.</p>
+ <Link className="studioAction primary" href="/copilot/workbench">Open engineering workbench →</Link>
  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:12,marginTop:20}}>
  {steps.map((s,i)=><article key={s.name} style={{padding:16,border:"1px solid #345369",borderRadius:12,background:"#102b40"}}><small>STEP {i+1}</small><h3 style={{margin:"6px 0"}}>{s.name}</h3><strong>{s.question}</strong><p>{s.detail}</p></article>)}
  </div>
