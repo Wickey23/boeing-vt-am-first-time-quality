@@ -19,7 +19,7 @@ export default function EngineeringAssessmentJourney({
   reviewedCount===0?{text:"Review document passages before assigning engineering requirements.",label:"Review context",action:()=>onStageChange("context")}:
   !hasGeometryRun?{text:"Run the supported geometric screening for this part.",label:"Analyze geometry",action:()=>onStageChange("part")}:
   {text:"Review available findings, unassessed risks and next actions.",label:"Review assessment",action:()=>onStageChange("assessment")};
- return <header className="oaAssessmentJourney" aria-label="Three-stage engineering assessment" data-testid="assessment-journey">
+ return <header role="region" className="oaAssessmentJourney" aria-label="Three-stage engineering assessment" data-testid="assessment-journey">
   <div className="oaAssessmentHeading">
    <div><small>ENGINEERING WORKSPACE</small><strong>Pre-build assessment</strong></div>
    <span title={fileName}>{fileName} · Research only</span>
