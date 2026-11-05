@@ -104,7 +104,7 @@ export default function ProfessionalStudy(){
    response=result.text;
   }else response="The part is loading. Confirm the STL units and upload an assembly document to begin contextual review.";
   if(/\b(assembly|requirement|load|material|fixture|document)\b/i.test(q))setStage("context");
-  setThread(t=>[...t,{role:"user",text:q},{role:"assistant",text:response}].slice(-24));
+  setThread(t=>([...t,{role:"user" as const,text:q},{role:"assistant" as const,text:response}]).slice(-24));
   setShowThread(true);setDraft("");
  };
  const exportEvidence=async()=>{
