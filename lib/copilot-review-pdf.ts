@@ -22,7 +22,8 @@ export type CopilotPdfInputs={
  readiness:EngineeringReadiness;coverage?:FailureCoverage[];
  geometricConcerns?:{code:string;message:string;basis:string;severity?:string}[];
  geometry?:{dimensionsMm:{x:number;y:number;z:number};triangles:number;
-  openEdges:number;nonManifoldEdges:number;disconnectedShells:number;smallestEdgeMm:number};
+  openEdges:number;nonManifoldEdges:number;disconnectedShells:number;smallestEdgeMm:number;
+  surfaceAreaMm2?:number;solidVolumeMm3?:number|null};
  selectedOrientation?:{id:string;buildHeightMm:number;downFacingAreaMm2:number;
   supportProxyMm3:number;overhangFraction:number;contactAreaMm2:number;
   rotation?:{x:number;y:number;z:number}};
@@ -185,6 +186,10 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
   ]);
   kv("Bounding box (mm)",[g.dimensionsMm.x,g.dimensionsMm.y,g.dimensionsMm.z].map(v=>fmt(v,2)).join(" x "));
   kv("Minimum mesh edge",fmt(g.smallestEdgeMm,4)+" mm (NOT wall thickness)");
+  kv("STL triangle surface area",fmt(g.surfaceAreaMm2,1)+" mm2 (geometry only)");
+  kv("Closed single-shell volume",g.solidVolumeMm3===null||g.solidVolumeMm3===undefined?
+   "Not calculated: topology does not permit reliable solid volume":fmt(g.solidVolumeMm3,2)+" mm3");
+  text("Geometric volume excludes supports, powder, density and any physical mass or cost validation.",{size:8,color:muted});
   if(g.disconnectedShells>1)callout("SHELL CONTINUITY NEEDS REVIEW",
     "Multiple closed mesh shells can be intentional. Confirm that they represent the intended geometry and, where required, have a valid physical load-transfer path.","warning");
  }else callout("STL audit not available","No current geometry audit measurements were included in this export.","warning");
