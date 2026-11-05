@@ -51,3 +51,35 @@ test("WebGL failure displays geometry-only STL projection rather than blocking t
  await expect(page.getByText(/WebGL unavailable · showing/)).toBeVisible();
  await expect(page.getByRole("heading",{name:"Inspect and confirm the model"})).toBeVisible();
 });
+
+test("fit-screen mode uses the desktop viewport for engineering work instead of oversized chrome",async({page})=>{
+ await page.setViewportSize({width:1744,height:888});
+ await page.goto("/copilot/workbench");
+ const root=page.locator(".psRoot");
+ await expect(root).toHaveClass(/psFit/);
+ await expect(page.getByRole("button",{name:"Fit screen"})).toHaveAttribute("aria-pressed","true");
+ const geometry=await page.evaluate(()=>{
+  function rect(selector:string){
+   const r=document.querySelector(selector)?.getBoundingClientRect();
+   if(!r)throw new Error("Missing layout element: "+selector);
+   return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};
+  }
+  return {stageHeader:rect(".psWorkspaceHeader"),stageViewport:rect(".psStageScroll"),
+   composer:rect(".psAssistant"),viewer:rect(".psViewerFrame"),
+   viewerControls:rect(".psViewerControls"),sidebar:rect(".oaSidebar"),
+   bodyScroll:document.body.scrollHeight,windowHeight:window.innerHeight,
+   docWidth:document.documentElement.scrollWidth,windowWidth:window.innerWidth};
+ });
+ expect(geometry.stageHeader.height).toBeLessThan(185);
+ expect(geometry.viewer.height).toBeGreaterThan(365);
+ expect(geometry.composer.height).toBeLessThan(115);
+ expect(geometry.sidebar.width).toBeLessThan(220);
+ expect(geometry.docWidth).toBeLessThanOrEqual(geometry.windowWidth+2);
+ expect(geometry.bodyScroll).toBeLessThanOrEqual(geometry.windowHeight+3);
+ await expect(page.getByRole("heading",{name:"Upload the part you want to evaluate"})).toBeInViewport();
+ await page.getByRole("button",{name:/Engineering Context/}).click();
+ await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeInViewport();
+ await page.getByRole("button",{name:"Fit screen"}).click();
+ await expect(root).not.toHaveClass(/psFit/);
+ await expect(page.getByRole("button",{name:"Compact view"})).toHaveAttribute("aria-pressed","false");
+});
