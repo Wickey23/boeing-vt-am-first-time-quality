@@ -125,7 +125,10 @@ export default function ProfessionalStudy(){
    const pdf=await createCopilotReviewPDF({
     projectName:a.projectName,partName:a.file.name,partSha256:partHash,process:a.journey.process,
     unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),knowledge:k,
-    reviewedEvidence:ctx.reviewed,approvedBindings,readiness
+    reviewedEvidence:ctx.reviewed,approvedBindings,readiness,
+    coverage,
+    geometricConcerns:[...meshFindings.map(f=>({code:f.code,message:f.message,basis:"STL mesh-topology audit"})),
+     ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis})):[])]
    });
    pdf.save("orientai-engineering-evidence-"+partHash.slice(0,8)+".pdf");
   }catch(e){setError(e instanceof Error?e.message:"Unable to export engineering evidence.");}
