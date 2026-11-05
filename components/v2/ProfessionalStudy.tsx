@@ -84,6 +84,17 @@ export default function ProfessionalStudy(){
  const [draft,setDraft]=useState("");
  const [thread,setThread]=useState<ChatItem[]>([]);
  const [showThread,setShowThread]=useState(false);
+ const [externalAiReady,setExternalAiReady]=useState(false);
+ const [externalAiApproved,setExternalAiApproved]=useState(false);
+ const [externalAiBusy,setExternalAiBusy]=useState(false);
+ useEffect(()=>{
+  let live=true;
+  void fetch("/api/engineering-copilot",{method:"GET",cache:"no-store"})
+   .then(async r=>r.ok?await r.json():null)
+   .then(data=>{if(live)setExternalAiReady(data?.enabled===true);})
+   .catch(()=>{if(live)setExternalAiReady(false);});
+  return()=>{live=false;};
+ },[]);
  const [reviewing,setReviewing]=useState("");
  const [rationale,setRationale]=useState("");
  const [uploadBusy,setUploadBusy]=useState(false);
@@ -197,14 +208,14 @@ export default function ProfessionalStudy(){
   if(!file.name.toLowerCase().endsWith(".stl")||file.size<1||file.size>20*1024*1024){setError("Select a nonempty STL file up to 20 MB.");return;}
   a.upload(file);a.setProjectName(file.name.replace(/\.stl$/i,""));setError("");setStage("geometry");
  };
- const send=()=>{
-  const q=draft.trim();if(!q)return;
+ const send=async()=>{
+  const q=draft.trim();if(!q||externalAiBusy)return;
   let response:string;
   if(!a.file)response="Upload an STL first. I can then inspect dimensions, geometric manufacturing concerns, and the assembly information you provide.";
-  else if(/\b(fail(?:ure|ures|ing)?|risks?|defects?|porosity|crack(?:s|ing)?|distort(?:ion)?|quality|printability|support|overhang|stress)\b/i.test(q)){
+  else if(/\b(fail(?:ure|ures|ing)?|risks?|defects?|porosity|crack(?:s|ing)?|distort(?:ion)?|quality|printability|support|overhang|stress|build|improve|recommend)\b/i.test(q)){
    response=explainPartFailureModes({
     partName:a.file.name,unitsConfirmed:isConfirmed,hasOrientation:currentRun,
-    meshFindings,orientationFindings:findings,coverage,
+    meshFindings,orientationFindings:findings,coverage,prebuild,
     assemblyKnown:Boolean(ctx.knowledge?.componentName.trim()&&ctx.knowledge?.assemblyContext.trim()),
     requirementsKnown:Boolean(ctx.knowledge?.attachmentNotes.trim()&&ctx.knowledge?.reviewedRequirements.trim()),
     documentCount:ctx.sources.length,reviewedCount:ctx.reviewed.length
@@ -217,8 +228,38 @@ export default function ProfessionalStudy(){
    response=result.text;
   }else response="The part is loading. Confirm the STL units and upload an assembly document to begin contextual review.";
   if(/\b(assembly|requirement|load|material|fixture|document)\b/i.test(q))setStage("context");
+  setDraft("");setShowThread(true);
+  if(externalAiReady&&externalAiApproved&&a.file){
+   setExternalAiBusy(true);
+   try{
+    const res=await fetch("/api/engineering-copilot",{
+     method:"POST",headers:{"Content-Type":"application/json"},
+     body:JSON.stringify({
+      allowExternal:true,message:q,
+      project:{name:a.projectName,partName:a.file.name,confirmed:isConfirmed,
+       process:a.journey.process,componentName:ctx.knowledge?.componentName??"",
+       assemblyContext:ctx.knowledge?.assemblyContext??"",
+       attachmentNotes:ctx.knowledge?.attachmentNotes??"",
+       requirements:ctx.knowledge?.reviewedRequirements??"",
+       hasOrientation:currentRun,
+       screeningFindings:prebuild.findings.filter(f=>f.status!=="unassessed").slice(0,10)
+        .map(f=>({id:f.id,title:f.title,observation:f.observation,basis:f.basis}))},
+      // Only engineer-reviewed excerpts; no binary CAD, PDFs or raw attachments.
+      sources:ctx.reviewed.slice(0,8).map(e=>({
+       id:e.sourceId,name:e.sourceName,text:e.excerpt,notes:e.reviewerNote
+      })),
+      history:thread.slice(-8)
+     })
+    });
+    const payload=await res.json();
+    if(!res.ok||typeof payload.text!=="string")throw Error(payload.error||"Model response unavailable");
+    response="External AI explanation (not a numerical solver or validated prediction):\n"+payload.text;
+   }catch(e){
+    response="External AI unavailable ("+(e instanceof Error?e.message:"request failed")+").\n\n"+
+     "Local evidence-based guidance:\n"+response;
+   }finally{setExternalAiBusy(false);}
+  }
   setThread(t=>([...t,{role:"user" as const,text:q},{role:"assistant" as const,text:response}]).slice(-24));
-  setShowThread(true);setDraft("");
  };
  const exportEvidence=async()=>{
   if(!a.file||!partHash||!ctx.knowledge){setError("Confirm the part identity before exporting.");return;}
@@ -375,12 +416,18 @@ export default function ProfessionalStudy(){
      <div className="psThreadHeader"><strong><MessageSquare size={15}/> Engineering conversation</strong><button type="button" onClick={()=>setShowThread(false)} aria-label="Collapse conversation"><X size={15}/></button></div>
      <div className="psThreadItems">{thread.map((m,i)=><p key={i} className={m.role==="user"?"psHumanMessage":"psAssistantMessage"}><strong>{m.role==="user"?"You":"ORIENTAI · Local guide"}</strong>{m.text}</p>)}</div>
     </div>}
+    <div className="psExternalAiSwitch">
+     {externalAiReady?<label><input type="checkbox" checked={externalAiApproved}
+      onChange={e=>setExternalAiApproved(e.target.checked)}/>
+      Use external AI for explanation. This sends my message, entered context and reviewed passages only, not STL bytes. Never include controlled data.</label>:
+      <span>Local evidence-based guide · External model unavailable on this deployment</span>}
+    </div>
     <div className="psAskBox">
      <textarea aria-label="Ask ORIENTAI" rows={2} value={draft} onChange={e=>setDraft(e.target.value)}
-      onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+      onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();void send();}}}
       placeholder="Ask about this part, its assembly context, or its potential failures…"/>
      <div><span><MessageSquare size={15}/> Source-backed local engineering guide</span>
-      <button type="button" aria-label="Send message" disabled={!draft.trim()} onClick={send}><ArrowUp size={17}/></button></div>
+      <button type="button" aria-label="Send message" disabled={!draft.trim()||externalAiBusy} onClick={()=>void send()}><ArrowUp size={17}/></button></div>
     </div>
     {error&&<p role="alert" className="psError">{error}</p>}
     <small>Engineering decision support only · No print-quality certification · Numerical studies require engineer-approved inputs</small>
