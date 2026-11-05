@@ -2,10 +2,10 @@
 import {useEffect,useRef,useState} from "react";
 import {STLLoader} from "three/examples/jsm/loaders/STLLoader.js";
 type P={x:number;y:number;z:number};
-type Props={url?:string;buildFraction?:number};
+type Props={url?:string;buildFraction?:number;thumbnail?:boolean};
 const cap=(x:number,min:number,max:number)=>Math.max(min,Math.min(max,x));
 /** Fallback renders actual STL triangles on a 2D canvas; no physical field is implied. */
-export default function StudioCanvasFallback({url,buildFraction=1}:Props){
+export default function StudioCanvasFallback({url,buildFraction=1,thumbnail=false}:Props){
  const canvas=useRef<HTMLCanvasElement>(null);
  const [triangles,setTriangles]=useState<P[][]>([]);
  const [error,setError]=useState("");
@@ -88,13 +88,13 @@ export default function StudioCanvasFallback({url,buildFraction=1}:Props){
    ctx.fillStyle=`rgb(${intensity-13},${intensity-3},${intensity+4})`;ctx.fill();
   }
  },[size,triangles,yaw,zoom,buildFraction]);
- return <div className="psFallback" aria-label="STL viewer without WebGL">
+ return <div className={"psFallback"+(thumbnail?" psThumbnailRenderer":"")} aria-label={thumbnail?"Actual STL model thumbnail":"STL viewer without WebGL"}>
   <canvas ref={canvas} role="img" aria-label="Canvas projection of uploaded STL geometry"
    onPointerDown={e=>{drag.current={x:e.clientX,yaw};e.currentTarget.setPointerCapture(e.pointerId);}}
    onPointerMove={e=>{if(drag.current)setYaw(drag.current.yaw+(e.clientX-drag.current.x)*.008);}}
    onPointerUp={()=>{drag.current=null;}} onPointerCancel={()=>{drag.current=null;}}
    onWheel={e=>{e.preventDefault();setZoom(z=>cap(z*(e.deltaY<0?1.08:.92),.4,2.7));}}/>
-  <div className="psFallbackInfo">2D STL geometry preview <small>WebGL unavailable · drag to rotate</small></div>
+  {!thumbnail&&<div className="psFallbackInfo">2D STL geometry preview <small>WebGL unavailable · drag to rotate</small></div>}
   {!triangles.length&&<p className="psFallbackError">{error||"Preparing geometric projection…"}</p>}
  </div>;
 }
