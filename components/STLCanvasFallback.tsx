@@ -83,7 +83,7 @@ export default function STLCanvasFallback({
   bg.addColorStop(0,"#182535");bg.addColorStop(1,"#0b1320");
   ctx.fillStyle=bg;ctx.fillRect(0,0,size.w,size.h);
   if(!faces.length)return;
-  const maxY=Math.max(0.001,...faces.map(f=>Math.max(...f.points.map(p=>p.y))));
+  let maxY=.001;for(const face of faces)for(const vertex of face.points)maxY=Math.max(maxY,vertex.y);
   const ceiling=maxY*clamp(buildFraction,0,1);
   // The same world-space clipping plane used by the WebGL build preview.
   function clip(poly:Point[]):Point[]{
@@ -109,7 +109,9 @@ export default function STLCanvasFallback({
   const centerX=(minX+maxX)/2,centerY=(minY+maxYp)/2;
   const projected:Projected[]=[];
   const highlighted=new Set(highlightTriangles??[]);
+  const stride=Math.max(1,Math.ceil(faces.length/30000));
   for(const f of faces){
+   if(f.index%stride!==0)continue; // display-only sampling for very large meshes
    const poly=clip(f.points);if(poly.length<3)continue;
    const points=poly.map(p=>project(p));
    const colorLight=clamp(.42+(.25*f.normal.y)+(.13*f.normal.x)+(.17*f.normal.z),.16,.92);
