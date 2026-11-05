@@ -456,3 +456,48 @@
  .psReferenceRoot .psDecisionActions>li{flex-wrap:wrap}
  .psReferenceRoot .psDecisionActions button{margin-left:auto}
 }
+
+/* Optional external model: concise consent, never implicitly selected. */
+.psReferenceRoot .psExternalAiSwitch{padding:3px 2px 6px;color:#93a7b7;font-size:9px}
+.psReferenceRoot .psExternalAiSwitch>label{display:flex;align-items:flex-start;gap:6px;line-height:1.4;cursor:pointer}
+.psReferenceRoot .psExternalAiSwitch input{flex:0 0 auto;margin:1px 0 0;accent-color:#779aaf}
+.psReferenceRoot .psExternalAiSwitch>span{display:block;font-size:9px}
+.psReferenceRoot .psAssistant{min-height:0;padding-top:4px!important}
+.psReferenceRoot .psAskBox{min-height:39px}
+.psReferenceRoot .psAskBox textarea{resize:none;max-height:75px}
+/* Optional inspection and test feedback for the external validation portion of the flow. */
+.psReferenceRoot .psFeedbackPanel{padding:11px;margin-top:10px;background:#232c34;border:1px solid #41515f;border-radius:5px}
+.psReferenceRoot .psFeedbackPanel>.psPanelHeading{margin:0 0 6px}
+.psReferenceRoot .psFeedbackPanel>.psPanelHeading>strong{font-size:11px}
+.psReferenceRoot .psFeedbackPanel>.psPanelHeading>span{font-size:9px;color:#a3b6c4}
+.psReferenceRoot .psFeedbackPanel .psCaveat{font-size:9px;line-height:1.4;color:#aabcc8}
+.psReferenceRoot .psFeedbackPanel>details{border-top:1px solid #3c4e5b;margin-top:10px}
+.psReferenceRoot .psFeedbackPanel>details>summary{display:flex;align-items:center;gap:6px;
+ font-size:10px;color:#d9e4ec;cursor:pointer;list-style:none;padding:10px 0}
+.psReferenceRoot .psFeedbackPanel>details>summary::-webkit-details-marker{display:none}
+.psReferenceRoot .psFeedbackCounts{display:flex;gap:6px;flex-wrap:wrap;padding:6px 0}
+.psReferenceRoot .psFeedbackCounts span{background:#31404d;border:1px solid #526676;
+ border-radius:3px;padding:5px 7px;font-size:9px;color:#bcd1df}
+.psReferenceRoot .psFeedbackItem{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+ background:#28333d;border:1px solid #3e5160;border-radius:4px;padding:9px;margin:5px 0}
+.psReferenceRoot .psFeedbackItem>div{min-width:0;flex:1}
+.psReferenceRoot .psFeedbackItem strong{font-size:10px}
+.psReferenceRoot .psFeedbackItem small{display:block;font-size:9px;color:#a7b9c6;padding-top:4px;overflow-wrap:anywhere}
+.psReferenceRoot .psFeedbackItem p{font-size:10px;line-height:1.4;margin:6px 0;color:#d5e2eb}
+.psReferenceRoot .psFeedbackItem>button{border:1px solid #536575;border-radius:3px;padding:6px;
+ background:#344351;color:#d3e3eb}
+.psReferenceRoot .psFeedbackForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px;margin:7px 0 10px}
+.psReferenceRoot .psFeedbackForm label{display:grid;gap:4px;min-width:0;font-size:9px;color:#b9c8d4}
+.psReferenceRoot .psFeedbackForm :is(input:not([type="checkbox"]),select,textarea){
+ min-width:0;width:100%;font-size:10px;color:#e7f0f6;background:#1a2630;
+ border:1px solid #526373;padding:7px 8px;border-radius:4px;line-height:1.3
+}
+.psReferenceRoot .psFeedbackForm .psFeedbackObservation{grid-column:1/-1}
+.psReferenceRoot .psFeedbackForm .psFeedbackReview{grid-column:1/-1;display:flex;flex-direction:row;
+ align-items:flex-start;gap:7px;line-height:1.45}
+.psReferenceRoot .psFeedbackReview input{flex:0 0 auto;accent-color:#7c9eb7;margin:2px 0}
+.psReferenceRoot .psFeedbackForm>.psPrimary{grid-column:1/-1;justify-self:end;min-width:160px}
+@container engineering-study (max-width:560px){
+ .psReferenceRoot .psFeedbackForm{grid-template-columns:minmax(0,1fr)}
+}
