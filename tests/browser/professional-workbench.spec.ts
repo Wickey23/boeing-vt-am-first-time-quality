@@ -3,7 +3,7 @@ import {test,expect} from "@playwright/test";
 test("new professional study keeps a readable three-stage interface and actual geometry inspection",async({page})=>{
  await page.setViewportSize({width:1600,height:900});
  await page.goto("/copilot/workbench");
- await expect(page.getByRole("heading",{name:"Pre-build assessment"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Part Geometry",exact:true})).toBeVisible();
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
  const stepper=page.getByRole("navigation",{name:"Assessment stages"});
  for(const label of ["Part Geometry","Engineering Context","Failure Assessment"])await expect(stepper.getByText(label,{exact:true})).toBeVisible();
@@ -15,7 +15,7 @@ test("new professional study keeps a readable three-stage interface and actual g
  await expect(page.getByRole("region",{name:"Dimensions and units"})).toContainText("mm");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Run geometry screening"}).click();
- await expect(page.getByText("Selected orientation", {exact:false})).toBeVisible({timeout:60000});
+ await expect(page.getByText(/Geometry screening results · selected orientation/)).toBeVisible({timeout:60000});
  await page.getByRole("button",{name:/Engineering Context/}).click();
  await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
 });
@@ -47,9 +47,9 @@ test("WebGL failure displays geometry-only STL projection rather than blocking t
  });
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
- await expect(page.getByRole("img",{name:"Canvas projection of uploaded STL geometry"})).toBeVisible({timeout:30000});
+ await expect(page.getByRole("complementary",{name:"Persistent engineering model viewer"}).getByRole("img",{name:"Canvas projection of uploaded STL geometry"})).toBeVisible({timeout:30000});
  await expect(page.getByText(/WebGL unavailable · showing/)).toBeVisible();
- await expect(page.getByRole("heading",{name:"Inspect and confirm the model"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Part Geometry",exact:true})).toBeVisible();
 });
 
 test("fit-screen mode uses the desktop viewport for engineering work instead of oversized chrome",async({page})=>{
@@ -57,7 +57,7 @@ test("fit-screen mode uses the desktop viewport for engineering work instead of 
  await page.goto("/copilot/workbench");
  const root=page.locator(".psRoot");
  await expect(root).toHaveClass(/psFit/);
- await expect(page.getByRole("button",{name:"Fit screen"})).toHaveAttribute("aria-pressed","true");
+ await expect(page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button")).toHaveCount(3);
  const geometry=await page.evaluate(()=>{
   function rect(selector:string){
    const r=document.querySelector(selector)?.getBoundingClientRect();
@@ -70,16 +70,45 @@ test("fit-screen mode uses the desktop viewport for engineering work instead of 
    bodyScroll:document.body.scrollHeight,windowHeight:window.innerHeight,
    docWidth:document.documentElement.scrollWidth,windowWidth:window.innerWidth};
  });
- expect(geometry.stageHeader.height).toBeLessThan(185);
+ expect(geometry.stageHeader.height).toBeLessThan(95);
  expect(geometry.viewer.height).toBeGreaterThan(365);
  expect(geometry.composer.height).toBeLessThan(115);
- expect(geometry.sidebar.width).toBeLessThan(220);
+ expect(geometry.sidebar.width).toBeGreaterThan(225);
+ expect(geometry.sidebar.width).toBeLessThan(270);
  expect(geometry.docWidth).toBeLessThanOrEqual(geometry.windowWidth+2);
  expect(geometry.bodyScroll).toBeLessThanOrEqual(geometry.windowHeight+3);
  await expect(page.getByRole("heading",{name:"Upload the part you want to evaluate"})).toBeInViewport();
  await page.getByRole("button",{name:/Engineering Context/}).click();
  await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeInViewport();
- await page.getByRole("button",{name:"Fit screen"}).click();
- await expect(root).not.toHaveClass(/psFit/);
- await expect(page.getByRole("button",{name:"Compact view"})).toHaveAttribute("aria-pressed","false");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Part Geometry"}).click();
+ await expect(page.locator(".psReferenceTopGrid")).toBeVisible();
+ await expect(page.locator(".psReferenceBottomGrid")).toBeVisible();
+});
+
+
+test("reference geometry layout uses two card rows, recommendation and persistent right CAD panel",async({page})=>{
+ await page.setViewportSize({width:1672,height:941});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("region",{name:"Dimensions and units"})).toBeVisible();
+ const cards=await page.evaluate(()=>{
+  const rect=(s:string)=>{const r=document.querySelector(s)?.getBoundingClientRect();if(!r)throw Error(s);return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,height:r.height,width:r.width};};
+  return {model:rect(".psReferenceModel"),mesh:rect(".psReferenceMesh"),
+   dimensions:rect(".psReferenceDimensions"),units:rect(".psReferenceConfirmation"),
+   recommendation:rect(".psReferenceRecommendation"),viewer:rect(".psViewerFrame"),
+   sidebar:rect(".oaSidebar"),stepper:rect(".psStepper")};
+ });
+ expect(cards.model.y).toBeCloseTo(cards.mesh.y,0);
+ expect(cards.model.right).toBeLessThan(cards.mesh.x);
+ expect(cards.dimensions.y).toBeCloseTo(cards.units.y,0);
+ expect(cards.model.bottom).toBeLessThan(cards.dimensions.y);
+ expect(cards.units.bottom).toBeLessThan(cards.recommendation.y);
+ expect(cards.viewer.height).toBeGreaterThan(365);
+ expect(cards.sidebar.width).toBeGreaterThan(220);
+ await expect(page.getByRole("button",{name:"Quick view"})).toBeVisible();
+ await page.getByRole("button",{name:"Quick view"}).click();
+ await expect(page.locator(".psRoot")).toHaveClass(/psViewerExpanded/);
+ await page.getByRole("button",{name:"Close expanded viewer"}).click();
+ await expect(page.locator(".psRoot")).not.toHaveClass(/psViewerExpanded/);
 });
