@@ -171,3 +171,39 @@
 @media(prefers-reduced-motion:reduce){
  .psRoot.psReferenceRoot .psPaneResizeHandle>svg{transition:none}
 }
+
+/* Resize-aware content: adapt to the pane's width, not the browser width.
+   A user can widen the CAD canvas without forcing desktop-width cards to overflow. */
+.psRoot.psReferenceRoot .psWorkingColumn{
+ container-type:inline-size;
+ container-name:engineering-study;
+}
+@container engineering-study (max-width:650px){
+ .psReferenceRoot .psReferenceTopGrid,
+ .psReferenceRoot .psReferenceBottomGrid{
+  grid-template-columns:minmax(0,1fr)!important;
+ }
+ .psReferenceRoot .psReferenceRecommendation{
+  flex-wrap:wrap;
+ }
+ .psReferenceRoot .psReferenceRecommendation button{
+  max-width:100%;margin-left:auto;
+ }
+ .psReferenceRoot .psReferenceHeading h2{font-size:20px}
+}
+@container engineering-study (max-width:510px){
+ .psReferenceRoot .psStep{gap:5px!important;padding:6px!important}
+ .psReferenceRoot .psStepContent strong{font-size:10px!important}
+ .psReferenceRoot .psStepCount{
+  width:18px!important;height:18px!important;flex:0 0 18px!important;
+ }
+ .psReferenceRoot .psModelContents{gap:8px}
+ .psReferenceRoot .psModelThumbnail{min-width:110px}
+ .psReferenceRoot .psReferenceRecommendation button{
+  width:100%;max-width:none;
+ }
+ .psReferenceRoot .psReferenceHeading p{font-size:10px}
+}
+@media(min-width:1101px){
+ .psRoot.psReferenceRoot .psPaneResizeHandle>svg{opacity:.34}
+}
