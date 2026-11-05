@@ -13,6 +13,7 @@ import PhysicalSliceWorkspace,{type SlicePreview} from "@/components/v2/Physical
 import MetalSlicedSidePanel from "@/components/v2/MetalSlicedSidePanel";
 import RiskPreflight from "@/components/v2/RiskPreflight";
 import ProcessQualityReview,{type QualitySnapshot} from "@/components/v2/ProcessQualityReview";
+import EngineeringAssessmentJourney from "@/components/v2/EngineeringAssessmentJourney";
 import type {LpbfPreflight} from "@/lib/lpbf-risk-preflight";
 import {reviewPhysicalLayerIslands} from "@/lib/lpbf-layer-island-review";
 import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
@@ -391,7 +392,7 @@ export default function ChatStudy(){
  const overlay=showOverhangs?"overhang":selected?"orientation":"geometry";
  return <div ref={layoutRef} className={"oaStudy"+(showArtifact?" oaStudySplit":"")+(resizingPanel?" oaStudyResizing":"")} style={{"--oa-panel-width":panelWidth+"%"} as CSSProperties}>
   <section className="oaStudyChat" aria-label="Engineering conversation">
-   {a.file&&<nav className="oaStudyQuickbar" aria-label="Engineering workflow shortcuts"><strong>Next steps</strong><button type="button" onClick={()=>{setShowArtifact(true);setSideMode("model");}}>3D engineering view</button><button type="button" onClick={()=>{setShowArtifact(true);setSideMode("model");setShowOverhangs(true);setShowSupports(true);setResultField("geometry");}}>Support / overhang review</button><button type="button" onClick={()=>document.querySelector(".oaProcessCard")?.scrollIntoView({behavior:"smooth",block:"center"})}>Build setup & analysis</button><button type="button" onClick={()=>document.querySelector(".oaCoverageCard")?.scrollIntoView({behavior:"smooth",block:"center"})}>Evidence & results</button></nav>}
+   {a.file&&<EngineeringAssessmentJourney partHash={partHash} fileName={a.file.name} unitsConfirmed={isConfirmed} hasGeometryRun={currentRun} onViewPart={()=>{setShowArtifact(true);setSideMode("model");setResultField("geometry");}}/>}
 
    <div className="oaStudyFeed" role="log" aria-label="Engineering chat messages">
     {messages.length===0&&!a.file&&<div className="oaStudyEmpty"><h1>What should we analyze?</h1><p>Upload an STL and I'll show the model, real mesh inspection, and the supported manufacturing screening steps.</p><button type="button" className="oaSecondaryRun" onClick={()=>void loadSyntheticDemo()}>Try synthetic cantilever bracket · known support-review geometry</button><small>Illustrative, non-qualified STL in millimeters. No Boeing data or external AI request.</small></div>}
