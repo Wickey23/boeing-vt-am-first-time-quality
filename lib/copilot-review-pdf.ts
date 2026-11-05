@@ -10,6 +10,7 @@ import type {FailureCoverage} from "./failure-coverage";
 
 export type CopilotPdfInputs={
  projectName:string;partName:string;partSha256:string;process:string;
+ modelFile?:File;
  unitsConfirmed:boolean;createdAt:string;knowledge:ProjectKnowledge;
  reviewedEvidence:ReviewedEvidence[];approvedBindings?:ApprovedParameterBinding[];
  readiness:EngineeringReadiness;coverage?:FailureCoverage[];
@@ -187,6 +188,28 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
   kv("Plate contact proxy",fmt(c.contactAreaMm2)+" mm2");
   if(c.rotation)kv("Rotation X/Y/Z",[c.rotation.x,c.rotation.y,c.rotation.z].map(v=>fmt(v,1)).join(" / ")+" deg");
  }else text("No current orientation screening was included. The model's appearance in the viewer does not prove build viability.");
+ if(input.modelFile){
+  section("Actual STL geometry views","Projected triangle wireframe of the uploaded model. This is not an engineering drawing or tolerance inspection.");
+  try{
+   const bytes=await input.modelFile.arrayBuffer();
+   const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),
+    x=>x.toString(16).padStart(2,"0")).join("");
+   if(digest!==input.partSha256)throw Error("STL hash changed since report initiation");
+   const {drawPartWireframe}=await import("./report-wireframe");
+   ensure(71);
+   doc.setFillColor(...light);doc.setDrawColor(...border);
+   doc.roundedRect(M,y,CONTENT,63,1.4,1.4,"FD");
+   const angle=input.selectedOrientation?.rotation??{x:0,y:0,z:0};
+   const simplified=drawPartWireframe(doc,bytes,angle,M+6,y+3,75,50);
+   drawPartWireframe(doc,bytes,{x:angle.x,y:angle.y,z:angle.z+90},M+93,y+3,75,50);
+   font(7.6,true,muted);doc.text("VIEW A - CURRENT ORIENTATION",M+6,y+59);
+   doc.text("VIEW B - 90 DEG VISUAL Z ROTATION",M+93,y+59);
+   y+=67;
+   if(simplified)text("Sampled triangle wireframe; small details may be omitted.",{size:7.8,color:muted});
+  }catch(e){
+   text("Geometry figure unavailable: "+(e instanceof Error?e.message:"unable to render"),{size:8,color:muted});
+  }
+ }
  section("Part-specific geometric finding register");
  if(input.geometricConcerns?.length){
   table(["Finding / review level","Potential engineering implication","Observed basis"],[48,81,47],
