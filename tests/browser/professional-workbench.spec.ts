@@ -14,7 +14,7 @@ test("new professional study keeps a readable three-stage interface and actual g
  await expect(page.getByRole("region",{name:"Mesh inspection"})).toContainText("Triangles");
  await expect(page.getByRole("region",{name:"Dimensions and units"})).toContainText("mm");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
- await page.getByRole("button",{name:"Run geometry screening"}).click();
+ await page.getByRole("region",{name:"Recommended workflow action"}).getByRole("button",{name:"Run screening"}).click();
  await expect(page.getByText(/Geometry screening results · selected orientation/)).toBeVisible({timeout:60000});
  await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
  await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
@@ -34,7 +34,7 @@ test("assembly text remains part-specific and report stage distinguishes unasses
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
  await expect(page.getByText("Lack-of-fusion porosity")).toBeVisible();
  await expect(page.getByText("Not assessed",{exact:true}).first()).toBeVisible();
- await expect(page.getByRole("button",{name:"Export evidence PDF"})).toBeDisabled();
+ await expect(page.getByRole("button",{name:"Export assessment PDF"})).toBeDisabled();
 });
 
 test("WebGL failure displays geometry-only STL projection rather than blocking the study",async({page})=>{
@@ -96,14 +96,14 @@ test("reference geometry layout uses two card rows, recommendation and persisten
   const rect=(s:string)=>{const r=document.querySelector(s)?.getBoundingClientRect();if(!r)throw Error(s);return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,height:r.height,width:r.width};};
   return {model:rect(".psReferenceModel"),mesh:rect(".psReferenceMesh"),
    dimensions:rect(".psReferenceDimensions"),units:rect(".psReferenceConfirmation"),
-   recommendation:rect(".psReferenceRecommendation"),viewer:rect(".psViewerFrame"),
+   action:rect(".psWorkflowBar"),viewer:rect(".psViewerFrame"),
    sidebar:rect(".oaSidebar"),stepper:rect(".psStepper")};
  });
  expect(cards.model.y).toBeCloseTo(cards.mesh.y,0);
  expect(cards.model.right).toBeLessThan(cards.mesh.x);
  expect(cards.dimensions.y).toBeCloseTo(cards.units.y,0);
  expect(cards.model.bottom).toBeLessThan(cards.dimensions.y);
- expect(cards.units.bottom).toBeLessThan(cards.recommendation.y);
+ expect(cards.action.bottom).toBeLessThan(cards.model.y);
  expect(cards.viewer.height).toBeGreaterThan(365);
  expect(cards.sidebar.width).toBeGreaterThan(199);
  await expect(page.getByRole("button",{name:"Quick view"})).toBeVisible();
@@ -208,4 +208,53 @@ test("mobile navigation remains an accessible overlay rather than collapsed desk
  await expect(page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("link",{name:"Current study"})).toBeVisible();
  await page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("button",{name:"Close sidebar"}).click();
  await expect(page.getByRole("button",{name:"Open navigation"})).toHaveAttribute("aria-expanded","false");
+});
+
+
+test("pre-build PDF export is available directly after dimensional confirmation",async({page})=>{
+ await page.setViewportSize({width:1680,height:920});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ const workflow=page.getByRole("region",{name:"Recommended workflow action"});
+ await expect(workflow.getByRole("button",{name:"Open pre-build assessment report"})).toBeVisible();
+ await workflow.getByRole("button",{name:"Open pre-build assessment report"}).click();
+ const exportButton=page.getByRole("button",{name:"Export assessment PDF"});
+ await expect(exportButton).toBeEnabled({timeout:30000});
+ const event=page.waitForEvent("download");
+ await exportButton.click();
+ const download=await event;
+ expect(download.suggestedFilename()).toMatch(/^orientai-engineering-evidence-[a-f0-9]{8}\\.pdf$/);
+});
+
+test("workbench answers failure questions with actual screening status and missing physics",async({page})=>{
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("textbox",{name:"Ask ORIENTAI"}).fill("How can this part fail during metal printing?");
+ await page.getByRole("button",{name:"Send message"}).click();
+ const answer=page.getByRole("log",{name:"Engineering assistant messages"});
+ await expect(answer).toContainText("PART-SPECIFIC PRE-BUILD RISK REVIEW");
+ await expect(answer).toContainText("NOT PREDICTED");
+ await expect(answer).toContainText("not a trained");
+ await expect(answer).toContainText("Lack-of-fusion porosity");
+});
+
+test("geometry action and first-row mesh values fit without duplicate preview and vertical scrolling",async({page})=>{
+ await page.setViewportSize({width:1728,height:950});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("region",{name:"Recommended workflow action"})).toBeVisible();
+ const metrics=await page.evaluate(()=>{
+  const scroll=document.querySelector(".psStageScroll") as HTMLElement|null;
+  const top=document.querySelector(".psReferenceTopGrid")?.getBoundingClientRect();
+  const bottom=document.querySelector(".psReferenceBottomGrid")?.getBoundingClientRect();
+  const hidden=document.querySelector(".psReferenceRecommendation");
+  return {scrollHeight:scroll?.scrollHeight??0,clientHeight:scroll?.clientHeight??0,
+   top:top?.top??0,bottom:bottom?.bottom??0,duplicate:!!hidden&&getComputedStyle(hidden).display==="none",
+   thumb:getComputedStyle(document.querySelector(".psModelThumbnail") as Element).display};
+ });
+ expect(metrics.duplicate).toBe(true);
+ expect(metrics.thumb).toBe("none");
+ expect(metrics.bottom-metrics.top).toBeLessThan(350);
+ expect(metrics.scrollHeight-metrics.clientHeight).toBeLessThan(40);
 });
