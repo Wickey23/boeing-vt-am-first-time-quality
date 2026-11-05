@@ -1,0 +1,17 @@
+/* Compact engineering viewport controls, shared across study and advanced numerical views. */
+.viewerCameraSelect{position:absolute;left:12px;bottom:42px;z-index:5;width:118px;height:32px;background:rgba(13,26,38,.94);color:#f1f6fb;border:1px solid #4a6277;border-radius:7px;font-size:11px;padding:0 8px;cursor:pointer}
+.viewerResetButton{position:absolute;right:12px;top:12px;z-index:5;display:flex;align-items:center;gap:7px;background:rgba(13,26,38,.94);border:1px solid #4a6277;border-radius:7px;color:#f1f6fb;padding:8px 10px;font-size:11px;cursor:pointer}
+.viewerResetButton:hover,.viewerCameraSelect:hover{border-color:#8aaac5}
+.viewerResetButton:focus-visible,.viewerCameraSelect:focus-visible,.viewerLegend summary:focus-visible{outline:2px solid #8bb4dd;outline-offset:2px}
+.viewerLegend{position:absolute;top:12px;left:12px;z-index:4;max-width:min(285px,calc(100% - 170px));background:rgba(8,20,31,.94);color:#f1f6fb;border:1px solid #42576a;border-radius:8px;font-size:11px;box-shadow:0 8px 26px #0004;overflow:hidden}
+.viewerLegend>summary{list-style:none;cursor:pointer;padding:9px 12px;font-size:11px;font-weight:650}
+.viewerLegend>summary::-webkit-details-marker{display:none}
+.viewerLegend>summary:before{content:"ⓘ";font-size:12px;color:#9cbcd4;margin-right:7px}
+.viewerLegend[open]{max-width:min(285px,calc(100% - 105px));max-height:65%;overflow:auto}
+.viewerLegend[open]>summary{border-bottom:1px solid #42576a}
+.viewerLegendBody{padding:10px 12px;line-height:1.5;pointer-events:auto}
+.viewerLegendBody>strong{display:block;margin-bottom:6px}
+.viewerLegendBody>div{margin-top:5px}
+.viewerLegendBody small{color:#c7d5e3;display:block;font-size:10px;line-height:1.5;margin-top:6px}
+.viewerLegendBody p{margin:5px 0}
+@media(max-width:430px){.viewerLegend{max-width:calc(100% - 130px)}.viewerResetButton{padding:7px}.viewerLegend[open]{max-width:calc(100% - 80px)}}
