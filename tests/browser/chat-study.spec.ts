@@ -152,7 +152,7 @@ test("LPBF solid-state thermal prototype requires approval and displays bounded 
  await expect(history).toBeVisible();
  await page.getByLabel("Thermal snapshot frame").fill("0");
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
- await expect(page.getByText("Solid-state LPBF research temperature")).toBeVisible();
+ await expect(page.locator(".viewerLegend > summary")).toHaveText("Solid-state LPBF research temperature");
  await page.getByLabel("STL coordinate units").selectOption("25.4");
  await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
  await expect(page.locator(".oaLpbfFrameControls")).toHaveCount(0);
