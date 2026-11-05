@@ -56,7 +56,10 @@ test("guided context persists source evidence and connects to traceable report e
  await expect(page.locator(".oaReviewedList")).toContainText("D1");
  await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
  await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Unassessed mechanisms");
- await page.getByRole("link",{name:/Review & export PDF/}).click();
+ const download=page.waitForEvent("download");
+ await page.getByRole("button",{name:"Export evidence PDF"}).click();
+ expect((await download).suggestedFilename()).toContain("-engineering-evidence.pdf");
+ await page.getByRole("link",{name:/Advanced report details/}).click();
  await expect(page).toHaveURL(/stage=results/);
  await expect(page.getByRole("heading",{name:"Inspect actual results"})).toBeVisible();
  await expect(page.getByRole("button",{name:"Export engineering review PDF"})).toBeVisible();
