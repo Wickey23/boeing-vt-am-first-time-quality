@@ -205,7 +205,7 @@ export function evaluatePrebuild(input:PrebuildInputs):PrebuildAssessment{
     recommendedAction:"Hold process acceptance. Verify the source revision, resolve out-of-range inputs and recheck the whole combination.",
     requiredEvidence:"Engineer-reviewed actual process window and verified settings",
     evidence:[evidence("process-window","decision="+window.decision+"; outsideCount="+window.outsideCount)],location:"process-setup"
-   });
+   }));
   }
   if(window?.decision==="inside-declared-ranges")add(make({
    id:"PARAMETERS_WITHIN_DECLARED_BOUNDS",domain:"manufacturing",status:"screened",priority:"information",
