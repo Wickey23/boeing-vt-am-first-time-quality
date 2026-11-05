@@ -223,3 +223,15 @@
 @media(max-width:780px){.psWorkspaceHeader{padding:13px 13px 10px}.psStageScroll{padding:16px 13px 25px}.psAssistant{padding:9px 12px}.psHeadline{align-items:start}.psHeadline>div:first-child{display:grid;gap:3px}.psHeadline h1{font-size:14px}.psHeaderMeta{display:none}.psStep{padding:8px 6px;min-height:55px}.psStepCount{flex-basis:23px;width:23px;height:23px}.psStepContent strong{font-size:10px}.psStepContent small{display:none}.psNextAction{flex-wrap:wrap}.psNextAction>div{display:grid;gap:3px}.psNextAction button{width:100%}.psSectionHead h2{font-size:22px}.psFactGrid,.psRiskColumns{grid-template-columns:1fr}.psSummaryGrid{gap:6px}.psSummaryGrid>div{padding:10px;gap:3px}.psSummaryGrid strong{font-size:17px}.psReportCard{align-items:stretch;flex-direction:column}.psReportButtons{width:100%}.psViewerColumn{padding:12px}}
 @media(max-width:400px){.psStepCount{display:none}.psStepContent strong{font-size:9px}.psNextAction button{min-width:0}.psContextFields{grid-template-columns:1fr}.psContextFields label:nth-child(n){grid-column:span 1}}
 @media(prefers-reduced-motion:reduce){.psRoot *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Legacy global HTML header rules are intentionally overridden in the new workbench.
+   Without this, a fixed 78px/420px grid can crush the staged navigation. */
+.oaRoot:has(.psRoot) .psWorkspaceHeader{
+ height:auto!important;min-height:0!important;grid-template-columns:minmax(0,1fr)!important;
+ grid-auto-rows:auto!important;align-items:stretch!important;justify-content:stretch!important;
+}
+.oaRoot:has(.psRoot) .psViewerHeader{
+ height:auto!important;min-height:30px!important;display:flex!important;
+ grid-template-columns:none!important;align-items:center!important;justify-content:space-between!important;
+ border:0!important;padding:0!important;background:transparent!important;
+}
