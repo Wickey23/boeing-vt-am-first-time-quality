@@ -16,21 +16,21 @@ test("new professional study keeps a readable three-stage interface and actual g
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Run geometry screening"}).click();
  await expect(page.getByText(/Geometry screening results · selected orientation/)).toBeVisible({timeout:60000});
- await page.getByRole("button",{name:/Engineering Context/}).click();
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
  await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
 });
 
 test("assembly text remains part-specific and report stage distinguishes unassessed mechanisms",async({page})=>{
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
- await page.getByRole("button",{name:/Engineering Context/}).click();
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
  await page.getByLabel("Upload assembly documents").setInputFiles({
   name:"sample-assembly.txt",mimeType:"text/plain",
   buffer:Buffer.from("Mounting bracket for a demonstration assembly.\nProposed 1200 N bolt load is unverified.\n")
  });
  await expect(page.getByText("sample-assembly.txt",{exact:true})).toBeVisible();
  await page.getByPlaceholder("e.g. Mounting bracket for actuator").fill("Demo mounting bracket");
- await page.getByRole("button",{name:/Failure Assessment/}).click();
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Failure Assessment/}).click();
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
  await expect(page.getByText("Lack-of-fusion porosity")).toBeVisible();
  await expect(page.getByText("Not assessed",{exact:true}).first()).toBeVisible();
@@ -66,7 +66,7 @@ test("fit-screen mode uses the desktop viewport for engineering work instead of 
   }
   return {stageHeader:rect(".psWorkspaceHeader"),stageViewport:rect(".psStageScroll"),
    composer:rect(".psAssistant"),viewer:rect(".psViewerFrame"),
-   viewerControls:rect(".psViewerControls"),sidebar:rect(".oaSidebar"),
+   viewerControls:rect(".psReferenceViewSettings"),sidebar:rect(".oaSidebar"),
    bodyScroll:document.body.scrollHeight,windowHeight:window.innerHeight,
    docWidth:document.documentElement.scrollWidth,windowWidth:window.innerWidth};
  });
@@ -78,10 +78,10 @@ test("fit-screen mode uses the desktop viewport for engineering work instead of 
  expect(geometry.docWidth).toBeLessThanOrEqual(geometry.windowWidth+2);
  expect(geometry.bodyScroll).toBeLessThanOrEqual(geometry.windowHeight+3);
  await expect(page.getByRole("heading",{name:"Upload the part you want to evaluate"})).toBeInViewport();
- await page.getByRole("button",{name:/Engineering Context/}).click();
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
  await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeInViewport();
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
- await page.getByRole("button",{name:"Part Geometry"}).click();
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:"Part Geometry"}).click();
  await expect(page.locator(".psReferenceTopGrid")).toBeVisible();
  await expect(page.locator(".psReferenceBottomGrid")).toBeVisible();
 });
