@@ -207,3 +207,121 @@
 @media(min-width:1101px){
  .psRoot.psReferenceRoot .psPaneResizeHandle>svg{opacity:.34}
 }
+
+/* Single persistent action strip; essential work is reachable without scrolling. */
+.psReferenceRoot .psWorkflowBar{
+ flex:0 0 auto;min-height:39px;padding:6px 17px;display:flex;align-items:center;
+ justify-content:space-between;gap:10px;background:#252d35;
+ border-bottom:1px solid #424d58;color:#e4edf3
+}
+.psReferenceRoot .psWorkflowSummary{
+ display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+ white-space:nowrap;overflow:hidden
+}
+.psReferenceRoot .psWorkflowSummary strong{
+ font-size:10px;font-weight:700;white-space:nowrap;color:#e8f1f7
+}
+.psReferenceRoot .psWorkflowSummary span{
+ color:#9fb0bf;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.psReferenceRoot .psWorkflowBar button{
+ display:flex;align-items:center;justify-content:center;gap:6px;
+ flex:0 0 auto;border-radius:4px;padding:6px 9px;
+ background:#42617a;color:#eff5fa;border:1px solid #66869d;
+ font-size:10px;font-weight:640;min-height:28px
+}
+.psReferenceRoot .psWorkflowBar button:disabled{opacity:.55;cursor:not-allowed}
+.psReferenceRoot .psWorkflowBar button.psWorkflowReport{
+ background:#2c3742;border-color:#506172;color:#cbdbe7
+}
+.psReferenceRoot .psReferenceGeometry .psReferenceRecommendation{
+ display:none!important
+}
+/* An upload thumbnail duplicates the persistent live CAD model on the right.
+   Remove this redundancy from the study pane to reclaim vertical space. */
+@media(min-width:1101px){
+ .psReferenceRoot .psReferenceGeometry .psModelThumbnail{display:none}
+ .psReferenceRoot .psReferenceGeometry .psModelContents{min-height:80px}
+ .psReferenceRoot .psReferenceGeometry .psModelDescription{gap:6px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceGrid .psPanel{
+  padding:9px 11px
+ }
+ .psReferenceRoot .psReferenceGeometry .psReferenceCardHeading{
+  padding-bottom:5px;margin-bottom:5px
+ }
+ .psReferenceRoot .psReferenceGeometry .psReferenceTopGrid{min-height:0}
+ .psReferenceRoot .psReferenceGeometry .psReferenceBottomGrid{min-height:0}
+ .psReferenceRoot .psReferenceGeometry .psReferenceHeading{padding:0;gap:3px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceHeading h2{font-size:19px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceHeading p{font-size:10px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceGrid{gap:9px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceMesh dl>div{padding:3px 0}
+ .psReferenceRoot .psReferenceGeometry .psReferenceDimensions dl>div{padding:4px 0}
+}
+.psReferenceRoot .psAssistant{padding:0 15px 8px!important}
+.psReferenceRoot .psAskBox{
+ display:flex;align-items:center;gap:8px;min-height:43px;
+ padding:6px 9px!important;
+}
+.psReferenceRoot .psAskBox textarea{
+ flex:1 1 0;min-width:0;width:auto;min-height:28px!important;
+ max-height:70px;resize:vertical;
+ margin:0;padding:4px!important;line-height:1.4;
+}
+.psReferenceRoot .psAskBox>div{flex:0 0 auto;display:flex;align-items:center}
+.psReferenceRoot .psAskBox>div span{display:none}
+.psReferenceRoot .psAskBox>div button{width:29px;height:29px}
+.psReferenceRoot .psSectionHead{padding-bottom:8px;margin:0}
+.psReferenceRoot .psSectionHead h2{font-size:19px;margin:2px 0 3px}
+.psReferenceRoot .psSectionHead p{font-size:10px;line-height:1.4}
+.psReferenceRoot .psContextPanel .psDocumentDrop{
+ min-height:67px;padding:9px 14px;display:grid;
+ grid-template-columns:25px minmax(0,1fr);grid-template-rows:auto auto;
+ gap:2px 10px;justify-content:flex-start;align-items:center;text-align:left;
+ background:#26313b;border-radius:4px
+}
+.psReferenceRoot .psContextPanel .psDocumentDrop>svg{
+ width:22px;height:22px;grid-column:1;grid-row:1/span 2
+}
+.psReferenceRoot .psContextPanel .psDocumentDrop>strong{
+ grid-column:2;grid-row:1;font-size:11px
+}
+.psReferenceRoot .psContextPanel .psDocumentDrop>span{
+ grid-column:2;grid-row:2;font-size:9px
+}
+.psReferenceRoot .psContextFields{
+ grid-template-columns:repeat(2,minmax(0,1fr));gap:7px
+}
+.psReferenceRoot .psContextFields label:nth-child(n){grid-column:span 1}
+.psReferenceRoot .psContextFields label{font-size:10px;gap:4px}
+.psReferenceRoot .psContextFields textarea{min-height:40px;max-height:100px;resize:vertical}
+.psReferenceRoot .psContextFields input{min-height:32px}
+.psReferenceRoot .psContextPanel .psCaveat{font-size:9px;line-height:1.3}
+.psReferenceRoot .psSummaryGrid{gap:7px}
+.psReferenceRoot .psSummaryGrid>div{padding:8px 10px;border-radius:4px}
+.psReferenceRoot .psSummaryGrid strong{font-size:16px}
+.psReferenceRoot .psRiskColumns{gap:9px}
+.psReferenceRoot .psRiskItem>summary{padding:7px 0}
+.psReferenceRoot .psRiskItem>summary small{padding:2px 5px;font-size:9px}
+.psReferenceRoot .psReportCard{gap:10px;padding:11px}
+.psReferenceRoot .psReportCard h3{font-size:13px}
+.psReferenceRoot .psReportCard p{font-size:10px;line-height:1.35}
+/* The report/export controls appear above the long mechanism register. */
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psSectionHead{order:-4}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psSummaryGrid{order:-3}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psReportCard{order:-2}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psRiskColumns{order:1}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psCaveat{order:2}
+@container engineering-study (max-width:650px){
+ .psReferenceRoot .psContextFields{grid-template-columns:minmax(0,1fr)}
+ .psReferenceRoot .psContextFields label:nth-child(n){grid-column:span 1}
+ .psReferenceRoot .psWorkflowSummary span{display:none}
+}
+@media(max-width:780px){
+ .psReferenceRoot .psWorkflowBar{padding:5px 9px;gap:5px}
+ .psReferenceRoot .psWorkflowBar button{padding:5px 6px;font-size:9px}
+ .psReferenceRoot .psWorkflowBar .psWorkflowSummary span{display:none}
+ .psReferenceRoot .psWorkflowSummary strong{font-size:9px}
+ .psReferenceRoot .psAskBox{min-height:39px}
+ .psReferenceRoot .psContextFields{grid-template-columns:minmax(0,1fr)}
+}
