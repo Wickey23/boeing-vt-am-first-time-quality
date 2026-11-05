@@ -205,6 +205,6 @@ test("mobile navigation remains an accessible overlay rather than collapsed desk
  await toggle.click();
  await expect(page.getByRole("button",{name:"Close navigation"})).toHaveAttribute("aria-expanded","true");
  await expect(page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("link",{name:"Current study"})).toBeVisible();
- await page.getByRole("button",{name:"Close sidebar"}).click();
+ await page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("button",{name:"Close sidebar"}).click();
  await expect(page.getByRole("button",{name:"Open navigation"})).toHaveAttribute("aria-expanded","false");
 });
