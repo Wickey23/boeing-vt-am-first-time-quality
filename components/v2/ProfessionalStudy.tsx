@@ -25,6 +25,7 @@ import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import "./professional-study.css";
 import "./professional-density.css";
 import "./professional-reference.css";
+import "./professional-enterprise.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
@@ -60,7 +61,13 @@ export default function ProfessionalStudy(){
  const [dropActive,setDropActive]=useState(false);
  const partFileInput=useRef<HTMLInputElement>(null);
  const stageScroll=useRef<HTMLDivElement>(null);
- useEffect(()=>{stageScroll.current?.scrollTo({top:0,behavior:"instant"});},[stage,a.file]);
+ useEffect(()=>{
+  const panel=stageScroll.current;
+  if(!panel)return;
+  panel.scrollTop=0;
+  const id=window.requestAnimationFrame(()=>{if(stageScroll.current)stageScroll.current.scrollTop=0;});
+  return()=>window.cancelAnimationFrame(id);
+ },[stage,a.file]);
  const ctx=useStudioContext(partHash);
  const isConfirmed=completedPart(a.journey,a.file,a.settings.unitScale);
  useEffect(()=>{
@@ -322,42 +329,43 @@ export default function ProfessionalStudy(){
       <option value="solid">Solid</option><option value="overhangs">Overhangs</option><option value="supports">Supports</option>
      </select>
     </div>
-    <div className="psReferenceViewSettings">
-     <h3><Layers size={18}/> Metal AM Engineering View</h3>
-     <div className="psToggleRow">
-      <button type="button" className={!showOverhangs&&!showSupports?"psToggleActive":""}
-       onClick={()=>{setShowOverhangs(false);setShowSupports(false);}}>Solid part</button>
-      <button type="button" aria-pressed={showOverhangs} className={showOverhangs?"psToggleActive":""}
-       onClick={()=>{setShowOverhangs(true);setShowSupports(false);}}>Overhang faces</button>
-      <button type="button" aria-pressed={showBuildDirection} className={showBuildDirection?"psToggleActive":""}
-       onClick={()=>setShowBuildDirection(v=>!v)}>Build direction</button>
-      <button type="button" aria-pressed={showSupports} className={showSupports?"psToggleActive":""}
-       onClick={()=>{setShowSupports(true);setShowOverhangs(false);}}>Support regions</button>
-     </div>
-     <div className="psOrientationControl">
-      <label htmlFor="ps-yaw-select">Build orientation (Z) <Info size={14}/></label>
-      <select id="ps-yaw-select" aria-label="Build orientation angle" disabled={!a.file}
-       value={previewYaw} onChange={e=>setPreviewYaw(Number(e.target.value))}>
-       <option value={0}>0°</option><option value={90}>90°</option>
-       <option value={180}>180°</option><option value={270}>270°</option>
-      </select>
-     </div>
-     <div className="psOverlayControl">
-      <label htmlFor="ps-overhang-overlay">Preview geometric overhang overlay</label>
-      <input id="ps-overhang-overlay" type="checkbox" aria-label="Preview geometric overhang overlay"
-       checked={showOverhangs} onChange={e=>{setShowOverhangs(e.target.checked);if(e.target.checked)setShowSupports(false);}}/>
-     </div>
-     <details className="psBuildDisclosure">
-      <summary>Build progression preview <span>{layer}% <ChevronDown size={14}/></span></summary>
-      <input type="range" aria-label="Build progression percentage" min={1} max={100} value={layer}
-       onChange={e=>{setPlaying(false);setLayer(Number(e.target.value));}}/>
-      <div className="psPlayback">
-       <button type="button" onClick={()=>{if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
-       <button type="button" onClick={()=>{setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
-      </div>
-     </details>
-     <small className="psViewerMethodNote">STL geometry and conceptual supports only; colors and buildup are not validated print-defect predictions. Z rotation is a visual preview.</small>
+    <div className="psViewerStatusLine" role="status">
+     <span><span className="psStatusDot"/> {a.file?"STL geometry":"No part loaded"}</span>
+     <span>{a.file?(isConfirmed?"Units confirmed":"Units unconfirmed"):"Awaiting file"}</span>
     </div>
+    <details className="psReferenceViewSettings psEngineeringInspector">
+     <summary><SlidersHorizontal size={15}/> Display & build settings <ChevronDown size={15}/></summary>
+     <div className="psEngineeringInspectorBody">
+      <div className="psOrientationControl">
+       <label htmlFor="ps-yaw-select">Visual Z rotation <Info size={14}/></label>
+       <select id="ps-yaw-select" aria-label="Build orientation angle" disabled={!a.file}
+        value={previewYaw} onChange={e=>setPreviewYaw(Number(e.target.value))}>
+        <option value={0}>0°</option><option value={90}>90°</option>
+        <option value={180}>180°</option><option value={270}>270°</option>
+       </select>
+      </div>
+      <div className="psOverlayControl">
+       <label htmlFor="ps-overhang-overlay">Highlight geometric overhangs</label>
+       <input id="ps-overhang-overlay" type="checkbox" aria-label="Preview geometric overhang overlay"
+        checked={showOverhangs} onChange={e=>{setShowOverhangs(e.target.checked);if(e.target.checked)setShowSupports(false);}}/>
+      </div>
+      <div className="psOverlayControl">
+       <label htmlFor="ps-build-axis-toggle">Show build direction</label>
+       <input id="ps-build-axis-toggle" type="checkbox" checked={showBuildDirection}
+        onChange={e=>setShowBuildDirection(e.target.checked)}/>
+      </div>
+      <details className="psBuildDisclosure">
+       <summary>Geometry buildup preview <span>{layer}% <ChevronDown size={14}/></span></summary>
+       <input type="range" aria-label="Build progression percentage" min={1} max={100} value={layer}
+        onChange={e=>{setPlaying(false);setLayer(Number(e.target.value));}}/>
+       <div className="psPlayback">
+        <button type="button" onClick={()=>{if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
+        <button type="button" onClick={()=>{setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
+       </div>
+      </details>
+      <small className="psViewerMethodNote">Geometry-only visualization. Supports and build progression are conceptual, not process simulations.</small>
+     </div>
+    </details>
    </div>
   </aside>
   <input ref={partFileInput} type="file" accept=".stl" className="psHiddenInput" aria-label="Select STL part" onChange={e=>attach(e.target.files?.[0])}/>
