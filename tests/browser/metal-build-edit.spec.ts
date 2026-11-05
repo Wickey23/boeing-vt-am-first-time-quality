@@ -5,6 +5,7 @@ test("edited STL is physically transformed and exported without overwriting the 
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  const physical=page.locator('details[aria-label="Real STL physical-layer geometry"]');
  await physical.locator("summary").first().click();
  const editor=physical.locator('details[aria-label="Metal build model preparation"]');
