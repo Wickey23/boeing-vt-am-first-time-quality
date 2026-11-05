@@ -5,6 +5,7 @@ test("LPBF process-window checker flags out-of-range settings and alerts the eng
  await page.goto("/copilot");
  await page.getByRole("button",{name:/Try synthetic cantilever bracket/}).click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  const card=page.getByRole("region",{name:"Deterministic LPBF process quality review"});
  await expect(card).toBeVisible();
  await expect(card).toContainText("Manufacturing evidence missing");
@@ -46,6 +47,7 @@ test("a new STL resets machine-specific process review to prevent stale qualifie
  await page.goto("/copilot");
  await page.getByRole("button",{name:/Try synthetic cantilever bracket/}).click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  const card=page.getByRole("region",{name:"Deterministic LPBF process quality review"});
  await card.getByText("Enter machine, material and approved process limits").click();
  await card.getByLabel("Process machine").fill("Test machine");
