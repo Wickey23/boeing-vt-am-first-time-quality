@@ -17,6 +17,10 @@ import EngineeringAssessmentJourney,{type AssessmentStage} from "@/components/v2
 import EngineeringContextStage from "@/components/v2/EngineeringContextStage";
 import EngineeringAssessmentResults from "@/components/v2/EngineeringAssessmentResults";
 import {usePartKnowledge} from "@/components/v2/usePartKnowledge";
+import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
+import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
+import {activeParameterBindings} from "@/lib/engineering-parameter-binding";
+import {activeServiceCase} from "@/lib/service-plan";
 import type {LpbfPreflight} from "@/lib/lpbf-risk-preflight";
 import {reviewPhysicalLayerIslands} from "@/lib/lpbf-layer-island-review";
 import {reviewUnitsFromFilename} from "@/lib/stl-unit-review";
@@ -48,6 +52,8 @@ export default function ChatStudy(){
  const partHash=fingerprint?.file===a.file?fingerprint.hash:null;
  const context=usePartKnowledge(partHash);
  const [activeStage,setActiveStage]=useState<AssessmentStage>("part");
+ const [reportBusy,setReportBusy]=useState(false);
+ const [reportError,setReportError]=useState("");
  useEffect(()=>setActiveStage("part"),[a.file]);
  const [historyKey,setHistoryKey]=useState<string|null>(null);
  const [messages,setMessages]=useState<Message[]>(emptyMessages);
