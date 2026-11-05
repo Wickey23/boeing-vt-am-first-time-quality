@@ -11,7 +11,7 @@ type Props={
  unitScale:number;unitsConfirmed:boolean;meshFindings:MeshFinding[];
  selected?:SelectedOrientation;findings:Finding[];hasRun:boolean;busy:boolean;
  progress:number;analysisError:string;
- onUpload:()=>void;onChangeUnits:(unit:number)=>void;onConfirm:()=>void;
+ onUpload:()=>void;onAttachFile:(file:File)=>void;onChangeUnits:(unit:number)=>void;onConfirm:()=>void;
  onRun:()=>void;onContinue:()=>void;onQuickView:()=>void;
 };
 const dimension=(data:Inspection|undefined)=>data?
@@ -37,7 +37,7 @@ export default function ProfessionalGeometryStage(p:Props){
    <p>Upload and review the part geometry, confirm units and mesh quality, then proceed to define the engineering context.</p>
   </div>
   {!p.file?<article className="psEmptyCard psReferenceEmpty"
-   onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const file=e.dataTransfer.files[0];if(file)p.onUpload();}}>
+   onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const file=e.dataTransfer.files[0];if(file)p.onAttachFile(file);}}>
    <Box size={30}/><h3>Upload the part you want to evaluate</h3>
    <p>STL geometry is processed locally. Dimensions and engineering requirements must be verified before analysis.</p>
    <button type="button" onClick={p.onUpload}><FileUp size={16}/> Upload STL</button>
@@ -59,7 +59,7 @@ export default function ProfessionalGeometryStage(p:Props){
       </div>
      </div>
     </article>
-    <article className="psPanel psReferenceMesh" aria-label="Mesh inspection">
+    <section className="psPanel psReferenceMesh" aria-label="Mesh inspection">
      <div className="psReferenceCardHeading"><strong><ShieldCheck size={18}/> Mesh Facts</strong></div>
      <dl>
       <div><dt>Triangles</dt><dd>{audit?.triangles.toLocaleString()??"—"}</dd></div>
@@ -70,10 +70,10 @@ export default function ProfessionalGeometryStage(p:Props){
        {manifold?"No flags":"Review needed"}</span>:"Pending"}</dd></div>
      </dl>
      {p.inspectionError&&<p className="psError" role="alert">{p.inspectionError}</p>}
-    </article>
+    </section>
    </div>
    <div className="psReferenceGrid psReferenceBottomGrid">
-    <article className="psPanel psReferenceDimensions" aria-label="Dimensions and units">
+    <section className="psPanel psReferenceDimensions" aria-label="Dimensions and units">
      <div className="psReferenceCardHeading"><strong><Ruler size={18}/> Dimensions & units</strong></div>
      <p>Confirm the model size and original STL units.</p>
      <dl><div><dt>Model size (X × Y × Z)</dt><dd>{dimension(p.inspection)}</dd></div></dl>
@@ -82,7 +82,7 @@ export default function ProfessionalGeometryStage(p:Props){
        <option value={1}>Millimeters (mm)</option><option value={25.4}>Inches (in)</option><option value={1000}>Meters (m)</option>
       </select>
      </label>
-    </article>
+    </section>
     <article className="psPanel psReferenceConfirmation" id="ps-units-confirmation" aria-label="STL units confirmation">
      <div className="psReferenceCardHeading"><strong><Layers size={18}/> STL Units Confirmation</strong></div>
      <p>STL files do not encode units. Confirm these values against the source drawing.</p>
