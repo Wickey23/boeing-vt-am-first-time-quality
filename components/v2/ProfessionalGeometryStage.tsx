@@ -66,8 +66,8 @@ export default function ProfessionalGeometryStage(p:Props){
       <div><dt>Open edges</dt><dd>{audit?.openEdges.toLocaleString()??"—"}</dd></div>
       <div><dt>Non-manifold edges</dt><dd>{audit?.nonManifoldEdges.toLocaleString()??"—"}</dd></div>
       <div><dt>Shells</dt><dd>{audit?.disconnectedShells.toLocaleString()??"—"}</dd></div>
-      <div><dt>Surface area</dt><dd>{audit?.surfaceAreaMm2?.toFixed(1)??"—"} mm²</dd></div>
-      <div><dt>Solid volume</dt><dd>{audit?.solidVolumeMm3?.toFixed(1)??"Not resolved"} {audit?.solidVolumeMm3?"mm³":""}</dd></div>
+      <div><dt>Surface area</dt><dd>{p.unitsConfirmed&&audit?.surfaceAreaMm2!==undefined?audit.surfaceAreaMm2.toFixed(1)+" mm²":"Confirm units"}</dd></div>
+      <div><dt>Solid volume</dt><dd>{!p.unitsConfirmed?"Confirm units":audit?.solidVolumeMm3!==null&&audit?.solidVolumeMm3!==undefined?audit.solidVolumeMm3.toFixed(1)+" mm³":"Not resolved"}</dd></div>
       <div><dt>Edge topology</dt><dd>{audit?<span className={manifold?"psMeshClear":"psMeshReview"}>{manifold?<CheckCircle2 size={13}/>:<AlertTriangle size={13}/>}
        {manifold?"No flags":"Review needed"}</span>:"Pending"}</dd></div>
      </dl>
