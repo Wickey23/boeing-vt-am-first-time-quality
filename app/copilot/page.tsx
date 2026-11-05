@@ -1,6 +1,3 @@
-import ChatAppShell from "@/components/v2/ChatAppShell";
-import ChatStudy from "@/components/v2/ChatStudy";
-
-export default function CopilotWorkspace(){
- return <ChatAppShell title="ORIENTAI"><ChatStudy/></ChatAppShell>;
-}
+import {redirect} from "next/navigation";
+/** Compatibility route: all engineering studies use the current workbench. */
+export default function CopilotWorkspace(){redirect("/copilot/workbench");}
