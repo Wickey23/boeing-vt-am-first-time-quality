@@ -1,0 +1,423 @@
+/* ORIENTAI visual reference implementation.
+ * This layer intentionally supersedes the experimental density and card CSS
+ * ONLY within the new /copilot/workbench route. No numerical methods change. */
+.oaRoot.oaProfessionalShell{
+ --oa-bg:#0c1523;--oa-sidebar:#0d1725;--oa-card:#172637;--oa-hover:#22394e;
+ --oa-text:#edf5fc;--oa-muted:#b1c0cf;--oa-border:#334a60;--oa-strong:#f7fbff;
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+ background:#0b1625;
+}
+.oaRoot.oaProfessionalShell .oaBody{height:100dvh;overflow:hidden;background:#0b1625}
+.oaRoot.oaProfessionalShell .oaMain{min-height:0;flex:1 1 0;overflow:hidden}
+.oaRoot:not(.oaIsCollapsed).oaProfessionalShell:has(.psReferenceRoot) .oaSidebar{
+ width:245px;flex:0 0 245px;padding:16px 13px 9px;
+ border-right:1px solid #263a50;display:flex;flex-direction:column;
+ background:linear-gradient(165deg,#0d1a2c 0%,#0b1523 68%,#0b1626 100%);
+}
+.oaRoot.oaProfessionalShell .oaSidebarTop{height:auto;min-height:72px;padding:0 9px 9px;align-items:flex-start}
+.oaRoot.oaProfessionalShell .oaBrand{display:flex;align-items:flex-start;gap:10px;font-weight:750;letter-spacing:-.015em}
+.oaRoot.oaProfessionalShell .oaBrandSymbol{
+ height:34px;width:34px;flex:0 0 34px;border:2px solid #bfe1f9;border-radius:50%;
+ display:grid;place-items:center;background:radial-gradient(circle,#278dd7 0 18%,transparent 23%);
+ color:transparent;font-size:0;box-shadow:0 0 0 3px #183957 inset;
+}
+.oaRoot.oaProfessionalShell .psBrandStack{display:grid;gap:4px;min-width:0}
+.oaRoot.oaProfessionalShell .psBrandStack .oaBrandText{font-size:18px;line-height:1.2;letter-spacing:-.025em;color:#f6f9ff}
+.oaRoot.oaProfessionalShell .psBrandStack>small{font-weight:450;font-size:10px;line-height:1.4;color:#b3c4d6}
+.oaRoot.oaProfessionalShell .oaNewChat{margin-top:8px}
+.oaRoot.oaProfessionalShell .oaNewChat,
+.oaRoot.oaProfessionalShell .oaNavItem,
+.oaRoot.oaProfessionalShell .oaCurrentStudy,
+.oaRoot.oaProfessionalShell .oaAdvanced>summary{
+ min-height:44px;padding:10px 13px;border-radius:9px;font-size:12px;gap:11px;
+ display:flex;align-items:center;
+}
+.oaRoot.oaProfessionalShell .oaNavItem.oaNavActive{
+ color:#f1f8ff;background:linear-gradient(125deg,#254c75,#1b3859);
+ border:1px solid #4088bf;box-shadow:0 0 14px #142d4a22;
+ font-weight:680;
+}
+.oaRoot.oaProfessionalShell .oaSidebarSection{border-top:1px solid #34475a;margin-top:16px;padding-top:17px}
+.oaRoot.oaProfessionalShell .oaSidebarSectionTitle{font-size:10px;letter-spacing:.11em;padding-left:14px}
+.oaRoot.oaProfessionalShell .oaCurrentStudy{margin-top:7px}
+.oaRoot.oaProfessionalShell .oaCurrentStudy .oaNavText{font-size:12px}
+.oaRoot.oaProfessionalShell .oaAdvanced{margin-top:0}
+.oaRoot.oaProfessionalShell .psSidebarLinks{
+ margin-top:auto;border-top:1px solid #354657;padding:13px 4px 10px;display:grid;gap:3px
+}
+.oaRoot.oaProfessionalShell .psSidebarLinks>a{
+ display:flex;align-items:center;gap:10px;padding:9px 10px;font-size:11px;
+ color:#d5e4f3;text-decoration:none;border-radius:8px
+}
+.oaRoot.oaProfessionalShell .psSidebarLinks>a:hover{background:#1a334b}
+.oaRoot.oaProfessionalShell .oaSidebarFooter{
+ border-top:1px solid #34495d;display:flex;align-items:center;gap:9px;
+ padding:12px 6px 5px;font-size:11px;margin:0
+}
+.oaRoot.oaProfessionalShell .psVTIcon{
+ border-radius:50%;background:#364f65;color:#edf7ff;font-weight:750;
+ display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;font-size:11px
+}
+.oaRoot.oaProfessionalShell .oaSidebarFooter .oaNavText{display:grid;gap:3px;font-weight:650;line-height:1.25}
+.oaRoot.oaProfessionalShell .oaSidebarFooter .oaNavText small{font-size:10px;font-weight:450;color:#9eb5ca}
+.oaRoot.oaProfessionalShell .oaTopbar{
+ flex:0 0 62px;height:62px!important;min-height:62px!important;
+ padding:0 24px!important;display:flex;align-items:center;justify-content:space-between;
+ background:linear-gradient(95deg,#111f33,#142238 65%,#101c2d)!important;
+ border-bottom:1px solid #3a4f62!important
+}
+.oaRoot.oaProfessionalShell .psTopbarIdentity{display:flex;align-items:center;gap:12px;min-width:0}
+.oaRoot.oaProfessionalShell .psTopbarIdentity>svg{color:#dbeaf8;flex-shrink:0}
+.oaRoot.oaProfessionalShell .psTopbarIdentity>div{white-space:nowrap;display:flex;gap:8px;align-items:baseline;min-width:0}
+.oaRoot.oaProfessionalShell .psTopbarIdentity strong{font-size:19px;font-weight:750;letter-spacing:-.02em;color:#fff}
+.oaRoot.oaProfessionalShell .psTopbarIdentity span{font-size:15px;color:#c8d5e3}
+.oaRoot.oaProfessionalShell .psMobileSidebarButton{display:none}
+.oaRoot.oaProfessionalShell .psTopbarActions{display:flex;align-items:center;gap:18px}
+.oaRoot.oaProfessionalShell .psSaveState{display:flex;align-items:center;gap:7px;font-size:11px;color:#b8cbdc;white-space:nowrap}
+.oaRoot.oaProfessionalShell .psSaveState svg{color:#9fd9be}
+.oaRoot.oaProfessionalShell .psProcessLink{
+ text-decoration:none;display:flex;align-items:center;gap:8px;border:1px solid #536779;
+ border-radius:9px;background:#203248;color:#f4f8fd;padding:9px 12px;font-size:11px;font-weight:650
+}
+.oaRoot.oaProfessionalShell .oaBottomDisclaimer{font-size:9px;line-height:1.25;padding:4px 12px 5px;border-top:1px solid #263a4f}
+/* Exactly three clear steps across the center, not a second stacked dashboard header. */
+.psRoot.psFit.psReferenceRoot{
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(425px,36%);
+ width:100%;height:100%;min-height:0;overflow:hidden;
+ background:radial-gradient(ellipse at 48% 12%,#1a2b3e30,transparent 65%),#0b1523;color:#ecf4fc;
+}
+.psReferenceRoot .psWorkingColumn{min-height:0;min-width:0;display:flex;flex-direction:column;border-right:1px solid #253a50}
+.psReferenceRoot .psWorkspaceHeader{
+ flex:0 0 auto;min-height:0!important;height:auto!important;display:block!important;
+ padding:11px 27px 0!important;background:transparent;border:0!important
+}
+.psReferenceRoot .psStepper{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
+ border-bottom:1px solid #36475b;min-width:0;width:100%
+}
+.psReferenceRoot .psStep{
+ display:flex;align-items:center;justify-content:flex-start;min-height:54px;gap:10px;
+ padding:8px 8px 11px;background:transparent!important;color:#d2dce7!important;
+ border:0!important;border-bottom:3px solid transparent!important;border-radius:0!important;
+ box-shadow:none!important;position:relative;text-align:left
+}
+.psReferenceRoot .psStep.psActive{border-bottom-color:#33a4ff!important;color:white!important}
+.psReferenceRoot .psStep::after{
+ content:"";height:1px;position:absolute;right:-3px;top:26px;width:13%;
+ background:#536779
+}
+.psReferenceRoot .psStep:last-child::after{display:none}
+.psReferenceRoot .psStepCount{
+ display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;
+ border-radius:50%;background:#273548;color:#d6e2ec;font-weight:700;font-size:12px;
+ border:1px solid #607084;box-shadow:0 1px 8px #0003
+}
+.psReferenceRoot .psStep.psActive .psStepCount{
+ background:#218ee0;border-color:#66bfff;color:#fff;box-shadow:0 0 13px #148bda44
+}
+.psReferenceRoot .psStepContent{display:block!important;flex:0 1 auto;min-width:0}
+.psReferenceRoot .psStepContent strong{font-size:12px;line-height:1.3;font-weight:700;white-space:normal!important}
+.psReferenceRoot .psStageScroll{
+ flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain;
+ padding:18px 27px 16px;scrollbar-gutter:auto
+}
+.psReferenceRoot .psStage{gap:14px}
+.psReferenceRoot .psReferenceHeading{display:grid;gap:6px;padding:0 1px 1px}
+.psReferenceRoot .psReferenceHeading>span{font-size:10px;color:#a6b7ca;letter-spacing:.1em;font-weight:750}
+.psReferenceRoot .psReferenceHeading h2{font-size:29px;margin:0;letter-spacing:-.035em;font-weight:780;line-height:1.18;color:#fff}
+.psReferenceRoot .psReferenceHeading p{font-size:12px;line-height:1.45;margin:0;max-width:720px;color:#c7d6e4}
+.psReferenceRoot .psReferenceGrid{display:grid;gap:13px;min-width:0}
+.psReferenceRoot .psReferenceTopGrid{grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr)}
+.psReferenceRoot .psReferenceBottomGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.psReferenceRoot .psReferenceGrid .psPanel{
+ border-radius:12px;background:linear-gradient(145deg,#1b293a,#152235 76%);
+ border:1px solid #45566a;box-shadow:0 12px 20px #0000001c;padding:13px 15px
+}
+.psReferenceRoot .psReferenceCardHeading{
+ display:flex;align-items:center;justify-content:space-between;gap:8px;
+ padding:0 0 10px;margin:0 0 10px;border-bottom:1px solid #3a4b5c
+}
+.psReferenceRoot .psReferenceCardHeading strong{
+ display:flex;align-items:center;gap:8px;font-size:14px;font-weight:750;line-height:1.3;
+ min-width:0;white-space:normal
+}
+.psReferenceRoot .psReferenceCardHeading svg{color:#dcebf8;flex:0 0 auto}
+.psReferenceRoot .psModelLoaded{
+ display:flex;align-items:center;gap:5px;color:#9de6ce;background:#174638;
+ border:1px solid #297a64;border-radius:15px;font-size:9px;font-weight:700;padding:4px 7px;white-space:nowrap
+}
+.psReferenceRoot .psModelLoaded svg{color:#9de6ce}
+.psReferenceRoot .psModelContents{
+ display:flex;align-items:stretch;gap:13px;min-width:0;
+}
+.psReferenceRoot .psModelThumbnail{
+ width:46%;min-width:130px;min-height:155px;height:155px;
+ flex:0 0 46%;overflow:hidden;border-radius:8px;border:1px solid #4b5d70;
+ background:radial-gradient(ellipse at center,#30405055,#1b293b);position:relative
+}
+.psReferenceRoot .psModelThumbnail .psFallback{
+ width:100%;height:100%;min-height:0!important;position:absolute;inset:0;overflow:hidden;
+}
+.psReferenceRoot .psModelThumbnail .psThumbnailRenderer canvas{width:100%;height:100%;pointer-events:none}
+.psReferenceRoot .psModelThumbnail .psFallbackError{font-size:9px;padding:8px}
+.psReferenceRoot .psModelDescription{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px;min-width:0;flex:1}
+.psReferenceRoot .psModelDescription>strong{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.psReferenceRoot .psModelDescription p{font-size:11px;color:#d0dbe6;margin:0;display:flex;align-items:center;gap:7px;line-height:1.35}
+.psReferenceRoot .psModelDescription p svg{color:#c8dae9;flex:0 0 auto}
+.psReferenceRoot .psModelDescription button{
+ display:flex;align-items:center;gap:7px;padding:7px 10px;font-size:10px;
+ color:#f0f7ff;background:#273648;border:1px solid #627184;border-radius:7px
+}
+.psReferenceRoot .psReferenceMesh dl,.psReferenceRoot .psReferenceDimensions dl{display:grid;gap:0;margin:0}
+.psReferenceRoot .psReferenceMesh dl>div,.psReferenceRoot .psReferenceDimensions dl>div{
+ display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+ padding:6px 0;border-bottom:1px solid #3b4a5b;min-width:0
+}
+.psReferenceRoot .psReferenceMesh dl>div:last-child,.psReferenceRoot .psReferenceDimensions dl>div:last-child{border:0}
+.psReferenceRoot .psReferenceMesh dt,.psReferenceRoot .psReferenceDimensions dt{font-size:11px;color:#c6d3df}
+.psReferenceRoot .psReferenceMesh dd,.psReferenceRoot .psReferenceDimensions dd{
+ text-align:right;margin:0;font-size:11px;font-weight:650;color:#f3f8ff;font-variant-numeric:tabular-nums
+}
+.psReferenceRoot .psMeshClear,.psReferenceRoot .psMeshReview{display:inline-flex;align-items:center;gap:6px}
+.psReferenceRoot .psMeshClear svg{color:#63cfae}
+.psReferenceRoot .psMeshReview svg{color:#eebf7e}
+.psReferenceRoot .psReferenceBottomGrid .psPanel{padding-top:12px;padding-bottom:12px}
+.psReferenceRoot .psReferenceBottomGrid .psReferenceCardHeading{margin-bottom:6px;padding-bottom:0;border:0}
+.psReferenceRoot .psReferenceBottomGrid p{font-size:10px;color:#becfdf;line-height:1.45;margin:0 0 9px}
+.psReferenceRoot .psReferenceDimensions label{display:flex;justify-content:space-between;align-items:center;gap:9px;font-size:10px;color:#c5d2df;margin-top:7px}
+.psReferenceRoot .psReferenceDimensions select,.psReferenceRoot .psOrientationControl select{
+ background:#1b2b3d;color:#f4f8fd;border:1px solid #637185;border-radius:7px;
+ padding:7px 10px;min-height:32px;font-size:10px;min-width:125px
+}
+.psReferenceRoot .psUnitsConfirmed,.psReferenceRoot .psConfirmUnits{
+ width:100%;display:flex;align-items:center;gap:9px;min-height:38px;
+ padding:8px 11px;border-radius:8px;background:#153e38;color:#c6f6e5;
+ border:1px solid #2c9e84;font-size:11px;font-weight:650
+}
+.psReferenceRoot .psUnitsConfirmed>span{margin-left:auto;font-size:10px;color:#cde9dd}
+.psReferenceRoot .psConfirmUnits{background:#245b70;color:#f3faff;border-color:#4c9cc0}
+.psReferenceRoot .psConfirmUnits svg:last-child{margin-left:auto}
+.psReferenceRoot .psMeshIssues{margin:0;background:#292936;border-color:#666077}
+.psReferenceRoot .psReferenceRecommendation{
+ display:flex;align-items:center;gap:13px;min-height:81px;min-width:0;
+ border:1px solid #238ad3;border-radius:11px;padding:12px 15px;
+ background:linear-gradient(115deg,#103652a8,#19364ea6);
+ box-shadow:inset 0 0 0 1px #2e79ac44,0 4px 18px #03345726
+}
+.psReferenceRoot .psReferenceRecommendation>svg{flex:0 0 30px;color:#28adff}
+.psReferenceRoot .psReferenceRecommendation>div{flex:1 1 0;min-width:0}
+.psReferenceRoot .psReferenceRecommendation strong{font-size:14px;color:#f4faff;font-weight:750}
+.psReferenceRoot .psReferenceRecommendation p{margin:5px 0 0;color:#c5d6e5;line-height:1.45;font-size:10px}
+.psReferenceRoot .psReferenceRecommendation button{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ border-radius:8px;border:1px solid #6cc8ff;padding:10px 13px;
+ background:linear-gradient(#8ccaff,#2e9ee8);font-weight:750;font-size:10px;color:#09283f;
+ box-shadow:0 4px 12px #0004;flex:0 0 auto;max-width:44%;white-space:normal
+}
+.psReferenceRoot .psReferenceAnalysis{border:1px solid #344b60;border-radius:9px;background:#162738}
+.psReferenceRoot .psReferenceAnalysis>summary{
+ display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;
+ list-style:none;font-weight:650;font-size:11px
+}
+.psReferenceRoot .psReferenceAnalysis>summary svg:last-child{margin-left:auto}
+.psReferenceRoot .psReferenceAnalysis>div,.psReferenceRoot .psReferenceAnalysis>p,
+.psReferenceRoot .psReferenceAnalysis>button{margin:8px 13px;font-size:11px}
+.psReferenceRoot .psReferenceScreenResults{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.psReferenceRoot .psReferenceScreenResults>div{display:grid;gap:4px;background:#203347;border-radius:7px;padding:9px}
+.psReferenceRoot .psReferenceScreenResults small{font-size:9px;color:#c5d3e0}
+.psReferenceRoot .psReferenceScreenResults strong{font-size:12px}
+.psReferenceRoot .psReferenceEmpty{min-height:230px}
+.psReferenceRoot .psStageScroll .psPanel:not(.psReferenceGrid .psPanel){background:#162537;border-color:#3b5064}
+/* Assistant: same single chat field directly below study content. */
+.psReferenceRoot .psAssistant{
+ background:transparent;border-top:0;padding:0 27px 13px;flex:0 0 auto;
+ box-shadow:none
+}
+.psReferenceRoot .psAskBox{
+ border:1px solid #536780;border-radius:10px;padding:11px 12px;
+ background:linear-gradient(115deg,#1d2e41,#1c2b41);box-shadow:0 4px 16px #0002
+}
+.psReferenceRoot .psAskBox textarea{font-size:12px!important;min-height:39px!important;padding:2px 4px 7px!important;line-height:1.4}
+.psReferenceRoot .psAskBox>div span{font-size:10px;color:#afc6d8}
+.psReferenceRoot .psAskBox>div button{background:#218fe6;border:1px solid #59b3f8;width:34px;height:34px}
+.psReferenceRoot .psAssistant>small{display:none}
+.psReferenceRoot .psThread{max-height:165px}
+/* Right CAD card: large actual geometry with compact, functional controls. */
+.psReferenceRoot .psViewerColumn{
+ padding:12px 16px 16px;gap:0;min-height:0;min-width:0;
+ overflow:hidden;background:transparent
+}
+.psReferenceRoot .psReferenceViewerCard{
+ display:flex;flex-direction:column;flex:1 1 0;min-height:0;min-width:0;
+ border:1px solid #45586d;border-radius:12px;padding:10px 11px 12px;
+ background:linear-gradient(155deg,#1c293a 0%,#142235 65%,#111d2b 100%);
+ box-shadow:0 12px 24px #0002
+}
+.psReferenceRoot .psReferenceViewerHeader{
+ display:flex;align-items:center;justify-content:space-between;min-height:34px!important;
+ flex:0 0 auto;gap:10px;padding:0 2px 10px!important;border:0!important;
+ background:transparent!important
+}
+.psReferenceRoot .psReferenceViewerHeader>strong{
+ display:flex;align-items:center;gap:8px;font-size:14px;min-width:0;white-space:nowrap;overflow:hidden
+}
+.psReferenceRoot .psReferenceViewerHeader strong span{
+ color:#b8c9d9;font-weight:500;text-overflow:ellipsis;overflow:hidden;white-space:nowrap
+}
+.psReferenceRoot .psViewerHeaderActions{display:flex;align-items:center;gap:6px}
+.psReferenceRoot .psViewerHeaderActions>button,
+.psReferenceRoot .psViewerMenu>summary{
+ display:grid;place-items:center;width:30px;height:30px;padding:5px;
+ border:1px solid transparent;border-radius:7px;background:transparent;color:#e5eff7;
+ cursor:pointer;list-style:none
+}
+.psReferenceRoot .psViewerHeaderActions>button:hover,
+.psReferenceRoot .psViewerMenu>summary:hover{border-color:#607d94;background:#263b50}
+.psReferenceRoot .psViewerMenu{position:relative}
+.psReferenceRoot .psViewerMenu>summary::-webkit-details-marker{display:none}
+.psReferenceRoot .psViewerMenu>div{
+ position:absolute;right:0;top:33px;z-index:30;display:grid;gap:3px;
+ min-width:158px;background:#1e3044;border:1px solid #536e86;border-radius:8px;padding:5px
+}
+.psReferenceRoot .psViewerMenu>div button{
+ display:flex;gap:8px;align-items:center;background:transparent;border:0;color:#f3f8ff;
+ font-size:11px;text-align:left;padding:7px;border-radius:5px
+}
+.psReferenceRoot .psViewerMenu>div button:hover{background:#2b4863}
+.psReferenceRoot .psViewerFrame.psReferenceViewport{
+ position:relative;flex:1 1 0;min-height:245px;height:0;max-height:none;
+ background:radial-gradient(ellipse at 60% 40%,#1c2e4255,#071423);
+ border:1px solid #34495f;border-radius:10px;overflow:hidden
+}
+.psReferenceRoot .psViewerFrame .viewer{height:100%!important;min-height:0!important;position:relative}
+.psReferenceRoot .psViewerFrame .viewer>select,
+.psReferenceRoot .psViewerFrame .viewer>button,
+.psReferenceRoot .psViewerFrame .viewerHint,
+.psReferenceRoot .psViewerFrame .viewer>div[style*="pointer-events: none"]{display:none!important}
+.psReferenceRoot .psBuildAxis{
+ position:absolute;z-index:5;top:13px;right:14px;pointer-events:none;
+ height:49px;width:49px;border:1px solid #4b647d;border-radius:8px;
+ background:#18283cbb;display:flex;align-items:flex-start;justify-content:center;padding-top:6px
+}
+.psReferenceRoot .psBuildAxis b{font-size:11px;color:#42aafe}
+.psReferenceRoot .psBuildAxis span{position:absolute;bottom:7px;font-size:10px;font-weight:750}
+.psReferenceRoot .psBuildAxis .psAxisX{right:7px;color:#f48e85}
+.psReferenceRoot .psBuildAxis .psAxisY{left:7px;color:#54d2b5}
+.psReferenceRoot .psBuildDirectionLabel{
+ position:absolute;left:12px;top:12px;z-index:5;background:#163b51de;
+ border:1px solid #4c88aa;padding:7px 9px;border-radius:7px;font-size:10px;color:#d9edfc
+}
+.psReferenceRoot .psViewerToolbar{
+ flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;
+ gap:8px;padding:8px 7px 12px;min-height:49px;border-bottom:1px solid #495d70
+}
+.psReferenceRoot .psCameraButtons{display:flex;align-items:center;gap:3px;min-width:0}
+.psReferenceRoot .psCameraButtons>button{
+ border:1px solid #506375;background:#233344;color:#dbe8f3;
+ width:32px;height:32px;display:grid;place-items:center;border-radius:6px
+}
+.psReferenceRoot .psCameraButtons>button[aria-pressed=true]{background:#205783;border-color:#49b2f4;color:#fff}
+.psReferenceRoot .psCameraButtons>button:hover{border-color:#85b3d7}
+.psReferenceRoot .psViewerToolbar>select{
+ background:#1c2b3e;color:#f3f7fb;border:1px solid #53677b;border-radius:7px;
+ font-size:10px;padding:7px 10px;min-width:105px;max-width:120px
+}
+.psReferenceRoot .psReferenceViewSettings{display:grid;gap:9px;padding:12px 3px 0;flex:0 0 auto}
+.psReferenceRoot .psReferenceViewSettings h3{
+ display:flex;align-items:center;gap:9px;font-size:13px;font-weight:750;margin:0 0 1px
+}
+.psReferenceRoot .psReferenceViewSettings h3 svg{color:#e8f3fb}
+.psReferenceRoot .psReferenceViewSettings .psToggleRow{display:flex;flex-wrap:wrap;gap:5px}
+.psReferenceRoot .psReferenceViewSettings .psToggleRow button{
+ padding:7px 9px;background:#25364a;border:1px solid #55697e;border-radius:7px;
+ color:#eef5fc;font-size:10px;font-weight:600
+}
+.psReferenceRoot .psReferenceViewSettings .psToggleRow button.psToggleActive{
+ background:#215c8f;border-color:#54adf0;color:#fff
+}
+.psReferenceRoot .psOrientationControl,.psReferenceRoot .psOverlayControl{
+ min-height:40px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+ border-bottom:1px solid #35485e;padding:3px 0 8px
+}
+.psReferenceRoot .psOrientationControl label{display:flex;align-items:center;gap:8px;font-size:11px;color:#dbe6ef}
+.psReferenceRoot .psOrientationControl select{min-width:90px;font-size:11px;min-height:30px;padding:6px 9px}
+.psReferenceRoot .psOverlayControl{border:0;padding-bottom:0;min-height:26px}
+.psReferenceRoot .psOverlayControl label{font-size:11px;color:#d0dce7}
+.psReferenceRoot .psOverlayControl input{
+ width:34px;height:18px;accent-color:#2789d8;cursor:pointer;flex:0 0 34px
+}
+.psReferenceRoot .psBuildDisclosure{
+ border-top:1px solid #32475d;font-size:10px;color:#c2d0df;margin:3px 0 0
+}
+.psReferenceRoot .psBuildDisclosure>summary{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;
+ list-style:none;cursor:pointer;font-size:10px;font-weight:650
+}
+.psReferenceRoot .psBuildDisclosure>summary span{display:flex;align-items:center;gap:6px}
+.psReferenceRoot .psBuildDisclosure>summary::-webkit-details-marker{display:none}
+.psReferenceRoot .psBuildDisclosure input[type="range"]{width:100%;accent-color:#36a0df}
+.psReferenceRoot .psBuildDisclosure .psPlayback{margin:6px 0;gap:7px}
+.psReferenceRoot .psBuildDisclosure .psPlayback button{font-size:10px;padding:6px 8px}
+.psReferenceRoot .psViewerMethodNote{
+ font-size:9px;line-height:1.35;color:#a5baca;margin:0;display:block
+}
+.psReferenceRoot.psViewerExpanded .psViewerColumn{
+ position:fixed;z-index:100;top:74px;right:19px;bottom:18px;
+ left:max(260px,17vw);width:auto;height:auto;background:#0b1628f7;
+ border:1px solid #536a7e;border-radius:14px;box-shadow:0 18px 70px #0009
+}
+.psReferenceRoot.psViewerExpanded .psViewerFrame{min-height:350px}
+.psReferenceRoot .psHiddenInput{position:absolute!important;width:1px!important;height:1px!important;opacity:0}
+@media (min-width:1500px) and (min-height:800px){
+ .psReferenceRoot .psReferenceTopGrid{min-height:196px}
+ .psReferenceRoot .psReferenceBottomGrid{min-height:112px}
+ .psReferenceRoot .psReferenceViewerCard{margin-bottom:0}
+}
+@media (max-width:1440px){
+ .psRoot.psFit.psReferenceRoot{grid-template-columns:minmax(0,1fr) minmax(375px,37%)}
+ .psReferenceRoot .psReferenceTopGrid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+ .psReferenceRoot .psModelThumbnail{min-width:100px;min-height:125px;height:125px}
+ .psReferenceRoot .psReferenceGrid{gap:9px}
+ .psReferenceRoot .psReferenceGrid .psPanel{padding:10px}
+ .psReferenceRoot .psReferenceCardHeading strong{font-size:12px}
+ .psReferenceRoot .psModelContents{gap:8px}
+ .psReferenceRoot .psReferenceRecommendation button{padding:8px 9px}
+ .psReferenceRoot .psReferenceViewSettings .psToggleRow button{font-size:9px;padding:6px}
+}
+@media(max-width:1130px){
+ .psRoot.psFit.psReferenceRoot{grid-template-columns:1fr;height:auto;overflow:visible}
+ .psReferenceRoot .psWorkingColumn{min-height:610px;height:calc(100dvh - 110px)}
+ .psReferenceRoot .psViewerColumn{min-height:610px;overflow:visible;padding:12px}
+ .psReferenceRoot .psViewerFrame.psReferenceViewport{height:370px;min-height:370px;flex:0 0 auto}
+ .psReferenceRoot .psReferenceTopGrid{grid-template-columns:1.3fr 1fr}
+}
+@media(max-width:780px){
+ .oaRoot.oaProfessionalShell .psTopbarIdentity>div span{display:none}
+ .oaRoot.oaProfessionalShell .psTopbarActions{gap:7px}
+ .oaRoot.oaProfessionalShell .psSaveState{display:none}
+ .oaRoot.oaProfessionalShell .psMobileSidebarButton{display:grid}
+ .psReferenceRoot .psWorkspaceHeader{padding:9px 12px 0!important}
+ .psReferenceRoot .psStep{gap:5px;padding:5px 4px 9px;min-height:43px}
+ .psReferenceRoot .psStepCount{height:24px;width:24px;flex-basis:24px;font-size:10px}
+ .psReferenceRoot .psStepContent strong{font-size:10px}
+ .psReferenceRoot .psStep::after{display:none}
+ .psReferenceRoot .psStageScroll{padding:13px 12px}
+ .psReferenceRoot .psReferenceHeading h2{font-size:23px}
+ .psReferenceRoot .psReferenceTopGrid,.psReferenceRoot .psReferenceBottomGrid{grid-template-columns:1fr}
+ .psReferenceRoot .psModelThumbnail{height:140px;min-height:140px}
+ .psReferenceRoot .psAssistant{padding:0 12px 10px}
+ .psReferenceRoot .psReferenceRecommendation{gap:9px;padding:10px;flex-wrap:wrap}
+ .psReferenceRoot .psReferenceRecommendation button{max-width:none;width:100%}
+ .psReferenceRoot .psReferenceViewerCard{padding:9px}
+}
+@media(max-width:420px){
+ .psReferenceRoot .psModelContents{flex-wrap:wrap}
+ .psReferenceRoot .psModelThumbnail{flex:1 1 100%;min-height:165px;height:165px}
+ .psReferenceRoot .psReferenceViewSettings .psToggleRow{flex-wrap:wrap}
+ .psReferenceRoot .psCameraButtons>button{width:27px;height:27px}
+ .psReferenceRoot .psViewerToolbar>select{min-width:79px}
+ .psReferenceRoot .psBuildAxis{width:42px;height:42px}
+}
+@media(prefers-reduced-motion:reduce){
+ .psReferenceRoot *{scroll-behavior:auto!important}
+}
