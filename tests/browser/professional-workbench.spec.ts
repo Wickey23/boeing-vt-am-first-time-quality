@@ -224,7 +224,7 @@ test("pre-build PDF export is available directly after dimensional confirmation"
  const event=page.waitForEvent("download");
  await exportButton.click();
  const download=await event;
- expect(download.suggestedFilename()).toMatch(/^orientai-engineering-evidence-[a-f0-9]{8}\\.pdf$/);
+ expect(download.suggestedFilename()).toMatch(/^orientai-engineering-evidence-[a-f0-9]{8}\.pdf$/);
 });
 
 test("workbench answers failure questions with actual screening status and missing physics",async({page})=>{
@@ -235,7 +235,7 @@ test("workbench answers failure questions with actual screening status and missi
  const answer=page.getByRole("log",{name:"Engineering assistant messages"});
  await expect(answer).toContainText("PART-SPECIFIC PRE-BUILD RISK REVIEW");
  await expect(answer).toContainText("NOT PREDICTED");
- await expect(answer).toContainText("not a trained");
+ await expect(answer).toContainText("NOT a trained");
  await expect(answer).toContainText("Lack-of-fusion porosity");
 });
 
