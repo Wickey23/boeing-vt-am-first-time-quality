@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
  ArrowRight,ArrowUp,Box,Check,CheckCircle2,ChevronDown,ClipboardCheck,
- Download,FileText,FileUp,Info,Layers,MessageSquare,Pause,Play,RotateCcw,
+ Download,FileText,FileUp,Info,Layers,MessageSquare,Pause,Play,RotateCcw,Minimize2,
  Search,ShieldAlert,ShieldCheck,SlidersHorizontal,SquareArrowOutUpRight,X
 } from "lucide-react";
 import {useAnalysis} from "@/components/AnalysisProvider";
@@ -34,6 +34,7 @@ export default function ProfessionalStudy(){
  const a=useAnalysis();
  const inspect=usePartInspection(a.file,a.settings.unitScale);
  const [stage,setStage]=useState<Stage>("geometry");
+ const [fitScreen,setFitScreen]=useState(true);
  const [partHash,setPartHash]=useState<string|null>(null);
  const [url,setUrl]=useState<string|undefined>();
  const [showOverhangs,setShowOverhangs]=useState(false);
@@ -50,6 +51,8 @@ export default function ProfessionalStudy(){
  const [uploadBusy,setUploadBusy]=useState(false);
  const [dropActive,setDropActive]=useState(false);
  const partFileInput=useRef<HTMLInputElement>(null);
+ const stageScroll=useRef<HTMLDivElement>(null);
+ useEffect(()=>{stageScroll.current?.scrollTo({top:0,behavior:"instant"});},[stage,a.file]);
  const ctx=useStudioContext(partHash);
  const isConfirmed=completedPart(a.journey,a.file,a.settings.unitScale);
  useEffect(()=>{
@@ -142,12 +145,12 @@ export default function ProfessionalStudy(){
   finally{setExportBusy(false);}
  };
  const projectName=a.file?.name??"No model uploaded";
- return <div className="psRoot" aria-label="ORIENTAI professional engineering workbench">
+ return <div className={"psRoot"+(fitScreen?" psFit":"")} aria-label="ORIENTAI professional engineering workbench">
   <div className="psWorkingColumn">
    <header className="psWorkspaceHeader">
     <div className="psHeadline">
      <div><span className="psEyebrow">ENGINEERING WORKSPACE</span><h1>Pre-build assessment</h1></div>
-     <div className="psHeaderMeta"><span className="psFileName" title={projectName}>{projectName}</span><span className="psResearch">Research prototype</span></div>
+     <div className="psHeaderMeta"><span className="psFileName" title={projectName}>{projectName}</span><button type="button" className="psDensityButton" aria-pressed={fitScreen} title="Fit the workbench to the available screen without browser zoom" onClick={()=>setFitScreen(v=>!v)}><Minimize2 size={14}/>{fitScreen?"Fit screen":"Compact view"}</button><span className="psResearch">Research prototype</span></div>
     </div>
     <nav className="psStepper" aria-label="Assessment stages">
      {stageEntries.map(({id,label,detail,Icon},i)=><button type="button" key={id}
@@ -167,7 +170,7 @@ export default function ProfessionalStudy(){
      }}>{next.action}<ArrowRight size={15}/></button>
     </div>
    </header>
-   <div className="psStageScroll" role="region" aria-label="Active assessment stage">
+   <div className="psStageScroll" ref={stageScroll} role="region" aria-label="Active assessment stage">
     {stage==="geometry"&&<section className="psStage" aria-label="Part geometry stage">
      <div className="psSectionHead"><span>STAGE 01 / PART GEOMETRY</span><h2>Inspect and confirm the model</h2><p>Review the actual mesh and dimensional scale before performing a metal-AM screening.</p></div>
      {!a.file?<div className="psEmptyCard" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();attach(e.dataTransfer.files[0]);}}>
