@@ -149,7 +149,7 @@ export default function ProfessionalStudy(){
   const q=draft.trim();if(!q)return;
   let response:string;
   if(!a.file)response="Upload an STL first. I can then inspect dimensions, geometric manufacturing concerns, and the assembly information you provide.";
-  else if(/\\b(fail(?:ure|ures|ing)?|risks?|defects?|porosity|crack(?:s|ing)?|distort(?:ion)?|quality|printability|support|overhang|stress)\\b/i.test(q)){
+  else if(/\b(fail(?:ure|ures|ing)?|risks?|defects?|porosity|crack(?:s|ing)?|distort(?:ion)?|quality|printability|support|overhang|stress)\b/i.test(q)){
    response=explainPartFailureModes({
     partName:a.file.name,unitsConfirmed:isConfirmed,hasOrientation:currentRun,
     meshFindings,orientationFindings:findings,coverage,
