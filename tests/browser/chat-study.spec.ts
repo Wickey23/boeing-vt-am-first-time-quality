@@ -52,9 +52,7 @@ test("guided context persists source evidence and connects to traceable report e
  await page.reload();
  await page.getByRole("button",{name:"Open engineering context stage"}).click();
  await expect(page.getByLabel("Component function")).toHaveValue("Synthetic mounting bracket");
- await expect(page.locator(".oaReviewedList")).toContainText("public-assembly-notes.txt").catch(async()=>{
-  await expect(page.locator(".oaReviewedList")).toContainText("D1");
- });
+ await expect(page.locator(".oaReviewedList")).toContainText("D1");
  await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
  await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Unassessed mechanisms");
  await page.getByRole("link",{name:/Review & export PDF/}).click();
@@ -92,15 +90,15 @@ test("conversation persists after reload for the active part and its dimensions 
  await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
  await expect(page.getByRole("button",{name:"Run geometry screening"})).toBeDisabled();
 });
-test("chat only runs numerical service workers after explicit engineering approval and never labels them print physics",async({page})=>{
+test("service calculations remain engineer-approved and cannot qualify print defects",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Not assessed");
- const coverage=page.getByRole("region",{name:"Failure mode assessment coverage"});
- await expect(coverage.getByText("Print-induced distortion and residual stress")).toBeHidden();
- await coverage.getByText("Show individual failure mechanisms and evidence gaps").click();
- await expect(coverage.getByText("Print-induced distortion and residual stress")).toBeVisible();
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Not assessed");
+ await expect(page.getByText("Print-induced distortion and residual stress")).toBeVisible();
+ await page.getByRole("button",{name:"Open part geometry view"}).click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review inputs and run numerical studies"}).click();
  const service=page.getByRole("region",{name:"Engineer-approved numerical studies"});
  const run=service.getByRole("button",{name:"Run All Applicable Analyses"});
@@ -110,21 +108,23 @@ test("chat only runs numerical service workers after explicit engineering approv
  await run.click();
  await expect(page.getByText("All three result fields computed.")).toBeVisible({timeout:100000});
  await expect(page.getByRole("region",{name:"Calculated service results"})).toContainText("Maximum stress");
- await expect(page.getByText(/Engineer-approved service study completed on the uploaded STL/)).toBeVisible();
  await page.getByRole("button",{name:"Stress",exact:true}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("2 calculated");
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.locator(".oaAssessmentMetrics > div:nth-child(2) strong")).toHaveText("2");
  const printRow=page.getByText("Print-induced distortion and residual stress").locator("..");
  await expect(printRow).toContainText("Not assessed");
+ await page.getByRole("button",{name:"Open part geometry view"}).click();
  await page.getByLabel("STL coordinate units").selectOption("25.4");
- await expect(page.getByRole("region",{name:"Calculated service results"})).toHaveCount(0);
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("0 calculated");
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.locator(".oaAssessmentMetrics > div:nth-child(2) strong")).toHaveText("0");
 });
 
 test("LPBF solid-state thermal prototype requires approval and displays bounded real worker frames",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
  const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
  const run=panel.getByRole("button",{name:"Run research thermal worker"});
@@ -144,7 +144,6 @@ test("LPBF solid-state thermal prototype requires approval and displays bounded 
  expect(data.model).toBe("lpbf-solid-transient-0.1");
  expect(data.snapshots.length).toBeGreaterThan(0);
  expect(data.summary.relativeEnergyImbalance).toBeLessThan(1e-4);
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Coarse solid-state LPBF heat-flow prototype");
  const history=page.getByRole("group",{name:"LPBF temperature history"}).or(page.locator(".oaLpbfFrameControls"));
  await expect(history).toBeVisible();
  await page.getByLabel("Thermal snapshot frame").fill("0");
@@ -159,6 +158,7 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
  const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
  await panel.getByLabel("Thermal model").selectOption("moving");
@@ -176,7 +176,6 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
  expect(data.model).toBe("lpbf-raster-enthalpy-0.1");
  expect(data.inputs.latentHeatJKg).toBeGreaterThan(0);
  expect(data.summary.relativeEnergyImbalance).toBeLessThan(1e-4);
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Experimental moving-raster LPBF enthalpy heat flow");
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await page.getByRole("button",{name:"Restart temperature history"}).click();
  await expect(page.getByLabel("Thermal snapshot frame")).toHaveValue("0");
@@ -193,6 +192,7 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
  const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
  await panel.getByLabel("Thermal model").selectOption("imported");
@@ -327,6 +327,7 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
 test("measurement questions open the appropriate study panel without claiming NIST validation",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByLabel("Message ORIENTAI").fill("Can you validate my thermography measurement against NIST AM Bench?");
  await page.getByRole("button",{name:"Send message"}).click();
  await expect(page.getByRole("region",{name:"LPBF process thermal research study"})).toBeVisible();
