@@ -140,3 +140,71 @@ test("CAD viewport owns the right pane, with secondary controls collapsed by def
  await viewer.getByRole("combobox",{name:"Geometry display mode"}).selectOption("solid");
  await expect(viewer.getByRole("checkbox",{name:"Preview geometric overhang overlay"})).not.toBeChecked();
 });
+
+
+test("desktop navigation collapses into accessible icon rail and persists after reload",async({page})=>{
+ await page.setViewportSize({width:1707,height:855});
+ await page.goto("/copilot/workbench");
+ const sidebar=page.getByRole("complementary",{name:"Workspace sidebar"});
+ const collapse=page.getByRole("button",{name:"Collapse navigation"});
+ await expect(collapse).toBeVisible();
+ await expect(collapse).toHaveAttribute("aria-expanded","true");
+ const old=await sidebar.boundingBox();expect(old).not.toBeNull();
+ await collapse.click();
+ const expand=page.getByRole("button",{name:"Expand navigation"});
+ await expect(expand).toBeVisible();
+ await expect(expand).toHaveAttribute("aria-expanded","false");
+ await expect(sidebar).toHaveCSS("width","58px");
+ const next=await sidebar.boundingBox();
+ expect(next!.width).toBeLessThan(old!.width-100);
+ await expect(sidebar.getByRole("link",{name:"Current study"})).toBeVisible();
+ await expect(sidebar.getByRole("link",{name:"Engineering reports"})).toBeVisible();
+ await page.reload();
+ await expect(page.getByRole("button",{name:"Expand navigation"})).toBeVisible();
+ await expect(sidebar).toHaveCSS("width","58px");
+ await page.getByRole("button",{name:"Expand navigation"}).click();
+ await expect(page.getByRole("button",{name:"Collapse navigation"})).toBeVisible();
+ const again=await sidebar.boundingBox();expect(again!.width).toBeGreaterThan(190);
+});
+
+test("study pane can be hidden and restored while CAD pane keeps its controls",async({page})=>{
+ await page.setViewportSize({width:1707,height:855});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const viewer=page.getByRole("complementary",{name:"Persistent engineering model viewer"});
+ const separator=page.getByRole("separator",{name:"Resize study and 3D viewer panels"});
+ await expect(separator).toHaveAttribute("aria-valuenow","42");
+ await separator.focus();await page.keyboard.press("ArrowLeft");
+ await expect(separator).toHaveAttribute("aria-valuenow","44");
+ await page.keyboard.press("Home");
+ await expect(separator).toHaveAttribute("aria-valuenow","35");
+ await page.keyboard.press("End");
+ await expect(separator).toHaveAttribute("aria-valuenow","64");
+ await page.getByRole("button",{name:"Hide study panel"}).click();
+ await expect(page.locator(".psRoot")).toHaveClass(/psStudyHidden/);
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await expect(viewer.getByRole("combobox",{name:"Geometry display mode"})).toBeVisible();
+ await expect(separator).toHaveCount(0);
+ const dimensions=await viewer.boundingBox();
+ expect(dimensions!.width).toBeGreaterThan(1050);
+ await page.getByRole("button",{name:"Show study panel"}).click();
+ await expect(page.getByRole("heading",{name:"Part Geometry",exact:true})).toBeVisible();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeVisible();
+ await expect(page.getByRole("separator",{name:"Resize study and 3D viewer panels"})).toHaveAttribute("aria-valuenow","64");
+ const pageWidth=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(pageWidth).toBeLessThanOrEqual(2);
+});
+
+test("mobile navigation remains an accessible overlay rather than collapsed desktop rail",async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto("/copilot/workbench");
+ await expect(page.getByRole("button",{name:"Collapse navigation"})).toBeHidden();
+ const toggle=page.getByRole("button",{name:"Open navigation"});
+ await expect(toggle).toBeVisible();
+ await expect(toggle).toHaveAttribute("aria-expanded","false");
+ await toggle.click();
+ await expect(page.getByRole("button",{name:"Close navigation"})).toHaveAttribute("aria-expanded","true");
+ await expect(page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("link",{name:"Current study"})).toBeVisible();
+ await page.getByRole("button",{name:"Close sidebar"}).click();
+ await expect(page.getByRole("button",{name:"Open navigation"})).toHaveAttribute("aria-expanded","false");
+});
