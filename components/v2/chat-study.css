@@ -524,3 +524,10 @@
 .oaViewerContextNote strong{font-size:12px}
 .oaViewerContextNote span{font-size:11px;color:var(--oa-text)}
 .oaViewerContextNote small{font-size:10px;line-height:1.45;color:var(--oa-muted)}
+
+.oaReportActions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.oaReportActions button{display:inline-flex;align-items:center;gap:7px;border:1px solid #456e91;background:#214b70;color:#fff;border-radius:8px;padding:10px 12px;font-size:11px;font-weight:650;cursor:pointer}
+.oaReportActions button:disabled{opacity:.45;cursor:not-allowed}
+.oaReportActions a{background:var(--oa-bg);color:var(--oa-text);border-color:var(--oa-border);padding:9px 10px}
+.oaReportActions .oaStudyError{flex-basis:100%}
+@media(max-width:850px){.oaReportActions,.oaReportActions button,.oaReportActions a{width:100%;justify-content:center}}
