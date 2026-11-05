@@ -235,3 +235,10 @@
  grid-template-columns:none!important;align-items:center!important;justify-content:space-between!important;
  border:0!important;padding:0!important;background:transparent!important;
 }
+
+.oaRoot:has(.psRoot) .psThreadHeader{
+ height:auto!important;min-height:0!important;display:flex!important;
+ grid-template-columns:none!important;padding:8px 11px!important;
+ align-items:center!important;justify-content:space-between!important;
+ background:transparent!important;border:0!important;border-bottom:1px solid #345169!important;
+}
