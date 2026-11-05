@@ -3,7 +3,7 @@ import Link from "next/link";
 import {usePathname,useRouter} from "next/navigation";
 import {useState} from "react";
 import {useAnalysis} from "@/components/AnalysisProvider";
-import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck} from "lucide-react";
+import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck,LayoutDashboard} from "lucide-react";
 import "./chat-shell.css";
 import EngineeringBuildTicker from "./EngineeringBuildTicker";
 
@@ -45,6 +45,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
     <SquarePen size={19}/><span className="oaNavText">New study</span>
    </button>
    <nav className="oaNavigation" aria-label="Primary navigation">
+    {nav("/copilot/workbench","Engineering workbench",LayoutDashboard)}
     {nav("/copilot","Current study",MessageSquare)}
     {nav("/report","Engineering reports",FileText)}
    </nav>
