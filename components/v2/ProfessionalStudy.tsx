@@ -22,6 +22,7 @@ import {useStudioContext} from "./useStudioContext";
 import StudioCanvasFallback from "./StudioCanvasFallback";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import "./professional-study.css";
+import "./professional-density.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
