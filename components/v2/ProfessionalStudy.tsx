@@ -26,6 +26,7 @@ import "./professional-study.css";
 import "./professional-density.css";
 import "./professional-reference.css";
 import "./professional-enterprise.css";
+import "./professional-workspace-layout.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
@@ -193,7 +194,7 @@ export default function ProfessionalStudy(){
      {stageEntries.map(({id,label},i)=><button type="button" key={id}
       className={"psStep"+(stage===id?" psActive":"")}
       aria-current={stage===id?"step":undefined}
-      onClick={()=>setStage(id)}>
+      onClick={()=>{setStage(id);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
       <span className="psStepCount">{i+1}</span>
       <span className="psStepContent"><strong>{label}</strong></span>
      </button>)}
