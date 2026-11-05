@@ -535,16 +535,6 @@ export default function ChatStudy(){
        <p><strong>Method:</strong> {item.method}</p><p><strong>Limitations:</strong> {item.limitations}</p><p><strong>Next inputs:</strong> {item.nextInput}</p>
       </details>)}</div>
      </section>}
-    {a.file&&<section className="oaBuildPreview" aria-label="Print buildup visualization">
-      <div className="oaBuildTitle"><strong>Layer buildup preview</strong><span>{layer}% of the model height</span></div>
-      <div className="oaRunActions"><button className="oaSecondaryRun" type="button" onClick={()=>{if(layer>=100)setLayer(1);setPlaying(v=>!v);}}>{playing?"Pause build preview":"Play build preview"}</button><button className="oaSecondaryRun" type="button" onClick={()=>{setPlaying(false);setLayer(1);}}>Restart</button></div>
-      <input aria-label="Layer buildup percentage" type="range" min="1" max="100" step="1" value={layer} onChange={e=>{setPlaying(false);setLayer(Number(e.target.value))}}/>
-      <p className="oaSubtle">The model viewer clips the actual STL geometry at the selected build height. This is a visualization of geometric progression only—not real toolpaths, layer timing, temperature evolution or material deposition physics.</p>
-      <div className="oaToggleControls">
-       <label><input type="checkbox" checked={showOverhangs} onChange={e=>setShowOverhangs(e.target.checked)}/> Highlight down-facing surfaces</label>
-       <label><input type="checkbox" checked={showSupports} onChange={e=>setShowSupports(e.target.checked)}/> Conceptual support preview</label>
-      </div>
-     </section>}
     <div ref={bottom}/>
    </div>
    <div className="oaStudyComposerArea">
@@ -579,7 +569,7 @@ export default function ChatStudy(){
     onPointerCancel={()=>setResizingPanel(false)}><span aria-hidden="true"/></div>}
   {showArtifact&&a.file&&<aside id="oa-engineering-side-panel" className="oaStudyArtifact" aria-label="Expanded 3D engineering model">
    <header><span><BoxIcon size={18}/> {a.file.name}</span><button ref={sideCloseRef} type="button" onClick={closeSideView} aria-label="Close 3D viewer" title="Collapse model side panel"><X size={19}/></button></header>
-   <div className="oaMetalEngineeringTools" role="group" aria-label="Metal additive manufacturing engineering view"><strong>Metal AM engineering view</strong><div><button type="button" aria-pressed={resultField==="geometry"&&!showOverhangs&&!showSupports} onClick={()=>{setSideMode("model");setResultField("geometry");setShowOverhangs(false);setShowSupports(false);setLayer(100)}}>Solid part</button><button type="button" aria-pressed={showOverhangs} onClick={()=>{setSideMode("model");setResultField("geometry");setShowOverhangs(v=>!v)}}>Overhang faces</button><button type="button" aria-pressed={showSupports} onClick={()=>{setSideMode("model");setResultField("geometry");setShowSupports(v=>!v)}}>Conceptual supports</button></div><label>Build progression · {layer}%<input aria-label="Build progression percentage" type="range" min="0" max="100" value={layer} onChange={e=>{setSideMode("model");setResultField("geometry");setLayer(Number(e.target.value))}}/></label><small>STL geometry and geometric screening only. Supports are illustrative, not machine-ready structures or validated defect predictions.</small></div>
+   <div className="oaMetalEngineeringTools" role="group" aria-label="Metal additive manufacturing engineering view"><strong>Metal AM engineering view</strong><div><button type="button" aria-pressed={resultField==="geometry"&&!showOverhangs&&!showSupports} onClick={()=>{setSideMode("model");setResultField("geometry");setShowOverhangs(false);setShowSupports(false);setLayer(100)}}>Solid part</button><button type="button" aria-pressed={showOverhangs} onClick={()=>{setSideMode("model");setResultField("geometry");setShowOverhangs(v=>!v)}}>Overhang faces</button><button type="button" aria-pressed={showSupports} onClick={()=>{setSideMode("model");setResultField("geometry");setShowSupports(v=>!v)}}>Conceptual supports</button></div><div className="oaMetalBuildPlayback"><button type="button" onClick={()=>{setSideMode("model");setResultField("geometry");if(layer>=100)setLayer(1);setPlaying(v=>!v);}}>{playing?"Pause build":"Play build"}</button><button type="button" onClick={()=>{setPlaying(false);setSideMode("model");setResultField("geometry");setLayer(1);}}>Restart</button></div><label>Build progression · {layer}%<input aria-label="Build progression percentage" type="range" min="1" max="100" value={layer} onChange={e=>{setPlaying(false);setSideMode("model");setResultField("geometry");setLayer(Number(e.target.value))}}/></label><small>STL geometry and geometric screening only. Supports are illustrative, not machine-ready structures or validated defect predictions.</small></div>
    {activeSlicePreview&&<div className="oaSideModeSwitch" role="group" aria-label="Model or sliced layer view">
      <button type="button" aria-pressed={sideMode==="model"} onClick={()=>setSideMode("model")}>3D model</button>
      <button type="button" aria-pressed={sideMode==="sliced"} onClick={()=>setSideMode("sliced")}>Physical layers</button>
