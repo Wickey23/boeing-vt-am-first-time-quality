@@ -161,11 +161,13 @@ export default function ProfessionalStudy(){
   a.result.configuration.unitScale===a.settings.unitScale);
  const selected=currentRun?(a.result?.candidates.find(c=>c.id===a.selected)??a.result?.candidates[0]):undefined;
  const findings=selected&&currentRun&&a.result?screenCandidate(selected,a.result.candidates):[];
+ const hasStructuralStudy=Boolean(currentRun&&selected&&a.result?.structural?.candidateId===selected.id);
+ const hasSteadyThermalStudy=Boolean(currentRun&&selected&&a.result?.thermal?.candidateId===selected.id);
  const meshFindings=inspect.data?.audit.findings??[];
  const coverage=failureCoverage({
   hasMeshAudit:Boolean(inspect.data),hasOrientationRun:currentRun,
-  hasStructuralStudy:Boolean(currentRun&&a.result?.structural),
-  hasSteadyThermalStudy:Boolean(currentRun&&a.result?.thermal),
+  hasStructuralStudy:hasStructuralStudy,
+  hasSteadyThermalStudy:hasSteadyThermalStudy,
   process:a.journey.process
  });
  const counts=coverageSummary(coverage);
@@ -178,8 +180,8 @@ export default function ProfessionalStudy(){
   attachmentNotes:ctx.knowledge?.attachmentNotes??"",requirements:ctx.knowledge?.reviewedRequirements??"",
   documentCount:ctx.sources.length,reviewedEvidenceCount:ctx.reviewed.length,
   processWindow:partHash&&isConfirmed&&a.journey.process==="PBF_LB_METAL"?processAssessment:null,
-  hasStructuralStudy:Boolean(currentRun&&a.result?.structural),
-  hasSteadyThermalStudy:Boolean(currentRun&&a.result?.thermal),coverage
+  hasStructuralStudy:hasStructuralStudy,
+  hasSteadyThermalStudy:hasSteadyThermalStudy,coverage
  });
  const manufacturingFlow=manufacturingProcessFlow({
   hasPart:Boolean(a.file),unitsConfirmed:isConfirmed,hasGeometryRun:currentRun,
@@ -274,8 +276,8 @@ export default function ProfessionalStudy(){
     componentName:k.componentName,assemblyContext:k.assemblyContext,attachmentNotes:k.attachmentNotes,
     requirements:k.reviewedRequirements,documentCount:ctx.sources.length,
     reviewedEvidenceCount:ctx.reviewed.length,
-    hasNumericalServiceStudy:Boolean(currentRun&&a.result?.structural),
-    hasSteadyThermalStudy:Boolean(currentRun&&a.result?.thermal),
+    hasNumericalServiceStudy:hasStructuralStudy,
+    hasSteadyThermalStudy:hasSteadyThermalStudy,
     hasLpbfGeometryCandidates:currentRun
    });
    const approvedBindings=activeParameterBindings(k.parameterBindings,ctx.sources,ctx.reviewed,activeServiceCase(a.servicePlan));
