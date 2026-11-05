@@ -4,11 +4,15 @@ import {AlertTriangle,ArrowRight,CheckCircle2,ChevronDown,ClipboardList,FileText
 import type {PrebuildAssessment,PrebuildFinding,PrebuildAction} from "@/lib/prebuild-assessment";
 import type {ManufacturingFlowStep} from "@/lib/manufacturing-process-flow";
 import type {FailureCoverage} from "@/lib/failure-coverage";
+import type {FeedbackDraft,InspectionFeedback} from "@/lib/part-inspection-feedback";
+import ProfessionalFeedbackPanel from "./ProfessionalFeedbackPanel";
 type Tab="findings"|"actions"|"workflow"|"coverage";
 const rank:Record<string,number>={critical:0,high:1,medium:2,information:3};
-export default function ProfessionalAssessmentPanel({assessment,flow,coverage,hasPart,canExport,hasGeometry,exportBusy,onExport,onGeometryExport,onJsonExport,onNavigate}:{
+export default function ProfessionalAssessmentPanel({assessment,flow,coverage,hasPart,canExport,hasGeometry,exportBusy,feedback,feedbackError,onAddFeedback,onRemoveFeedback,onExport,onGeometryExport,onJsonExport,onNavigate}:{
  assessment:PrebuildAssessment;flow:ManufacturingFlowStep[];coverage:FailureCoverage[];
  hasPart:boolean;canExport:boolean;hasGeometry:boolean;exportBusy:boolean;
+ feedback:InspectionFeedback[];feedbackError:string;
+ onAddFeedback:(draft:FeedbackDraft)=>void;onRemoveFeedback:(id:string)=>void;
  onExport:()=>void;onGeometryExport:()=>void;onJsonExport:()=>void;
  onNavigate:(stage:"geometry"|"context"|"assessment")=>void;
 }){
@@ -105,6 +109,8 @@ export default function ProfessionalAssessmentPanel({assessment,flow,coverage,ha
      </details>
     </div>
    </li>)}</ol>
+   <ProfessionalFeedbackPanel findings={assessment.findings.map(f=>({id:f.id,title:f.title}))}
+    records={feedback} error={feedbackError} onAdd={onAddFeedback} onRemove={onRemoveFeedback}/>
   </div>}
   {tab==="coverage"&&<div className="psDecisionView">
    <div className="psDecisionSectionBar"><div><strong>Supported vs unassessed methods</strong>
