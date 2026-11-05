@@ -12,11 +12,12 @@ type Props={
  unitsConfirmed:boolean;
  hasGeometryRun:boolean;
  onViewPart:()=>void;
+ onReviewPart:()=>void;
 };
 /** Guided entry into the existing part-scoped document, evidence and report pipeline.
  * Metadata and extracted text remain browser-local; a PDF is NOT automatically read.
  */
-export default function EngineeringAssessmentJourney({partHash,fileName,unitsConfirmed,hasGeometryRun,onViewPart}:Props){
+export default function EngineeringAssessmentJourney({partHash,fileName,unitsConfirmed,hasGeometryRun,onViewPart,onReviewPart}:Props){
  const [knowledge,setKnowledge]=useState<ProjectKnowledge|null>(null);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
@@ -71,7 +72,7 @@ export default function EngineeringAssessmentJourney({partHash,fileName,unitsCon
     <span className="oaAssessmentStepIcon"><ClipboardList size={17}/></span><span><strong>03 · Assessment & export</strong><small>{hasGeometryRun?"Geometry screening available":"Run supported checks"}</small></span><ArrowRight size={15}/>
    </Link>
   </nav>
-  <div className="oaAssessmentNext"><FileCheck2 size={17}/><span><strong>Recommended next action</strong>{next}</span></div>
+  <div className="oaAssessmentNext"><FileCheck2 size={17}/><span><strong>Recommended next action</strong>{next}</span>{!unitsConfirmed?<button type="button" onClick={onReviewPart}>Review dimensions</button>:sources.length>0?<Link href={reviewed===0?"/copilot/advanced?stage=documents":"/copilot/advanced?stage=requirements"}>{reviewed===0?"Review evidence":"Confirm requirements"}</Link>:null}</div>
   <div className="oaAssessmentUpload">
    <div><strong>Add assembly / requirements document</strong><small>PDF, DOCX, XLSX and text references. Documents are kept local to this browser; no automatic AI transmission.</small></div>
    <label className="oaAssessmentUploadButton"><FileUp size={16}/>{busy?"Reading…":"Upload documents"}<input type="file" aria-label="Upload assembly documents" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.csv,.json,.log" disabled={!partHash||busy} onChange={e=>{void attach(e.target.files);e.currentTarget.value="";}}/></label>
