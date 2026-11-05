@@ -16,6 +16,7 @@ import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
 import {reportPDF,downloadJSON} from "@/lib/engineering-report";
 import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
 import {findEvidence,localCopilotReply} from "@/lib/copilot-context";
+import {explainPartFailureModes} from "@/lib/part-failure-explanation";
 import {activeParameterBindings} from "@/lib/engineering-parameter-binding";
 import {activeServiceCase} from "@/lib/service-plan";
 import {useStudioContext} from "./useStudioContext";
@@ -137,7 +138,15 @@ export default function ProfessionalStudy(){
   const q=draft.trim();if(!q)return;
   let response:string;
   if(!a.file)response="Upload an STL first. I can then inspect dimensions, geometric manufacturing concerns, and the assembly information you provide.";
-  else if(ctx.knowledge){
+  else if(/\\b(fail(?:ure|ures|ing)?|risks?|defects?|porosity|crack(?:s|ing)?|distort(?:ion)?|quality|printability|support|overhang|stress)\\b/i.test(q)){
+   response=explainPartFailureModes({
+    partName:a.file.name,unitsConfirmed:isConfirmed,hasOrientation:currentRun,
+    meshFindings,orientationFindings:findings,coverage,
+    assemblyKnown:Boolean(ctx.knowledge?.componentName.trim()&&ctx.knowledge?.assemblyContext.trim()),
+    requirementsKnown:Boolean(ctx.knowledge?.attachmentNotes.trim()&&ctx.knowledge?.reviewedRequirements.trim()),
+    documentCount:ctx.sources.length,reviewedCount:ctx.reviewed.length
+   });
+  }else if(ctx.knowledge){
    const result=localCopilotReply(ctx.knowledge,q,{
     partName:a.file.name,confirmed:isConfirmed,hasOrientation:currentRun,
     loadsReviewed:ctx.reviewed.some(x=>x.category==="load"),process:a.journey.process
