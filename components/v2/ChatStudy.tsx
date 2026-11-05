@@ -474,23 +474,37 @@ export default function ChatStudy(){
 
     {activeStage==="part"&&<>
      <div className="oaStageIntro oaPartIntro"><span className="oaStageEyebrow">STAGE 01 / PART GEOMETRY</span><h1>Inspect and confirm the model</h1><p>Review the uploaded geometry, verify scale, and run the supported manufacturing screens before making engineering decisions.</p></div>
-    {a.file&&<article className="oaInChatModel" aria-label="Uploaded STL model in chat">
-      <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button ref={sideToggleRef} onClick={()=>showArtifact?closeSideView():setShowArtifact(true)} type="button" aria-expanded={showArtifact} aria-controls="oa-engineering-side-panel"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
-      {showArtifact&&<p className="oaSideViewHint">3D model open in side workspace. Use X or Escape to collapse; reopen it here anytime.</p>}
-      {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary fallback={<STLCanvasFallback url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={serviceField?undefined:layer/100} highlightTriangles={!serviceField?riskFocus:undefined}/>}><ModelViewer highlightTriangles={!serviceField?riskFocus:undefined} url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
-      <div className="oaModelMetadata">
-       <span>{inspect.data?inspect.data.audit.triangles.toLocaleString()+" mesh triangles":"Inspecting mesh..."}</span>
-       <span>{inspect.data?Object.values(inspect.data.dimensions).map(n=>n.toFixed(1)).join(" × ")+" mm (selected units)":"Dimensions pending"}</span>
-      </div>
-      <div className="oaModelControls"><label>STL coordinate units
-       <select aria-label="STL coordinate units" value={a.settings.unitScale} onChange={e=>a.update("unitScale",Number(e.target.value))}>
-        <option value={1}>Millimeters</option><option value={25.4}>Inches</option><option value={1000}>Meters</option>
-       </select></label>
-       <button type="button" onClick={()=>a.confirmPart()} disabled={!inspect.data||isConfirmed}> {isConfirmed?"Units confirmed":"Confirm units & dimensions"}</button>
-      </div>
-      {unitWarning&&<p className="oaUnitScaleWarning" role="alert"><AlertTriangle size={17}/><span><strong>Review apparent unit-scale mismatch.</strong> {unitWarning.message} If units are corrected, reconfirm against the source drawing.</span></p>}
-      <p className="oaSubtle">STL does not encode units. Confirm against the source drawing. 3D color is geometric screening, not a predicted defect field.</p>
-     </article>}
+    {a.file&&<article className="oaInChatModel oaGeometryOverview" aria-label="Uploaded STL model in chat">
+     <header><span><BoxIcon size={18}/> Part geometry · {a.file.name}</span>
+      <button ref={sideToggleRef} onClick={()=>showArtifact?closeSideView():setShowArtifact(true)} type="button" aria-expanded={showArtifact} aria-controls="oa-engineering-side-panel"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button>
+     </header>
+     {showArtifact&&<p className="oaSideViewHint">The uploaded STL is shown in the engineering viewer on the right.</p>}
+     {!showArtifact&&<div className="oaInlineViewer"><ViewerErrorBoundary fallback={<STLCanvasFallback url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={serviceField?undefined:layer/100} highlightTriangles={!serviceField?riskFocus:undefined}/>}><ModelViewer highlightTriangles={!serviceField?riskFocus:undefined} url={url} unitScale={a.settings.unitScale} rotation={serviceField?undefined:selected?.rotation} overhangDeg={a.settings.overhangDeg} showOverhangs={!serviceField&&showOverhangs} showSupports={!serviceField&&showSupports} buildFraction={resultField==="lpbf"&&lpbfFrame?lpbfFrame.fraction:serviceField?undefined:layer/100} field={serviceField} fieldLabel={resultField==="lpbf"?(lpbfResult?.engine.includes("raster")?"Unvalidated raster-enthalpy temperature":"Solid-state LPBF research temperature"):resultField==="stress"?"Service stress":resultField==="displacement"?"Service displacement":resultField==="thermal"?"Steady temperature":undefined}/></ViewerErrorBoundary></div>}
+     <div className="oaGeometryCards">
+      <section className="oaGeometryFactCard" aria-label="STL mesh facts">
+       <h2><CheckCircle2 size={17}/> Mesh inspection</h2>
+       <dl>
+        <div><dt>Triangles</dt><dd>{inspect.data?inspect.data.audit.triangles.toLocaleString():"Inspecting…"}</dd></div>
+        <div><dt>Open edges</dt><dd>{inspect.data?inspect.data.audit.openEdges.toLocaleString():"—"}</dd></div>
+        <div><dt>Non-manifold edges</dt><dd>{inspect.data?inspect.data.audit.nonManifoldEdges.toLocaleString():"—"}</dd></div>
+        <div><dt>Mesh topology</dt><dd>{inspect.error?"Inspection failed":inspect.data?(meshFindings.length?"Review required":"Screening complete"):"Pending"}</dd></div>
+       </dl>
+       <p>Geometry-only mesh screening. No manufacturing defect prediction.</p>
+      </section>
+      <section className="oaGeometryFactCard oaGeometryUnitsCard" aria-label="Dimensions and STL units">
+       <h2><BoxIcon size={17}/> Dimensions and units</h2>
+       <div className="oaModelMetadata"><span>Bounds (X × Y × Z)</span><strong>{inspect.data?Object.values(inspect.data.dimensions).map(n=>n.toFixed(1)).join(" × ")+" mm":"Pending inspection"}</strong></div>
+       <div className="oaModelControls"><label>STL coordinate units
+        <select aria-label="STL coordinate units" value={a.settings.unitScale} onChange={e=>a.update("unitScale",Number(e.target.value))}>
+         <option value={1}>Millimeters</option><option value={25.4}>Inches</option><option value={1000}>Meters</option>
+        </select></label>
+        <button type="button" onClick={()=>a.confirmPart()} disabled={!inspect.data||isConfirmed}>{isConfirmed?"Units confirmed":"Confirm units & dimensions"}</button>
+       </div>
+       <p>STL does not encode units. Confirm these against the source drawing.</p>
+      </section>
+     </div>
+     {unitWarning&&<p className="oaUnitScaleWarning" role="alert"><AlertTriangle size={17}/><span><strong>Review apparent unit-scale mismatch.</strong> {unitWarning.message} If units are corrected, reconfirm against the source drawing.</span></p>}
+    </article>}
 
     {a.file&&<section className="oaProcessCard" aria-label="Analysis workflow">
       <header><span><SlidersHorizontal size={17}/> Engineering analysis activity</span><span className="oaProcessLabel">{a.busy?"Analyzing":currentRun?"Screening complete":"Preflight"}</span></header>
