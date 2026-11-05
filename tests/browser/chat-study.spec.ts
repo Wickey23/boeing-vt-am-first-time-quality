@@ -3,7 +3,7 @@ import {readFile} from "node:fs/promises";
 test("uploaded STL appears in chat with inspected mesh, geometric build preview and explicit physics limitations",async({page})=>{
  const externalCalls:string[]=[];
  page.on("request",r=>{if(r.method()==="POST"&&/engineering-copilot|llm-api/.test(r.url()))externalCalls.push(r.url());});
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Upload STL").click();
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toBeVisible();
@@ -37,7 +37,7 @@ test("uploaded STL appears in chat with inspected mesh, geometric build preview 
  expect(externalCalls).toEqual([]);
 });
 test("auto-open model can be resized by keyboard and closed on mobile",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  const panel=page.getByRole("complementary",{name:"Expanded 3D engineering model"});
  await expect(panel).toBeVisible();
@@ -55,7 +55,7 @@ test("auto-open model can be resized by keyboard and closed on mobile",async({pa
  await expect(page.getByRole("button",{name:"Open side view"})).toBeVisible();
 });
 test("conversation persists after reload for the active part and its dimensions must be reconfirmed when scale changes",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByLabel("Message ORIENTAI").fill("Does an STL prove that the part will not crack?");
  await page.getByRole("button",{name:"Send message"}).click();
@@ -67,7 +67,7 @@ test("conversation persists after reload for the active part and its dimensions 
  await expect(page.getByRole("button",{name:"Run geometry screening"})).toBeDisabled();
 });
 test("chat only runs numerical service workers after explicit engineering approval and never labels them print physics",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Not assessed");
  await expect(page.getByText("Print-induced distortion and residual stress")).toBeVisible();
@@ -93,7 +93,7 @@ test("chat only runs numerical service workers after explicit engineering approv
 });
 
 test("LPBF solid-state thermal prototype requires approval and displays bounded real worker frames",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
@@ -127,7 +127,7 @@ test("LPBF solid-state thermal prototype requires approval and displays bounded 
 });
 
 test("Moving Gaussian enthalpy mode requires new approval and exports a real distinct model run",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
@@ -161,7 +161,7 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
 
 test("Imported numerical laser CSV runs with exact path hash and invalidates on replacement",async({page})=>{
  test.setTimeout(180000);
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
@@ -296,7 +296,7 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
 });
 
 test("measurement questions open the appropriate study panel without claiming NIST validation",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByLabel("Message ORIENTAI").fill("Can you validate my thermography measurement against NIST AM Bench?");
  await page.getByRole("button",{name:"Send message"}).click();
