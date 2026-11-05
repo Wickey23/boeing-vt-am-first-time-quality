@@ -362,3 +362,12 @@
 @media(max-width:1100px){.oaAssessmentHeading small{display:none}.oaAssessmentStep{gap:5px}.oaAssessmentStepNumber{width:21px;flex-basis:21px;height:24px}}
 @media(max-width:850px){.oaAssessmentJourney{padding:8px 10px;gap:6px}.oaAssessmentStages{grid-template-columns:repeat(3,minmax(0,1fr))}.oaAssessmentStep{padding:6px}.oaAssessmentStep strong{font-size:10px}.oaAssessmentStep small{display:none}.oaAssessmentStepNumber{display:none}.oaAssessmentNext{font-size:10px}.oaAssessmentNext>span{flex-basis:100%;}.oaAssessmentLimitations{display:none}}
 @media(max-width:450px){.oaAssessmentStep strong{font-size:9px}.oaAssessmentNext .oaAssessmentUploadButton{padding:6px}}
+
+/* Failure-mechanism status is available when requested, not a wall of unassessed rows. */
+.oaCoverageDisclosure{margin-top:12px;border-top:1px solid var(--oa-border);padding-top:9px}
+.oaCoverageDisclosure>summary{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--oa-text);font-size:12px;font-weight:650;list-style:none}
+.oaCoverageDisclosure>summary::-webkit-details-marker{display:none}
+.oaCoverageDisclosure>summary svg{transition:transform .15s ease}
+.oaCoverageDisclosure[open]>summary svg{transform:rotate(180deg)}
+.oaCoverageDisclosure .oaCoverageRows{margin-top:8px}
+@media(prefers-reduced-motion:reduce){.oaCoverageDisclosure>summary svg{transition:none}}
