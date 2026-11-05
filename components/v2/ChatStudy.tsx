@@ -97,7 +97,8 @@ export default function ChatStudy(){
  useEffect(()=>{if(layer>=100&&playing)setPlaying(false);},[layer,playing]);
  const [url,setUrl]=useState<string|undefined>(undefined);
  const fileInput=useRef<HTMLInputElement>(null);
- const bottom=useRef<HTMLDivElement>(null);
+ const messageAnchor=useRef<HTMLDivElement>(null);
+ const previousMessageId=useRef<string|null>(null);
  const pendingRun=useRef<string|null>(null);
  const layoutRef=useRef<HTMLDivElement>(null);
  const previouslyLoadedFile=useRef<File|null>(null);
@@ -259,7 +260,14 @@ export default function ChatStudy(){
  useEffect(()=>{if(historyKey&&historyKey===keyPrefix+partHash){
   try{localStorage.setItem(historyKey,JSON.stringify(messages.slice(-70)))}catch{}
  }},[historyKey,partHash,messages]);
- useEffect(()=>{bottom.current?.scrollIntoView({behavior:"smooth",block:"end"})},[messages.length,a.busy,a.progress,a.result?.runId]);
+ // Only bring new chat messages into view; never jump to the analysis footer on load or solver updates.
+ useEffect(()=>{
+  const id=messages[messages.length-1]?.id??null;
+  if(previousMessageId.current&&id&&id!==previousMessageId.current){
+   messageAnchor.current?.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+  previousMessageId.current=id;
+ },[messages]);
  useEffect(()=>{
   if(!a.file){setUrl(undefined);return;}
   const object=URL.createObjectURL(a.file);
@@ -409,6 +417,7 @@ export default function ChatStudy(){
       </>}
      </div>
     </div>)}
+    <div ref={messageAnchor} aria-hidden="true"/>
     {a.file&&<article className="oaInChatModel" aria-label="Uploaded STL model in chat">
       <header><span><BoxIcon size={17}/> Uploaded model · {a.file.name}</span><button ref={sideToggleRef} onClick={()=>showArtifact?closeSideView():setShowArtifact(true)} type="button" aria-expanded={showArtifact} aria-controls="oa-engineering-side-panel"><SquareArrowOutUpRight size={15}/> {showArtifact?"Close side view":"Open side view"}</button></header>
       {showArtifact&&<p className="oaSideViewHint">3D model open in side workspace. Use X or Escape to collapse; reopen it here anytime.</p>}
@@ -531,12 +540,13 @@ export default function ChatStudy(){
     {a.file&&<section className="oaCoverageCard" aria-label="Failure mode assessment coverage">
       <div className="oaBuildTitle"><strong>Failure-mode coverage</strong><span>{coverageCounts.screened} screened · {coverageCounts.calculated} calculated · {coverageCounts.notAssessed} unassessed</span></div>
       <p className="oaSubtle">These statuses show which checks actually ran. Service stress and heat-conduction results do not qualify any print-related failure mechanism as assessed.</p>
+      <details className="oaCoverageDisclosure"><summary>Show individual failure mechanisms and evidence gaps <ChevronDown size={15}/></summary>
       <div className="oaCoverageRows">{coverage.map(item=><details key={item.id} className="oaCoverageRow">
        <summary><span className="oaCoverageName">{item.name}</span><span className={"oaCoverageStatus oaState-"+item.state}>{item.state==="screened"?"Screened":item.state==="calculated"?"Calculated":"Not assessed"}</span></summary>
        <p><strong>Method:</strong> {item.method}</p><p><strong>Limitations:</strong> {item.limitations}</p><p><strong>Next inputs:</strong> {item.nextInput}</p>
-      </details>)}</div>
+      </details>)}</div></details>
      </section>}
-    <div ref={bottom}/>
+
    </div>
    <div className="oaStudyComposerArea">
     {attachError&&<p role="alert" className="oaStudyError">{attachError}</p>}
