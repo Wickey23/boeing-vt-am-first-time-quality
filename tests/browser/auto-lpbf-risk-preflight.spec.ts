@@ -4,6 +4,7 @@ import {readFile} from "node:fs/promises";
 test("STL receives automatic, evidence-labeled LPBF risk screening after unit confirmation",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
  await expect(preflight).toContainText("Awaiting confirmed STL units");
  await expect(preflight.getByRole("button",{name:/Export source-hashed evidence JSON/})).toHaveCount(0);
@@ -34,13 +35,14 @@ test("tilted closed geometry produces a selectable 3D face warning, not defect p
  await page.getByLabel("Attach STL in conversation").setInputFiles({
   name:"tilted-cube.stl",mimeType:"model/stl",buffer:Buffer.from(tilted)});
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
  await expect(preflight).toContainText("Elevated down-facing surfaces require support/process review",{timeout:60000});
  await preflight.getByRole("button",{name:/Highlight .*relevant STL triangles in 3D/}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
- await expect(page.getByText("Selected geometric risk-region triangles")).toBeVisible();
+ await expect(page.getByText("Highlighted geometry")).toBeVisible();
  await preflight.getByRole("button",{name:"Clear 3D highlight"}).click();
- await expect(page.getByText("Selected geometric risk-region triangles")).toHaveCount(0);
+ await expect(page.getByText("Highlighted geometry")).toHaveCount(0);
 });
 
 test("one-click synthetic cantilever example triggers a real geometric support-review finding",async({page})=>{
@@ -48,6 +50,7 @@ test("one-click synthetic cantilever example triggers a real geometric support-r
  await page.getByRole("button",{name:/Try synthetic cantilever bracket/}).click();
  await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toContainText("lpbf-demo-cantilever-30mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
  await expect(preflight).toContainText("Elevated down-facing surfaces require support/process review",{timeout:60000});
  await expect(preflight).toContainText("160.0 mm²");
@@ -56,12 +59,13 @@ test("one-click synthetic cantilever example triggers a real geometric support-r
  await expect(page.getByText(/source-derived screening observations, not simulated metal-print defects/)).toBeVisible();
  await preflight.getByRole("button",{name:/Highlight .*relevant STL triangles in 3D/}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
- await expect(page.getByText("Selected geometric risk-region triangles")).toBeVisible();
+ await expect(page.getByText("Highlighted geometry")).toBeVisible();
 });
 
 test("machine envelope changes recompute risk blockers instead of leaving stale geometry results",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
  await expect(preflight).toContainText("No issues triggered these limited geometric screening rules",{timeout:60000});
