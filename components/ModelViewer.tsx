@@ -5,6 +5,7 @@ import {Grid,OrbitControls} from "@react-three/drei";
 import {STLLoader} from "three/examples/jsm/loaders/STLLoader.js";
 import * as THREE from "three";
 import {RotateCcw} from "lucide-react";
+import "./viewer-controls.css";
 import {sampleVerticalSupports} from "@/lib/support-preview";
 import ServiceBoundary from "./ServiceBoundary";
 import {DEFAULT_SERVICE_SETUP,type ServiceSetup} from "@/lib/service-load";
