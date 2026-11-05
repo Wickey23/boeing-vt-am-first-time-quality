@@ -30,7 +30,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
   analysis.startUploadedProject();
   if(typeof window!=="undefined")window.dispatchEvent(new Event("orientai-new-study"));
   setMobileOpen(false);
-  router.push(professional?"/copilot/workbench":"/");
+  router.push("/copilot/workbench");
  };
  const toggle=()=>{
   if(typeof window!=="undefined"&&window.matchMedia("(max-width: 780px)").matches)setMobileOpen(v=>!v);
@@ -47,7 +47,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
   {mobileOpen&&<button className="oaScrim" aria-label="Close sidebar" onClick={()=>setMobileOpen(false)}/>}
   <aside id="oa-workbench-navigation" className={"oaSidebar"+(mobileOpen?" oaMobileOpen":"")} aria-label="Workspace sidebar">
    <div className="oaSidebarTop">
-    <Link href="/" className="oaBrand" onClick={()=>setMobileOpen(false)} title="ORIENTAI home">
+    <Link href="/copilot/workbench" className="oaBrand" onClick={()=>setMobileOpen(false)} title="ORIENTAI home">
      <span className="oaBrandSymbol">O</span><span className="psBrandStack"><span className="oaBrandText">ORIENTAI</span>{professional&&<small>Engineering AI for<br/>Metal Additive Manufacturing</small>}</span>
     </Link>
     <button className="oaMobileClose" aria-label="Close sidebar" onClick={()=>setMobileOpen(false)}><X size={20}/></button>
@@ -56,8 +56,8 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
     <SquarePen size={19}/><span className="oaNavText">New study</span>
    </button>
    <nav className="oaNavigation" aria-label="Primary navigation">
-    {professional?nav("/copilot/workbench","Current study",MessageSquare):nav("/copilot/workbench","Engineering workbench",LayoutDashboard)}
-    {!professional&&nav("/copilot","Current study",MessageSquare)}
+    {nav("/copilot/workbench","Current study",MessageSquare)}
+    
     {nav("/report","Engineering reports",FileText)}
    </nav>
    <div className="oaSidebarSection">
@@ -69,7 +69,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
    <details className="oaAdvanced">
     <summary aria-label="Engineering tools" title="Engineering tools" onClick={e=>{if(professional&&collapsed){e.preventDefault();setCollapsed(false);}}}><FlaskConical size={17}/><span className="oaNavText">Engineering tools</span><ChevronDown className="oaAdvancedArrow" size={15}/></summary>
     <div className="oaAdvancedLinks">
-     <Link href="/orientation" onClick={()=>setMobileOpen(false)}>Orientation workspace</Link>
+     <Link href="/orientation" onClick={()=>setMobileOpen(false)}>Legacy research orientation tools</Link>
      <Link href="/simulation/benchmarks" onClick={()=>setMobileOpen(false)}>Simulation benchmarks</Link>
      <Link href="/ml" onClick={()=>setMobileOpen(false)}>ML experiments</Link>
      <Link href="/orientation?example=ded" onClick={()=>setMobileOpen(false)}>Launch DED example</Link>
@@ -79,7 +79,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
    </details>
    {!professional&&<EngineeringBuildTicker/>}
    {professional&&<div className="psSidebarLinks">
-    <Link href="/copilot/advanced" title="Engineering settings" aria-label="Engineering settings" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Engineering settings</Link>
+    <Link href="/copilot/advanced" title="Engineering settings" aria-label="Engineering settings" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Advanced research studies</Link>
     <Link href="/how-it-works" title="Help and support" aria-label="Help and support" onClick={()=>setMobileOpen(false)}><HelpCircle size={16}/> Help & support</Link>
    </div>}
    <div className="oaSidebarFooter">
