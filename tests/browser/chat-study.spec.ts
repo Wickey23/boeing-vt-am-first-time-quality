@@ -50,6 +50,10 @@ test("guided context persists source evidence and connects to traceable report e
  await page.getByRole("button",{name:"Review relevance"}).first().click();
  await page.getByLabel("Evidence review rationale").fill("Relevant to candidate assembly; proposed load is explicitly unverified.");
  await page.getByRole("button",{name:"Confirm passage relevance"}).click();
+ await page.getByLabel("Message ORIENTAI").fill("What assembly load does the document describe?");
+ await page.getByRole("button",{name:"Send message"}).click();
+ await expect(page.getByText(/Relevant excerpts \(not independently verified\)/)).toBeVisible();
+
  await page.reload();
  await page.getByRole("button",{name:"Open engineering context stage"}).click();
  await expect(page.getByLabel("Component function")).toHaveValue("Synthetic mounting bracket");
