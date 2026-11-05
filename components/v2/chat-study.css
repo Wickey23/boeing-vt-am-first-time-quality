@@ -326,3 +326,6 @@
  .oaArtifactCanvas{min-height:240px;flex:1 1 0}
  .oaStudyQuickbar{position:relative;flex-shrink:0}
 }
+
+.oaMetalBuildPlayback{display:flex;gap:7px;flex-wrap:wrap}
+.oaMetalBuildPlayback button:first-child{background:var(--oa-strong);color:var(--oa-bg);border-color:var(--oa-strong)}
