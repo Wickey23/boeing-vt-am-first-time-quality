@@ -587,7 +587,7 @@ export default function ChatStudy(){
       ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis,level:f.severity==="blocker"?"blocker" as const:"review" as const})):[])
      ]}
      canRun={canScreen} busy={a.busy} onRunGeometry={doScreen} onOpenGeometry={()=>setActiveStage("part")} onOpenContext={()=>setActiveStage("context")}
-     selectedOrientation={selected?{id:selected.id,buildHeightMm:selected.buildHeightMm,supportProxyMm3:selected.supportProxyMm3}:undefined}/>}
+     selectedOrientation={selected?{id:selected.id,buildHeightMm:selected.buildHeightMm,supportProxyMm3:selected.supportProxyMm3}:undefined} onExportReport={()=>void exportEvidencePDF()} reportBusy={reportBusy} reportError={reportError}/>}
     <section className="oaStudyTranscript" aria-label="Engineering conversation history">
      <div className="oaTranscriptHeading"><FileText size={16}/><strong>Engineering conversation</strong><span>{messages.length} messages</span></div>
     {messages.map(m=><div key={m.id} className={"oaStudyMessage "+(m.role==="user"?"oaEngineer":"oaAssistant")}>
