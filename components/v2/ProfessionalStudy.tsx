@@ -293,7 +293,9 @@ export default function ProfessionalStudy(){
      openEdges:inspect.data.audit.openEdges,
      nonManifoldEdges:inspect.data.audit.nonManifoldEdges,
      disconnectedShells:inspect.data.audit.disconnectedShells,
-     smallestEdgeMm:inspect.data.audit.smallestEdgeMm
+     smallestEdgeMm:inspect.data.audit.smallestEdgeMm,
+     surfaceAreaMm2:inspect.data.audit.surfaceAreaMm2,
+     solidVolumeMm3:inspect.data.audit.solidVolumeMm3
     }:undefined,
     selectedOrientation:selected?{
      id:selected.id,buildHeightMm:selected.buildHeightMm,downFacingAreaMm2:selected.downFacingAreaMm2,
