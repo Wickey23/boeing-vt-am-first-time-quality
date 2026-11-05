@@ -5,10 +5,13 @@ import type {ProjectKnowledge} from "./copilot-context";
 import type {ReviewedEvidence} from "./engineering-evidence";
 import type {EngineeringReadiness} from "./engineering-readiness";
 import type {ApprovedParameterBinding} from "./engineering-parameter-binding";
+import type {FailureCoverage} from "./failure-coverage";
 export type CopilotPdfInputs={
  projectName:string;partName:string;partSha256:string;process:string;
  unitsConfirmed:boolean;createdAt:string;knowledge:ProjectKnowledge;
  reviewedEvidence:ReviewedEvidence[];approvedBindings?:ApprovedParameterBinding[];readiness:EngineeringReadiness;
+ coverage?:FailureCoverage[];
+ geometricConcerns?:{code:string;message:string;basis:string}[];
  study?:{jobId:string;stressMPa?:number;displacementMm?:number;
  temperatureMinC?:number;temperatureMaxC?:number;
  structuralModel?:string;thermalModel?:string};
@@ -74,6 +77,27 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
  title("Evidence readiness - NOT a quality pass");
  for(const gate of input.readiness.gates){
   paragraph(gate.title+" ["+gate.status+"]: "+gate.detail);
+ }
+ if(input.geometricConcerns?.length){
+  title("Part-specific geometric concerns");
+  for(const concern of input.geometricConcerns.slice(0,35)){
+   paragraph(concern.code+": "+concern.message,9);
+   paragraph("Basis: "+concern.basis,8,[92,104,119]);
+  }
+ }else if(input.coverage?.length){
+  title("Part-specific geometry status");
+  paragraph("No additional localized concerns were supplied in this study. This does NOT establish that the part can be manufactured without defects.");
+ }
+ if(input.coverage?.length){
+  title("Manufacturing and service failure mechanism coverage");
+  paragraph("Assessments below describe actual methods run or evidence still required. They are not predicted failure probabilities.");
+  for(const item of input.coverage){
+   paragraph(item.name+" ["+item.state+"] | "+item.category,9);
+   paragraph("Method: "+item.method,8,[92,104,119]);
+   paragraph("Limitations: "+item.limitations,8,[92,104,119]);
+   if(item.state==="not-assessed")paragraph("Needed: "+item.nextInput,8,[92,104,119]);
+  }
+  paragraph("An unassessed mechanism is unknown, not low risk. An STL geometry screen does not prove absence of keyhole porosity, hot cracking, residual-stress distortion or fatigue failures.");
  }
  title("Known limitations");
  for(const caveat of input.readiness.caveats)paragraph("- "+caveat);
