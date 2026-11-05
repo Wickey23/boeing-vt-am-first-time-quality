@@ -239,7 +239,8 @@ export default function ProfessionalStudy(){
     projectName:a.projectName,partName:a.file.name,partSha256:partHash,process:a.journey.process,modelFile:a.file,
     unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),knowledge:k,
     reviewedEvidence:ctx.reviewed,approvedBindings,readiness,
-    coverage,
+    coverage,prebuild,manufacturingFlow,
+    processWindow:a.journey.process==="PBF_LB_METAL"?processAssessment:null,
     geometricConcerns:[...meshFindings.map(f=>({code:f.code,message:f.message,basis:"STL mesh-topology audit",severity:f.level})),
      ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis,severity:f.severity})):[])],
     geometry:inspect.data?{
