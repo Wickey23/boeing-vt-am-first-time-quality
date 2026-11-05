@@ -123,12 +123,23 @@ export default function ProfessionalStudy(){
  });
  const counts=coverageSummary(coverage);
  const candidates=useMemo(()=>ctx.candidates.filter(c=>!ctx.reviewed.some(r=>r.key===c.key)),[ctx.candidates,ctx.reviewed]);
- const next=!a.file?{title:"Upload a part",detail:"Begin with an STL model.",action:"Upload STL",to:"geometry" as Stage}:
-  !isConfirmed?{title:"Confirm dimensions",detail:"Verify the source STL units before analysis.",action:"Review dimensions",to:"geometry" as Stage}:
-  !ctx.sources.length?{title:"Provide engineering context",detail:"Add an assembly reference or describe the intended function.",action:"Add context",to:"context" as Stage}:
+ const next=!a.file?{title:"Upload STL",detail:"Select the component you want to assess.",action:"Upload part",to:"geometry" as Stage}:
+  !isConfirmed?{title:"Confirm dimensions",detail:"Verify units against the source drawing.",action:"Review units",to:"geometry" as Stage}:
+  !currentRun?{title:"Screen geometry",detail:"Run local build-orientation and overhang checks.",action:"Run screening",to:"geometry" as Stage}:
+  !ctx.sources.length?{title:"Add engineering context",detail:"Define the part's application and assembly role.",action:"Add context",to:"context" as Stage}:
   !ctx.reviewed.length?{title:"Review source evidence",detail:"Confirm which document excerpts apply to this part.",action:"Review evidence",to:"context" as Stage}:
-  !currentRun?{title:"Run geometry screening",detail:"Evaluate candidate LPBF orientations and geometric concerns.",action:"Run screening",to:"geometry" as Stage}:
-  {title:"Review the assessment",detail:"Inspect calculated screens, unassessed mechanisms and evidence.",action:"View findings",to:"assessment" as Stage};
+  {title:"Review failure mechanisms",detail:"Inspect screened findings and remaining unknowns.",action:"Review risks",to:"assessment" as Stage};
+ const advanceWorkflow=()=>{
+  if(!a.file){partFileInput.current?.click();return;}
+  if(!isConfirmed){
+   setStage("geometry");
+   window.requestAnimationFrame(()=>document.getElementById("ps-units-confirmation")?.scrollIntoView({block:"nearest",behavior:"smooth"}));
+   return;
+  }
+  if(!currentRun){setStage("geometry");a.retry();return;}
+  setStage(next.to);stageScroll.current?.scrollTo({top:0,behavior:"instant"});
+ };
+
  const attach=(file:File|undefined)=>{
   if(!file)return;
   if(!file.name.toLowerCase().endsWith(".stl")||file.size<1||file.size>20*1024*1024){setError("Select a nonempty STL file up to 20 MB.");return;}
@@ -222,6 +233,14 @@ export default function ProfessionalStudy(){
      </button>)}
     </nav>
    </header>
+   <div className="psWorkflowBar" role="region" aria-label="Recommended workflow action">
+    <div className="psWorkflowSummary"><strong>Next: {next.title}</strong><span>{next.detail}</span></div>
+    <button type="button" onClick={advanceWorkflow} disabled={a.busy}>
+     {a.busy?"Analyzing...":next.action} <ArrowRight size={14}/>
+    </button>
+    {a.file&&isConfirmed&&<button type="button" className="psWorkflowReport" onClick={()=>{setStage("assessment");stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}
+     aria-label="Open pre-build assessment report">Report <FileText size={14}/></button>}
+   </div>
    <div className="psStageScroll" ref={stageScroll} role="region" aria-label="Active assessment stage">
     {stage==="geometry"&&<ProfessionalGeometryStage
      file={a.file} url={url} inspection={inspect.data} inspectionError={inspect.error}
@@ -316,7 +335,7 @@ export default function ProfessionalStudy(){
      <article className="psPanel psReportCard">
       <div><span className="psEyebrow">ENGINEERING DELIVERABLE</span><h3>Pre-build assessment report</h3><p>Download actual geometry results or the source-backed engineering context. Both reports identify limitations; neither certifies the part.</p></div>
       <div className="psReportButtons">
-       <button type="button" className="psPrimary" onClick={()=>void exportEvidence()} disabled={!a.file||!partHash||!isConfirmed||exportBusy}><Download size={15}/> Export evidence PDF</button>
+       <button type="button" className="psPrimary" onClick={()=>void exportEvidence()} disabled={!a.file||!partHash||!isConfirmed||exportBusy}><Download size={15}/> Export assessment PDF</button>
        <button type="button" className="psSecondary" onClick={()=>void exportGeometry()} disabled={!currentRun||exportBusy}><Download size={15}/> Geometry analysis PDF</button>
        <button type="button" className="psTextButton" onClick={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}} disabled={!currentRun}>Download analysis JSON</button>
       </div>
