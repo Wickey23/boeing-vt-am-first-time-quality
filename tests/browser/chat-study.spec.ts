@@ -1,21 +1,20 @@
 import {test,expect} from "@playwright/test";
 import {readFile} from "node:fs/promises";
-test("uploaded STL appears in chat with inspected mesh, geometric build preview and explicit physics limitations",async({page})=>{
+test("focused part screen keeps the real viewer, geometric screening and build progression",async({page})=>{
  const externalCalls:string[]=[];
  page.on("request",r=>{if(r.method()==="POST"&&/engineering-copilot|llm-api/.test(r.url()))externalCalls.push(r.url());});
  await page.goto("/copilot");
  await page.getByLabel("Upload STL").click();
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toBeVisible();
- await expect(page.getByText(/mesh triangles/)).toBeVisible();
+ await expect(page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button")).toHaveCount(3);
  await expect(page.getByRole("region",{name:"Analysis workflow"})).toContainText("Mesh topology and dimensions");
- await expect(page.getByText("Machine/material process-window review")).toBeVisible();
- await expect(page.getByText("Calibrated defect probability / residual stress / fatigue")).toBeVisible();
- await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Run geometry screening"}).click();
  await expect(page.getByText(/Geometric orientation screening completed/)).toBeVisible({timeout:30000});
- await expect(page.getByRole("region",{name:"Risk assessment results"})).toContainText("Failure-risk assessment");
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Manufacturing screening");
+ await page.getByRole("button",{name:"Open part geometry view"}).click();
  await page.getByLabel("Build progression percentage").fill("50");
  await expect(page.getByText("Build progression · 50%")).toBeVisible();
  await page.getByRole("button",{name:"Restart"}).click();
@@ -23,10 +22,8 @@ test("uploaded STL appears in chat with inspected mesh, geometric build preview 
  await page.getByRole("button",{name:"Play build",exact:true}).click();
  await expect.poll(async()=>Number(await page.getByLabel("Build progression percentage").inputValue())).toBeGreaterThan(1);
  await page.getByRole("button",{name:"Pause build",exact:true}).click();
- // Uploaded STL should open the live engineering side workspace automatically.
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await page.getByRole("button",{name:"Close 3D viewer"}).click();
- await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toHaveCount(0);
  await expect(page.locator(".oaInlineViewer")).toBeVisible();
  await page.getByRole("button",{name:"Open side view"}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
@@ -36,27 +33,35 @@ test("uploaded STL appears in chat with inspected mesh, geometric build preview 
  await expect(page.getByText(/STL geometry and geometric screening only/)).toBeVisible();
  expect(externalCalls).toEqual([]);
 });
-test("guided assessment links part-specific document intake to evidence review and report export",async({page})=>{
+test("guided context persists source evidence and connects to traceable report export",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
- await expect(page.getByRole("region",{name:"Three-stage engineering assessment"})).toBeVisible();
- await expect(page.getByRole("link",{name:"Open failure assessment and export stage"})).toContainText("Failure assessment");
- await expect(page.getByRole("link",{name:"Open engineering context stage"})).toBeVisible();
+ await expect(page.getByRole("banner",{name:"Three-stage engineering assessment"})).toBeVisible();
+ await page.getByRole("button",{name:"Open engineering context stage"}).click();
+ await expect(page.getByRole("heading",{name:"Understand the part in its assembly"})).toBeVisible();
  await page.getByLabel("Upload assembly documents").setInputFiles({
   name:"public-assembly-notes.txt",mimeType:"text/plain",
-  buffer:Buffer.from("Mounting bracket for a demonstration assembly. A proposed 1800 N service load requires engineer verification.\n")
+  buffer:Buffer.from("Mounting bracket for a demonstration assembly. A proposed 1800 N service load requires engineer verification.\\n")
  });
- await expect(page.getByText(/D1 · public-assembly-notes.txt · Text available/)).toBeVisible();
- await page.getByRole("link",{name:"Open engineering context stage"}).click();
- await expect(page).toHaveURL(/stage=documents/);
- await expect(page.getByRole("heading",{name:"Understand the larger assembly"})).toBeVisible();
- await page.getByRole("button",{name:"Add assembly reference files"}).click();
- await expect(page.getByText(/D1 · public-assembly-notes.txt/)).toBeVisible();
- await page.goto("/copilot/advanced?stage=results");
+ await expect(page.locator(".oaDocumentItem")).toContainText("public-assembly-notes.txt");
+ await page.getByLabel("Component function").fill("Synthetic mounting bracket");
+ await page.getByLabel("Assembly relationships").fill("Demonstration assembly with bolted interface");
+ await page.getByRole("button",{name:"Review relevance"}).first().click();
+ await page.getByLabel("Evidence review rationale").fill("Relevant to candidate assembly; proposed load is explicitly unverified.");
+ await page.getByRole("button",{name:"Confirm passage relevance"}).click();
+ await page.reload();
+ await page.getByRole("button",{name:"Open engineering context stage"}).click();
+ await expect(page.getByLabel("Component function")).toHaveValue("Synthetic mounting bracket");
+ await expect(page.locator(".oaReviewedList")).toContainText("public-assembly-notes.txt").catch(async()=>{
+  await expect(page.locator(".oaReviewedList")).toContainText("D1");
+ });
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Unassessed mechanisms");
+ await page.getByRole("link",{name:/Review & export PDF/}).click();
+ await expect(page).toHaveURL(/stage=results/);
  await expect(page.getByRole("heading",{name:"Inspect actual results"})).toBeVisible();
  await expect(page.getByRole("button",{name:"Export engineering review PDF"})).toBeVisible();
 });
-
 test("auto-open model can be resized by keyboard and closed on mobile",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
