@@ -286,33 +286,78 @@ export default function ProfessionalStudy(){
    </div>
   </div>
   <aside className="psViewerColumn" aria-label="Persistent engineering model viewer">
-   <header className="psViewerHeader"><strong><Box size={18}/>{projectName}</strong><span>CAD / STL GEOMETRY</span></header>
-   <div className="psViewerFrame">
-    {a.file?<ViewerErrorBoundary fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
-     <ModelViewer url={url} unitScale={a.settings.unitScale} rotation={selected?.rotation}
-      overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
-      buildFraction={layer/100}/>
-    </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={35}/><strong>No model loaded</strong><small>Upload an STL to inspect its geometry here.</small></div>}
-   </div>
-   <section className="psViewerControls">
-    <div className="psPanelHeading"><strong>Metal AM engineering view</strong><span>Geometry</span></div>
-    <div className="psToggleRow">
-     <button className={!showOverhangs&&!showSupports?"psToggleActive":""} onClick={()=>{setShowOverhangs(false);setShowSupports(false);}}>Solid part</button>
-     <button aria-pressed={showOverhangs} className={showOverhangs?"psToggleActive":""} onClick={()=>setShowOverhangs(v=>!v)}>Overhang faces</button>
-     <button aria-pressed={showSupports} className={showSupports?"psToggleActive":""} onClick={()=>setShowSupports(v=>!v)}>Conceptual supports</button>
+   <div className="psReferenceViewerCard">
+    <header className="psReferenceViewerHeader">
+     <strong><Box size={19}/>3D Viewer <span>· {projectName}</span></strong>
+     <div className="psViewerHeaderActions">
+      <button type="button" aria-label={viewerExpanded?"Close expanded viewer":"Expand 3D viewer"}
+       title={viewerExpanded?"Return to workbench":"Expand the model viewer"}
+       onClick={()=>setViewerExpanded(v=>!v)}>{viewerExpanded?<X size={17}/>:<Maximize2 size={17}/>}</button>
+      <details className="psViewerMenu"><summary aria-label="Model viewer options"><MoreHorizontal size={17}/></summary>
+       <div><button type="button" onClick={()=>setViewerReset(n=>n+1)}><RotateCcw size={14}/> Reset camera</button>
+        <button type="button" onClick={()=>setCameraView("iso")}><Eye size={14}/> Isometric view</button></div>
+      </details>
+     </div>
+    </header>
+    <div className="psViewerFrame psReferenceViewport">
+     {a.file?<ViewerErrorBoundary fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
+      <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation}
+       cameraView={cameraView} onCameraViewChange={setCameraView}
+       overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
+       buildFraction={layer/100}/>
+     </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small></div>}
+     <div className="psBuildAxis" aria-hidden="true"><b>+Z</b><span className="psAxisX">X</span><span className="psAxisY">Y</span></div>
+     {showBuildDirection&&<div className="psBuildDirectionLabel" role="status">Build axis ↑ · visualization</div>}
     </div>
-    <div className="psBuildRow"><strong>Build progression</strong><span>{layer}%</span></div>
-    <input type="range" aria-label="Build progression percentage" value={layer} min={1} max={100}
-     onChange={e=>{setPlaying(false);setLayer(Number(e.target.value));}}/>
-    <div className="psPlayback">
-     <button onClick={()=>{if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
-     <button onClick={()=>{setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
+    <div className="psViewerToolbar" role="toolbar" aria-label="3D model navigation">
+     <div className="psCameraButtons">
+      <button type="button" aria-label="Isometric view" title="Isometric view" aria-pressed={cameraView==="iso"} onClick={()=>setCameraView("iso")}><Box size={17}/></button>
+      <button type="button" aria-label="Top view" title="Top view" aria-pressed={cameraView==="top"} onClick={()=>setCameraView("top")}><Compass size={17}/></button>
+      <button type="button" aria-label="Front view" title="Front view" aria-pressed={cameraView==="front"} onClick={()=>setCameraView("front")}><Eye size={17}/></button>
+      <button type="button" aria-label="Side view" title="Side view" aria-pressed={cameraView==="side"} onClick={()=>setCameraView("side")}><Hand size={17}/></button>
+      <button type="button" aria-label="Fit model view" title="Fit model view" onClick={()=>{setCameraView("iso");setViewerReset(n=>n+1);}}><Maximize2 size={17}/></button>
+     </div>
+     <select aria-label="Geometry display mode" value={showSupports?"supports":showOverhangs?"overhangs":"solid"}
+      onChange={e=>{const v=e.target.value;setShowOverhangs(v==="overhangs");setShowSupports(v==="supports");}}>
+      <option value="solid">Solid</option><option value="overhangs">Overhangs</option><option value="supports">Supports</option>
+     </select>
     </div>
-    <small>STL geometry preview. Support posts are conceptual, not machine-ready. Build progression is not a deposition or thermal simulation.</small>
-   </section>
-   <div className="psViewerBottom">
-    <div><span className="psEyebrow">STUDY EVIDENCE</span><p>{ctx.sources.length} documents · {ctx.reviewed.length} reviewed excerpts · {counts.notAssessed} unassessed risks</p></div>
-    <button type="button" onClick={()=>setStage("assessment")}>Open results <ArrowRight size={14}/></button>
+    <div className="psReferenceViewSettings">
+     <h3><Layers size={18}/> Metal AM Engineering View</h3>
+     <div className="psToggleRow">
+      <button type="button" className={!showOverhangs&&!showSupports?"psToggleActive":""}
+       onClick={()=>{setShowOverhangs(false);setShowSupports(false);}}>Solid part</button>
+      <button type="button" aria-pressed={showOverhangs} className={showOverhangs?"psToggleActive":""}
+       onClick={()=>{setShowOverhangs(true);setShowSupports(false);}}>Overhang faces</button>
+      <button type="button" aria-pressed={showBuildDirection} className={showBuildDirection?"psToggleActive":""}
+       onClick={()=>setShowBuildDirection(v=>!v)}>Build direction</button>
+      <button type="button" aria-pressed={showSupports} className={showSupports?"psToggleActive":""}
+       onClick={()=>{setShowSupports(true);setShowOverhangs(false);}}>Support regions</button>
+     </div>
+     <div className="psOrientationControl">
+      <label htmlFor="ps-yaw-select">Build orientation (Z) <Info size={14}/></label>
+      <select id="ps-yaw-select" aria-label="Build orientation angle" disabled={!a.file}
+       value={previewYaw} onChange={e=>setPreviewYaw(Number(e.target.value))}>
+       <option value={0}>0°</option><option value={90}>90°</option>
+       <option value={180}>180°</option><option value={270}>270°</option>
+      </select>
+     </div>
+     <div className="psOverlayControl">
+      <label htmlFor="ps-overhang-overlay">Preview geometric overhang overlay</label>
+      <input id="ps-overhang-overlay" type="checkbox" aria-label="Preview geometric overhang overlay"
+       checked={showOverhangs} onChange={e=>{setShowOverhangs(e.target.checked);if(e.target.checked)setShowSupports(false);}}/>
+     </div>
+     <details className="psBuildDisclosure">
+      <summary>Build progression preview <span>{layer}% <ChevronDown size={14}/></span></summary>
+      <input type="range" aria-label="Build progression percentage" min={1} max={100} value={layer}
+       onChange={e=>{setPlaying(false);setLayer(Number(e.target.value));}}/>
+      <div className="psPlayback">
+       <button type="button" onClick={()=>{if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
+       <button type="button" onClick={()=>{setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
+      </div>
+     </details>
+     <small className="psViewerMethodNote">STL geometry and conceptual supports only; colors and buildup are not validated print-defect predictions. Z rotation is a visual preview.</small>
+    </div>
    </div>
   </aside>
   <input ref={partFileInput} type="file" accept=".stl" className="psHiddenInput" aria-label="Select STL part" onChange={e=>attach(e.target.files?.[0])}/>
