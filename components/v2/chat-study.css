@@ -363,3 +363,7 @@
 .oaAssessmentCaveat{font-size:9px;color:var(--oa-muted);line-height:1.3}
 @media(max-width:1100px){.oaAssessmentStepIcon{display:none}.oaAssessmentStep{padding:8px}.oaAssessmentHeading>span,.oaAssessmentCaveat{display:none}}
 @media(max-width:850px){.oaAssessmentJourney{gap:8px;padding:9px 12px}.oaAssessmentStages{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:6px}.oaAssessmentStep{flex:0 0 175px;scroll-snap-align:start}.oaAssessmentHeading h2{font-size:12px}.oaAssessmentUpload{align-items:start}.oaAssessmentUploadButton{padding:7px 8px}.oaAssessmentUpload>div small{display:none}.oaAssessmentNext{font-size:10px}}
+
+.oaAssessmentNext span{flex:1;min-width:0}
+.oaAssessmentNext button,.oaAssessmentNext a{border:1px solid var(--oa-border);border-radius:8px;background:var(--oa-card);color:var(--oa-text);padding:6px 8px;font-size:10px;text-decoration:none;white-space:nowrap}
+.oaAssessmentNext button:hover,.oaAssessmentNext a:hover{border-color:var(--oa-strong)}
