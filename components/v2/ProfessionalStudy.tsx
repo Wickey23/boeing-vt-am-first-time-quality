@@ -416,6 +416,7 @@ export default function ProfessionalStudy(){
      onExport={()=>void exportEvidence()} onGeometryExport={()=>void exportGeometry()}
      onJsonExport={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}}
      onNavigate={nextStage=>{setStage(nextStage);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}
+     onInspectOverhangs={()=>{setShowOverhangs(true);setShowSupports(false);setCameraView("iso");setViewerExpanded(false);}}
     />}
    </div>
    <div className="psAssistant">
