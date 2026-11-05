@@ -11,11 +11,16 @@ test("closed cube passes edge topology checks",()=>{
  assert.equal(result.nonManifoldEdges,0);
  assert.equal(result.disconnectedShells,1);
  assert.ok(result.triangles>=12);
+ assert.ok(result.surfaceAreaMm2!==undefined&&Math.abs(result.surfaceAreaMm2-600)<1e-2,
+  "10 mm cube has 600 mm^2 exterior surface");
+ assert.ok(result.solidVolumeMm3!==null&&result.solidVolumeMm3!==undefined&&
+  Math.abs(result.solidVolumeMm3-1000)<1e-2,"10 mm cube has 1000 mm^3 volume");
 });
 
 test("open sheet reports boundary edges and blocks physical meshing",()=>{
  const result=auditSTL(fixture("invalid-open-surface.stl"));
  assert.ok(result.openEdges>=3);
+ assert.equal(result.solidVolumeMm3,null,"Never infer solid volume from open mesh");
  assert.ok(result.findings.some(x=>x.code==="OPEN_SURFACE"&&x.level==="blocker"));
 });
 
