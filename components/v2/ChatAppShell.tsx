@@ -16,14 +16,16 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
  const professional=path==="/copilot/workbench";
  const [mobileOpen,setMobileOpen]=useState(false);
  const [collapsed,setCollapsed]=useState(false);
+ const [navPreferenceLoaded,setNavPreferenceLoaded]=useState(false);
  useEffect(()=>{
   if(!professional)return;
   try{setCollapsed(window.localStorage.getItem("orientai-workbench-nav-collapsed-v1")==="true");}catch{}
+  setNavPreferenceLoaded(true);
  },[professional]);
  useEffect(()=>{
-  if(!professional)return;
+  if(!professional||!navPreferenceLoaded)return;
   try{window.localStorage.setItem("orientai-workbench-nav-collapsed-v1",String(collapsed));}catch{}
- },[collapsed,professional]);
+ },[collapsed,professional,navPreferenceLoaded]);
  const newStudy=()=>{
   analysis.startUploadedProject();
   if(typeof window!=="undefined")window.dispatchEvent(new Event("orientai-new-study"));
@@ -77,8 +79,8 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
    </details>
    {!professional&&<EngineeringBuildTicker/>}
    {professional&&<div className="psSidebarLinks">
-    <Link href="/copilot/advanced" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Engineering settings</Link>
-    <Link href="/how-it-works" onClick={()=>setMobileOpen(false)}><HelpCircle size={16}/> Help & support</Link>
+    <Link href="/copilot/advanced" title="Engineering settings" aria-label="Engineering settings" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Engineering settings</Link>
+    <Link href="/how-it-works" title="Help and support" aria-label="Help and support" onClick={()=>setMobileOpen(false)}><HelpCircle size={16}/> Help & support</Link>
    </div>}
    <div className="oaSidebarFooter">
     {professional?<span className="psVTIcon">VT</span>:<ShieldCheck size={17}/>}
