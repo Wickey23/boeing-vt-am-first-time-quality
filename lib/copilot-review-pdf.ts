@@ -10,6 +10,7 @@ import type {FailureCoverage} from "./failure-coverage";
 import type {PrebuildAssessment} from "./prebuild-assessment";
 import type {ManufacturingFlowStep} from "./manufacturing-process-flow";
 import type {ProcessWindowAssessment} from "./lpbf-process-quality";
+import type {InspectionFeedback} from "./part-inspection-feedback";
 
 export type CopilotPdfInputs={
  projectName:string;partName:string;partSha256:string;process:string;
@@ -17,7 +18,7 @@ export type CopilotPdfInputs={
  unitsConfirmed:boolean;createdAt:string;knowledge:ProjectKnowledge;
  reviewedEvidence:ReviewedEvidence[];approvedBindings?:ApprovedParameterBinding[];
  prebuild?:PrebuildAssessment;manufacturingFlow?:ManufacturingFlowStep[];
- processWindow?:ProcessWindowAssessment|null;
+ processWindow?:ProcessWindowAssessment|null;feedbackRecords?:InspectionFeedback[];
  readiness:EngineeringReadiness;coverage?:FailureCoverage[];
  geometricConcerns?:{code:string;message:string;basis:string;severity?:string}[];
  geometry?:{dimensionsMm:{x:number;y:number;z:number};triangles:number;
@@ -337,6 +338,15 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
    "ORIENTAI participates in pre-build screening. Machine execution, inspection and qualification are external.");
   table(["Manufacturing phase","State","Output / owner"],[67,35,74],
    input.manufacturingFlow.map(f=>[f.name,f.status.toUpperCase(),f.output+" / "+f.owner]));
+  if(input.feedbackRecords?.length){
+   section("Engineer-entered inspection and test observations",
+    "These are manual reviewed-source entries, not independently verified measurements or model training.");
+   table(["Build / source","Linked finding / outcome","Observation"],[52,50,74],
+    input.feedbackRecords.slice(0,25).map(f=>[
+     f.buildId+" / "+f.sourceReference,f.findingId??"Not linked"+" / "+f.outcome,
+     f.testMethod+": "+f.observation+" (reviewer "+f.reviewedBy+")"
+    ]));
+  }
   section("Proposed future verification plan");
   text("1. Preserve a controlled drawing, STL fingerprint, machine setup and physical build identity.",{size:8.5});
   text("2. Compare rule-based concerns with actual slicer records, as-built inspection and service tests.",{size:8.5});
