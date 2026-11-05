@@ -40,6 +40,7 @@ test("guided assessment links part-specific document intake to evidence review a
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("region",{name:"Three-stage engineering assessment"})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Open failure assessment and export stage"})).toContainText("Failure assessment");
  await expect(page.getByRole("link",{name:"Open engineering context stage"})).toBeVisible();
  await page.getByLabel("Upload assembly documents").setInputFiles({
   name:"public-assembly-notes.txt",mimeType:"text/plain",
@@ -90,7 +91,10 @@ test("chat only runs numerical service workers after explicit engineering approv
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Not assessed");
- await expect(page.getByText("Print-induced distortion and residual stress")).toBeVisible();
+ const coverage=page.getByRole("region",{name:"Failure mode assessment coverage"});
+ await expect(coverage.getByText("Print-induced distortion and residual stress")).toBeHidden();
+ await coverage.getByText("Show individual failure mechanisms and evidence gaps").click();
+ await expect(coverage.getByText("Print-induced distortion and residual stress")).toBeVisible();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Review inputs and run numerical studies"}).click();
  const service=page.getByRole("region",{name:"Engineer-approved numerical studies"});
