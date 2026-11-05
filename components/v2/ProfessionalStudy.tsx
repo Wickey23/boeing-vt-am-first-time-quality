@@ -12,6 +12,9 @@ import {usePartInspection} from "@/components/PartInspection";
 import {completedPart} from "@/lib/engineering-journey";
 import {screenCandidate} from "@/lib/part-screening";
 import {failureCoverage,coverageSummary} from "@/lib/failure-coverage";
+import {evaluatePrebuild} from "@/lib/prebuild-assessment";
+import {manufacturingProcessFlow} from "@/lib/manufacturing-process-flow";
+import {assessLpbfProcessWindow,emptyProcessQualityInput,PROCESS_PARAMETERS,type ProcessQualityInput} from "@/lib/lpbf-process-quality";
 import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
 import {reportPDF,downloadJSON} from "@/lib/engineering-report";
 import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
@@ -22,6 +25,8 @@ import {activeServiceCase} from "@/lib/service-plan";
 import {useStudioContext} from "./useStudioContext";
 import StudioCanvasFallback from "./StudioCanvasFallback";
 import ProfessionalGeometryStage from "./ProfessionalGeometryStage";
+import ProfessionalProcessPanel from "./ProfessionalProcessPanel";
+import ProfessionalAssessmentPanel from "./ProfessionalAssessmentPanel";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
 import "./professional-study.css";
 import "./professional-density.css";
@@ -82,6 +87,8 @@ export default function ProfessionalStudy(){
  const [reviewing,setReviewing]=useState("");
  const [rationale,setRationale]=useState("");
  const [uploadBusy,setUploadBusy]=useState(false);
+ const [processInput,setProcessInput]=useState<ProcessQualityInput>(emptyProcessQualityInput);
+ const [processStoreKey,setProcessStoreKey]=useState<string|null>(null);
  const [dropActive,setDropActive]=useState(false);
  const partFileInput=useRef<HTMLInputElement>(null);
  const stageScroll=useRef<HTMLDivElement>(null);
@@ -93,6 +100,33 @@ export default function ProfessionalStudy(){
   return()=>window.cancelAnimationFrame(id);
  },[stage,a.file]);
  const ctx=useStudioContext(partHash);
+ useEffect(()=>{
+  const key=partHash?"orientai.lpbf.window.v1:"+partHash+":"+a.settings.unitScale:null;
+  setProcessStoreKey(null);
+  if(!key){setProcessInput(emptyProcessQualityInput());return;}
+  try{
+   const raw=localStorage.getItem(key);
+   const prior=raw?JSON.parse(raw) as ProcessQualityInput:null;
+   if(prior&&typeof prior.machine==="string"&&typeof prior.material==="string"&&
+    typeof prior.parameterSet==="string"&&typeof prior.reference==="string"&&
+    typeof prior.referenceReviewed==="boolean"&&
+    PROCESS_PARAMETERS.every(p=>prior.values?.[p.id]===null||
+     typeof prior.values?.[p.id]==="number"&&Number.isFinite(prior.values[p.id]))&&
+    PROCESS_PARAMETERS.every(p=>prior.windows?.[p.id]&&
+     ["min","max"].every(field=>{
+      const value=prior.windows[p.id][field as "min"|"max"];
+      return value===null||typeof value==="number"&&Number.isFinite(value);
+     })))setProcessInput(prior);
+   else setProcessInput(emptyProcessQualityInput());
+  }catch{setProcessInput(emptyProcessQualityInput());}
+  setProcessStoreKey(key);
+ },[partHash,a.settings.unitScale]);
+ useEffect(()=>{
+  const key=partHash?"orientai.lpbf.window.v1:"+partHash+":"+a.settings.unitScale:null;
+  if(!key||processStoreKey!==key)return;
+  try{localStorage.setItem(key,JSON.stringify(processInput));}
+  catch{setError("Browser storage could not save the process-window review.");}
+ },[partHash,a.settings.unitScale,processStoreKey,processInput]);
  const isConfirmed=completedPart(a.journey,a.file,a.settings.unitScale);
  useEffect(()=>{
   if(!a.file){setPartHash(null);setUrl(undefined);return;}
@@ -122,6 +156,24 @@ export default function ProfessionalStudy(){
   process:a.journey.process
  });
  const counts=coverageSummary(coverage);
+ const processAssessment=assessLpbfProcessWindow(processInput);
+ const prebuild=evaluatePrebuild({
+  fileName:a.file?.name??null,unitsConfirmed:isConfirmed,process:a.journey.process,
+  mesh:inspect.data?.audit??null,selected:currentRun?selected??null:null,
+  allCandidates:currentRun?a.result?.candidates??[]:[],
+  componentName:ctx.knowledge?.componentName??"",assemblyContext:ctx.knowledge?.assemblyContext??"",
+  attachmentNotes:ctx.knowledge?.attachmentNotes??"",requirements:ctx.knowledge?.reviewedRequirements??"",
+  documentCount:ctx.sources.length,reviewedEvidenceCount:ctx.reviewed.length,
+  processWindow:partHash&&isConfirmed&&a.journey.process==="PBF_LB_METAL"?processAssessment:null,
+  hasStructuralStudy:Boolean(currentRun&&a.result?.structural),
+  hasSteadyThermalStudy:Boolean(currentRun&&a.result?.thermal),coverage
+ });
+ const manufacturingFlow=manufacturingProcessFlow({
+  hasPart:Boolean(a.file),unitsConfirmed:isConfirmed,hasGeometryRun:currentRun,
+  hasAssemblyContext:Boolean(ctx.knowledge?.componentName&&ctx.knowledge.assemblyContext),
+  hasReviewedEvidence:ctx.reviewed.length>0,
+  hasRiskAssessment:currentRun&&isConfirmed,hasBlockers:prebuild.disposition==="geometry-blocked"
+ });
  const candidates=useMemo(()=>ctx.candidates.filter(c=>!ctx.reviewed.some(r=>r.key===c.key)),[ctx.candidates,ctx.reviewed]);
  const next=!a.file?{title:"Upload STL",detail:"Select the component you want to assess.",action:"Upload part",to:"geometry" as Stage}:
   !isConfirmed?{title:"Confirm dimensions",detail:"Verify units against the source drawing.",action:"Review units",to:"geometry" as Stage}:
@@ -288,6 +340,8 @@ export default function ProfessionalStudy(){
        </div>
        <p className="psCaveat">Document text and notes are not automatically entered as validated FEM loads or material allowables.</p>
       </article>
+      {a.journey.process==="PBF_LB_METAL"&&<ProfessionalProcessPanel
+       input={processInput} onChange={setProcessInput} confirmed={isConfirmed}/>}
       <article className="psPanel">
        <div className="psPanelHeading"><strong><ShieldCheck size={17}/> Source evidence</strong><span>{ctx.reviewed.length} reviewed · {candidates.length} suggested</span></div>
        {ctx.reviewed.length>0&&<div className="psEvidenceReviewed">{ctx.reviewed.map(e=><p key={e.key}><CheckCircle2 size={15}/> <span>{e.category} · [{e.sourceId} {e.locator}] {e.excerpt.slice(0,140)}</span></p>)}</div>}
@@ -306,42 +360,14 @@ export default function ProfessionalStudy(){
       {ctx.error&&<p className="psError" role="alert">{ctx.error}</p>}
      </>}
     </section>}
-    {stage==="assessment"&&<section className="psStage" aria-label="Failure assessment stage">
-     <div className="psSectionHead"><span>STAGE 03 / FAILURE ASSESSMENT</span><h2>Engineering evidence and risks</h2><p>Separate actual geometric screens from research calculations and manufacturing failures that remain unassessed.</p></div>
-     <div className="psSummaryGrid">
-      <div><CheckCircle2 size={17}/><strong>{counts.screened}</strong><small>Geometry screens</small></div>
-      <div><Layers size={17}/><strong>{counts.calculated}</strong><small>Research calculations</small></div>
-      <div><Info size={17}/><strong>{counts.notAssessed}</strong><small>Not assessed</small></div>
-     </div>
-     <article className="psPanel">
-      <div className="psPanelHeading"><strong><ShieldAlert size={17}/> Part-specific concerns</strong><span>{(meshFindings.length+findings.length)} flagged</span></div>
-      {!a.file?<p>Upload the model to begin screening.</p>:!currentRun?<div className="psNotice">Confirm STL units and run geometric screening to populate this section.</div>:
-       [...meshFindings.map(f=>({code:f.code,message:f.message,basis:"Mesh topology",severity:f.level})),
-        ...findings.map(f=>({code:f.code,message:f.message,basis:f.basis,severity:f.severity}))].length===0?
-       <p className="psCaveat">No findings from completed geometric rules. This does not imply the part will print successfully.</p>:
-       <div className="psRiskFindings">{[...meshFindings.map(f=>({code:f.code,message:f.message,basis:"Mesh topology",severity:f.level})),
-        ...findings.map(f=>({code:f.code,message:f.message,basis:f.basis,severity:f.severity}))].map((f,i)=><div key={f.code+i}>
-        <span className="psPriority">{f.severity}</span><div><strong>{f.code}</strong><p>{f.message}</p><small>{f.basis}</small></div></div>)}</div>}
-     </article>
-     <div className="psRiskColumns">
-      {(["Manufacturing risks","In-service behavior"] as const).map(group=><article className="psPanel" key={group}>
-       <div className="psPanelHeading"><strong>{group}</strong></div>
-       {coverage.filter(f=>group==="Manufacturing risks"?f.category!=="service":f.category==="service").map(f=><details key={f.id} className="psRiskItem">
-        <summary><span>{f.name}</span><small className={f.state!=="not-assessed"?"psCalculated":""}>{f.state==="not-assessed"?"Not assessed":f.state==="screened"?"Screened":"Calculated"}</small></summary>
-        <p><strong>Method:</strong> {f.method}</p><p><strong>Limitation:</strong> {f.limitations}</p><p><strong>Next input:</strong> {f.nextInput}</p>
-       </details>)}
-      </article>)}
-     </div>
-     <article className="psPanel psReportCard">
-      <div><span className="psEyebrow">ENGINEERING DELIVERABLE</span><h3>Pre-build assessment report</h3><p>Download actual geometry results or the source-backed engineering context. Both reports identify limitations; neither certifies the part.</p></div>
-      <div className="psReportButtons">
-       <button type="button" className="psPrimary" onClick={()=>void exportEvidence()} disabled={!a.file||!partHash||!isConfirmed||exportBusy}><Download size={15}/> Export assessment PDF</button>
-       <button type="button" className="psSecondary" onClick={()=>void exportGeometry()} disabled={!currentRun||exportBusy}><Download size={15}/> Geometry analysis PDF</button>
-       <button type="button" className="psTextButton" onClick={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}} disabled={!currentRun}>Download analysis JSON</button>
-      </div>
-     </article>
-     <p className="psCaveat">Unassessed is not low risk. Neither part orientation nor idealized service response provides validated LPBF defect probabilities.</p>
-    </section>}
+    {stage==="assessment"&&<ProfessionalAssessmentPanel
+     assessment={prebuild} coverage={coverage} flow={manufacturingFlow}
+     hasPart={Boolean(a.file)} canExport={Boolean(a.file&&partHash&&isConfirmed)}
+     hasGeometry={currentRun} exportBusy={exportBusy}
+     onExport={()=>void exportEvidence()} onGeometryExport={()=>void exportGeometry()}
+     onJsonExport={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}}
+     onNavigate={nextStage=>{setStage(nextStage);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}
+    />}
    </div>
    <div className="psAssistant">
     {showThread&&thread.length>0&&<div className="psThread" role="log" aria-label="Engineering assistant messages">
