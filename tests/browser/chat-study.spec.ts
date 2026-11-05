@@ -342,3 +342,45 @@ test("measurement questions open the appropriate study panel without claiming NI
  await expect(page.getByText(/cannot yet validate NIST AM Bench time-above-melt/)).toBeVisible();
  await expect(page.getByRole("button",{name:"Run research thermal worker"})).toBeDisabled();
 });
+
+
+test("professional study stepper keeps all three names readable with no overlap",async({page})=>{
+ await page.setViewportSize({width:1600,height:900});
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ const nav=page.getByRole("navigation",{name:"Assessment stages"});
+ const labels=["Part Geometry","Engineering Context","Failure Assessment"];
+ for(const label of labels)await expect(nav.getByText(label,{exact:true})).toBeVisible();
+ const positions=await nav.locator("button").evaluateAll(buttons=>buttons.map(el=>{
+  const r=el.getBoundingClientRect();return {x:r.x,right:r.right,top:r.top,bottom:r.bottom,width:r.width};
+ }));
+ expect(positions).toHaveLength(3);
+ expect(positions[0].right).toBeLessThan(positions[1].x);
+ expect(positions[1].right).toBeLessThan(positions[2].x);
+ expect(positions[0].width).toBeGreaterThan(120);
+ const next=page.locator(".oaAssessmentNext");
+ const rect=await next.boundingBox();
+ expect(rect).not.toBeNull();
+ expect(rect!.y).toBeGreaterThan(positions[0].bottom);
+ await expect(page.getByRole("region",{name:"STL mesh facts"})).toContainText("Triangles");
+ await expect(page.getByRole("region",{name:"Dimensions and STL units"})).toContainText("Bounds");
+});
+
+test("WebGL-disabled browsers show actual STL via Canvas 2D instead of a blocking error card",async({page})=>{
+ await page.addInitScript(()=>{
+  const original=HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,type:string,...args:unknown[]){
+   if(type==="webgl"||type==="webgl2"||type==="experimental-webgl")return null;
+   return Reflect.apply(original,this,[type,...args]);
+  } as typeof HTMLCanvasElement.prototype.getContext;
+ });
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ const preview=page.getByRole("img",{name:"Orthographic projection of the uploaded STL geometry"});
+ await expect(preview).toBeVisible({timeout:25000});
+ await expect(page.getByText("WebGL unavailable. Showing the uploaded STL with the 2D renderer.")).toBeVisible();
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Run geometry screening"}).click();
+ await expect(page.getByText(/Geometric orientation screening completed/)).toBeVisible({timeout:35000});
+});
