@@ -3,7 +3,7 @@ import Link from "next/link";
 import {usePathname,useRouter} from "next/navigation";
 import {useState} from "react";
 import {useAnalysis} from "@/components/AnalysisProvider";
-import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck,LayoutDashboard} from "lucide-react";
+import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck,LayoutDashboard,Cloud,Layers,HelpCircle,Settings2} from "lucide-react";
 import "./chat-shell.css";
 import EngineeringBuildTicker from "./EngineeringBuildTicker";
 
@@ -13,13 +13,14 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
  const path=usePathname();
  const router=useRouter();
  const analysis=useAnalysis();
+ const professional=path==="/copilot/workbench";
  const [mobileOpen,setMobileOpen]=useState(false);
  const [collapsed,setCollapsed]=useState(false);
  const newStudy=()=>{
   analysis.startUploadedProject();
   if(typeof window!=="undefined")window.dispatchEvent(new Event("orientai-new-study"));
   setMobileOpen(false);
-  router.push("/");
+  router.push(professional?"/copilot/workbench":"/");
  };
  const toggle=()=>{
   if(typeof window!=="undefined"&&window.matchMedia("(max-width: 780px)").matches)setMobileOpen(v=>!v);
@@ -32,12 +33,12 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
    <Icon size={18} strokeWidth={1.85}/><span className="oaNavText">{label}</span>
   </Link>
  );
- return <div className={"oaRoot"+(collapsed?" oaIsCollapsed":"")}>
+ return <div className={"oaRoot"+(collapsed?" oaIsCollapsed":"")+(professional?" oaProfessionalShell":"")}>
   {mobileOpen&&<button className="oaScrim" aria-label="Close sidebar" onClick={()=>setMobileOpen(false)}/>}
   <aside className={"oaSidebar"+(mobileOpen?" oaMobileOpen":"")} aria-label="Workspace sidebar">
    <div className="oaSidebarTop">
     <Link href="/" className="oaBrand" onClick={()=>setMobileOpen(false)} title="ORIENTAI home">
-     <span className="oaBrandSymbol">O</span><span className="oaBrandText">ORIENTAI</span>
+     <span className="oaBrandSymbol">O</span><span className="psBrandStack"><span className="oaBrandText">ORIENTAI</span>{professional&&<small>Engineering AI for<br/>Metal Additive Manufacturing</small>}</span>
     </Link>
     <button className="oaMobileClose" aria-label="Close sidebar" onClick={()=>setMobileOpen(false)}><X size={20}/></button>
    </div>
@@ -45,8 +46,8 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
     <SquarePen size={19}/><span className="oaNavText">New study</span>
    </button>
    <nav className="oaNavigation" aria-label="Primary navigation">
-    {nav("/copilot/workbench","Engineering workbench",LayoutDashboard)}
-    {nav("/copilot","Current study",MessageSquare)}
+    {professional?nav("/copilot/workbench","Current study",MessageSquare):nav("/copilot/workbench","Engineering workbench",LayoutDashboard)}
+    {!professional&&nav("/copilot","Current study",MessageSquare)}
     {nav("/report","Engineering reports",FileText)}
    </nav>
    <div className="oaSidebarSection">
@@ -66,13 +67,28 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
      <Link href="/how-it-works" onClick={()=>setMobileOpen(false)}><BookOpen size={14}/> Technical guide</Link>
     </div>
    </details>
-   <EngineeringBuildTicker/>
+   {!professional&&<EngineeringBuildTicker/>}
+   {professional&&<div className="psSidebarLinks">
+    <Link href="/copilot/advanced" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Engineering settings</Link>
+    <Link href="/how-it-works" onClick={()=>setMobileOpen(false)}><HelpCircle size={16}/> Help & support</Link>
+   </div>}
    <div className="oaSidebarFooter">
-    <ShieldCheck size={17}/><span className="oaNavText">Virginia Tech · Research prototype</span>
+    {professional?<span className="psVTIcon">VT</span>:<ShieldCheck size={17}/>}
+    <span className="oaNavText">{professional?<>Virginia Tech<small>Research prototype</small></>:"Virginia Tech · Research prototype"}</span>
    </div>
   </aside>
   <div className="oaBody">
-   <header className="oaTopbar">
+   {professional?   <header className="oaTopbar">
+    <div className="psTopbarIdentity">
+     <button type="button" className="oaIconButton psMobileSidebarButton" onClick={toggle} aria-label="Toggle sidebar" title="Toggle sidebar"><PanelLeft size={20}/></button>
+     <Box size={24} strokeWidth={1.9}/>
+     <div><strong>ORIENTAI</strong><span>· Engineering Study</span></div>
+    </div>
+    <div className="psTopbarActions">
+     <span className="psSaveState" role="status"><Cloud size={16}/>{!analysis.ready?"Loading study…":analysis.storageError?"Local save issue":analysis.saving?"Saving locally…":"Saved locally"}</span>
+     <Link className="psProcessLink" href="/copilot/advanced?stage=process"><Layers size={17}/> Metal AM <ChevronDown size={15}/></Link>
+    </div>
+   </header>:   <header className="oaTopbar">
     <div className="oaTopLeft">
      <button type="button" className="oaIconButton" onClick={toggle} aria-label="Toggle sidebar" title="Toggle sidebar">
       <PanelLeft size={20}/>
@@ -81,7 +97,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
      <div className="oaModelName">{title==="ORIENTAI"?"ORIENTAI":title}<span className="oaModelSuffix"> · Engineering AI</span></div>
     </div>
     <span className="oaResearchLabel">Research prototype</span>
-   </header>
+   </header>}
    <main className="oaMain" id="main-content">{children}</main>
    <div className="oaBottomDisclaimer">ORIENTAI supports engineering review. Results do not certify a part or guarantee first-time quality.</div>
   </div>
