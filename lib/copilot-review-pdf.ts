@@ -5,10 +5,13 @@ import type {ProjectKnowledge} from "./copilot-context";
 import type {ReviewedEvidence} from "./engineering-evidence";
 import type {EngineeringReadiness} from "./engineering-readiness";
 import type {ApprovedParameterBinding} from "./engineering-parameter-binding";
+import type {FailureCoverage} from "./failure-coverage";
 export type CopilotPdfInputs={
  projectName:string;partName:string;partSha256:string;process:string;
  unitsConfirmed:boolean;createdAt:string;knowledge:ProjectKnowledge;
  reviewedEvidence:ReviewedEvidence[];approvedBindings?:ApprovedParameterBinding[];readiness:EngineeringReadiness;
+ coverage?:FailureCoverage[];
+ geometryFindings?:{code:string;message:string;basis:string}[];
  study?:{jobId:string;stressMPa?:number;displacementMm?:number;
  temperatureMinC?:number;temperatureMaxC?:number;
  structuralModel?:string;thermalModel?:string};
@@ -74,6 +77,24 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
  title("Evidence readiness - NOT a quality pass");
  for(const gate of input.readiness.gates){
   paragraph(gate.title+" ["+gate.status+"]: "+gate.detail);
+ }
+ if(input.geometryFindings?.length){
+  title("Geometry-specific screening concerns");
+  for(const finding of input.geometryFindings.slice(0,30)){
+   paragraph(finding.code+": "+finding.message);
+   paragraph("Basis: "+finding.basis,8,[75,84,95]);
+  }
+ }else if(input.coverage?.length){
+  title("Geometry-screening findings");
+  paragraph("No additional localized concern was supplied with this report. This does not establish defect-free printing.");
+ }
+ if(input.coverage?.length){
+  title("Manufacturing and service assessment coverage");
+  for(const item of input.coverage){
+   paragraph(item.name+" ["+item.state+"] | "+item.category,9);
+   paragraph("Method: "+item.method+" | Limits: "+item.limitations+" | Needed: "+item.nextInput,8,[75,84,95]);
+  }
+  paragraph("Unassessed mechanisms are unknown, not low-risk. Screened geometry cannot establish calibrated defect probability or first-time quality.");
  }
  title("Known limitations");
  for(const caveat of input.readiness.caveats)paragraph("- "+caveat);
