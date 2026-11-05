@@ -421,3 +421,29 @@
 @media(prefers-reduced-motion:reduce){
  .psReferenceRoot *{scroll-behavior:auto!important}
 }
+
+/* Higher specificity than the retired density experiment: this is the reference header. */
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot.psFit) .oaTopbar{
+ height:62px!important;min-height:62px!important;flex-basis:62px!important;
+ padding:0 24px!important;display:flex!important;align-items:center!important
+}
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot.psFit) .oaSidebarTop{
+ height:auto!important;min-height:72px!important;padding:0 9px 9px!important
+}
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot.psFit) .oaSidebarFooter{
+ font-size:11px!important;margin-top:0!important
+}
+.psReferenceRoot .psOverlayControl input[type=checkbox]{
+ appearance:none;position:relative;width:36px;height:20px;border-radius:14px;
+ border:1px solid #6b7e8f;background:#354253;cursor:pointer;transition:background .15s
+}
+.psReferenceRoot .psOverlayControl input[type=checkbox]::after{
+ content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;
+ background:#e6edf3;border-radius:50%;transition:transform .15s
+}
+.psReferenceRoot .psOverlayControl input[type=checkbox]:checked{background:#2379b8;border-color:#68b8ee}
+.psReferenceRoot .psOverlayControl input[type=checkbox]:checked::after{transform:translateX(16px)}
+@media(prefers-reduced-motion:reduce){
+ .psReferenceRoot .psOverlayControl input[type=checkbox],
+ .psReferenceRoot .psOverlayControl input[type=checkbox]::after{transition:none}
+}
