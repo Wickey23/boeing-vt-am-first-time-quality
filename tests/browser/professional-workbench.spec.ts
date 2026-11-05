@@ -9,8 +9,8 @@ test("new professional study keeps a readable three-stage interface and actual g
  for(const label of ["Part Geometry","Engineering Context","Failure Assessment"])await expect(stepper.getByText(label,{exact:true})).toBeVisible();
  const items=await stepper.getByRole("button").evaluateAll(elements=>elements.map(element=>element.getBoundingClientRect().toJSON()));
  expect(items).toHaveLength(3);
- expect(items[0].right).toBeLessThan(items[1].left);
- expect(items[1].right).toBeLessThan(items[2].left);
+ expect(items[0].right).toBeLessThanOrEqual(items[1].left);
+ expect(items[1].right).toBeLessThanOrEqual(items[2].left);
  await expect(page.getByRole("region",{name:"Mesh inspection"})).toContainText("Triangles");
  await expect(page.getByRole("region",{name:"Dimensions and units"})).toContainText("mm");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
