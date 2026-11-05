@@ -409,6 +409,42 @@ export default function ChatStudy(){
   pendingRun.current=null;
   a.retry();
  };
+ const exportEvidencePDF=async()=>{
+  if(!a.file||!partHash||!isConfirmed||!context.knowledge){
+   setReportError("Confirm the STL dimensions and units before exporting.");return;
+  }
+  setReportBusy(true);setReportError("");
+  try{
+   const k=context.knowledge;
+   const readiness=assessEngineeringReadiness({
+    fileName:a.file.name,unitsConfirmed:isConfirmed,process:a.journey.process,
+    componentName:k.componentName,assemblyContext:k.assemblyContext,
+    attachmentNotes:k.attachmentNotes,requirements:k.reviewedRequirements,
+    documentCount:context.sources.length,reviewedEvidenceCount:context.reviewed.length,
+    hasNumericalServiceStudy:serviceCurrent&&Boolean(serviceStudy?.structural),
+    hasSteadyThermalStudy:serviceCurrent&&Boolean(serviceStudy?.thermal),
+    hasLpbfGeometryCandidates:currentRun
+   });
+   const bindings=activeParameterBindings(k.parameterBindings,context.sources,context.reviewed,activeServiceCase(a.servicePlan));
+   const geometryFindings=[
+    ...meshFindings.map(f=>({code:f.code,message:f.message,basis:"Uploaded mesh topology audit"})),
+    ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis})):[])
+   ];
+   const pdf=await createCopilotReviewPDF({
+    projectName:a.projectName,partName:a.file.name,partSha256:partHash,
+    process:a.journey.process,unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),
+    knowledge:k,reviewedEvidence:context.reviewed,approvedBindings:bindings,readiness,coverage,geometryFindings,
+    study:serviceCurrent&&serviceStudy?{
+     jobId:serviceStudy.jobId,stressMPa:serviceStudy.structural?.solver.maxVonMisesMPa,
+     displacementMm:serviceStudy.structural?.solver.maxDisplacementMm,
+     temperatureMinC:serviceStudy.thermal?.min,temperatureMaxC:serviceStudy.thermal?.max,
+     structuralModel:serviceStudy.structural?.solver.model,thermalModel:serviceStudy.thermal?.solver.model
+    }:undefined
+   });
+   pdf.save((a.projectName||"orientai").replace(/[^a-z0-9_-]+/gi,"-").slice(0,50)+"-engineering-evidence.pdf");
+  }catch(e){setReportError(e instanceof Error?e.message:"Engineering evidence export failed.");}
+  finally{setReportBusy(false);}
+ };
  const overlay=showOverhangs?"overhang":selected?"orientation":"geometry";
  return <div ref={layoutRef} className={"oaStudy"+(showArtifact?" oaStudySplit":"")+(resizingPanel?" oaStudyResizing":"")} style={{"--oa-panel-width":panelWidth+"%"} as CSSProperties}>
   <section className="oaStudyChat" aria-label="Engineering conversation">
