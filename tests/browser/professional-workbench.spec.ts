@@ -28,7 +28,7 @@ test("assembly text remains part-specific and report stage distinguishes unasses
   name:"sample-assembly.txt",mimeType:"text/plain",
   buffer:Buffer.from("Mounting bracket for a demonstration assembly.\nProposed 1200 N bolt load is unverified.\n")
  });
- await expect(page.getByText("sample-assembly.txt")).toBeVisible();
+ await expect(page.getByText("sample-assembly.txt",{exact:true})).toBeVisible();
  await page.getByPlaceholder("e.g. Mounting bracket for actuator").fill("Demo mounting bracket");
  await page.getByRole("button",{name:/Failure Assessment/}).click();
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
@@ -48,6 +48,6 @@ test("WebGL failure displays geometry-only STL projection rather than blocking t
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("img",{name:"Canvas projection of uploaded STL geometry"})).toBeVisible({timeout:30000});
- await expect(page.getByText(/WebGL unavailable/)).toBeVisible();
+ await expect(page.getByText(/WebGL unavailable · showing/)).toBeVisible();
  await expect(page.getByRole("heading",{name:"Inspect and confirm the model"})).toBeVisible();
 });
