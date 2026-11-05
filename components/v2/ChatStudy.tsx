@@ -321,7 +321,12 @@ export default function ChatStudy(){
    aiRequest.current=controller;
    setAiBusy(true);setDraft("");
    const mesh=inspect.data;
-   // No STL bytes, drawings, document uploads, or unapproved attachments.
+   // No raw STL/document bytes or unreviewed source text are transmitted.
+   const reviewedSources=context.reviewed.slice(0,12).map(e=>({
+    id:e.sourceId,name:e.sourceName,
+    text:"["+e.sourceId+" "+e.locator+"] "+e.excerpt,
+    notes:"Engineer relevance rationale (not numerical approval): "+e.reviewerNote
+   }));
    const localContext=[
     "Client-reported mesh measurements (not independently verified by the LLM):",
     mesh?"Dimensions in mm: "+Object.values(mesh.dimensions).map(v=>Number(v).toPrecision(5)).join(" x "):"Dimensions unavailable",
@@ -340,10 +345,11 @@ export default function ChatStudy(){
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({allowExternal:true,message:question,
        project:{name:a.projectName,partName:a.file?.name??"",confirmed:isConfirmed,
-        process:a.journey.process,componentName:a.projectName,
-        assemblyContext:"",attachmentNotes:"",
-        requirements:localContext,hasOrientation:currentRun},
-       sources:[],history:messages.slice(-10).map(m=>({role:m.role,text:m.text}))}),
+        process:a.journey.process,componentName:context.knowledge?.componentName||a.projectName,
+        assemblyContext:context.knowledge?.assemblyContext||"",
+        attachmentNotes:context.knowledge?.attachmentNotes||"",
+        requirements:(context.knowledge?.reviewedRequirements||"")+"\\n\\n"+localContext,hasOrientation:currentRun},
+       sources:reviewedSources,history:messages.slice(-10).map(m=>({role:m.role,text:m.text}))}),
       signal:controller.signal
      });
      const data=await response.json();
@@ -632,7 +638,7 @@ export default function ChatStudy(){
     {aiAvailable&&<label className="oaStudyAiConsent">
      <input aria-label="Authorize AI messages from main chat" type="checkbox" checked={allowAi}
       onChange={e=>setAllowAi(e.target.checked)}/>
-     Use the configured external AI for each message while checked. I approve sharing my text, recent conversation and mesh measurements. Do not include controlled Boeing data. The STL binary is never transmitted.
+     Use the configured external AI for each message while checked. I approve sharing chat, mesh measurements, engineer-entered assembly context and explicitly reviewed excerpts. Raw STL/document files are never sent. Do not include controlled Boeing data.
     </label>}
     <small>{aiBusy?"Consulting approved AI model…":allowAi&&aiAvailable?
      "External AI is configured, not connectivity-verified. AI answers are advisory; no physical solver runs from chat.":
