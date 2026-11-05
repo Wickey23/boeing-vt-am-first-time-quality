@@ -1,40 +1,72 @@
 import {test,expect} from "@playwright/test";
 import {readFile} from "node:fs/promises";
-test("uploaded STL appears in chat with inspected mesh, geometric build preview and explicit physics limitations",async({page})=>{
+test("focused part screen keeps the real viewer, geometric screening and build progression",async({page})=>{
  const externalCalls:string[]=[];
  page.on("request",r=>{if(r.method()==="POST"&&/engineering-copilot|llm-api/.test(r.url()))externalCalls.push(r.url());});
  await page.goto("/copilot");
  await page.getByLabel("Upload STL").click();
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toBeVisible();
- await expect(page.getByText(/mesh triangles/)).toBeVisible();
+ await expect(page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button")).toHaveCount(3);
  await expect(page.getByRole("region",{name:"Analysis workflow"})).toContainText("Mesh topology and dimensions");
- await expect(page.getByText("Machine/material process-window review")).toBeVisible();
- await expect(page.getByText("Calibrated defect probability / residual stress / fatigue")).toBeVisible();
- await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  await page.getByRole("button",{name:"Run geometry screening"}).click();
  await expect(page.getByText(/Geometric orientation screening completed/)).toBeVisible({timeout:30000});
- await expect(page.getByRole("region",{name:"Risk assessment results"})).toContainText("Failure-risk assessment");
- await page.getByLabel("Layer buildup percentage").fill("50");
- await expect(page.getByText("50% of the model height")).toBeVisible();
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Manufacturing screening");
+ await page.getByRole("button",{name:"Open part geometry view"}).click();
+ await page.getByLabel("Build progression percentage").fill("50");
+ await expect(page.getByText("Build progression · 50%")).toBeVisible();
  await page.getByRole("button",{name:"Restart"}).click();
- await expect(page.getByText("1% of the model height")).toBeVisible();
- await page.getByRole("button",{name:"Play build preview"}).click();
- await expect.poll(async()=>Number(await page.getByLabel("Layer buildup percentage").inputValue())).toBeGreaterThan(1);
- await page.getByRole("button",{name:"Pause build preview"}).click();
- // Uploaded STL should open the live engineering side workspace automatically.
+ await expect(page.getByText("Build progression · 1%")).toBeVisible();
+ await page.getByRole("button",{name:"Play build",exact:true}).click();
+ await expect.poll(async()=>Number(await page.getByLabel("Build progression percentage").inputValue())).toBeGreaterThan(1);
+ await page.getByRole("button",{name:"Pause build",exact:true}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await page.getByRole("button",{name:"Close 3D viewer"}).click();
- await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toHaveCount(0);
  await expect(page.locator(".oaInlineViewer")).toBeVisible();
  await page.getByRole("button",{name:"Open side view"}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await page.keyboard.press("Escape");
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toHaveCount(0);
  await page.getByRole("button",{name:"Open side view"}).click();
- await expect(page.getByText(/not real toolpaths, layer timing/)).toBeVisible();
+ await expect(page.getByText(/STL geometry and geometric screening only/)).toBeVisible();
  expect(externalCalls).toEqual([]);
+});
+test("guided context persists source evidence and connects to traceable report export",async({page})=>{
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("region",{name:"Three-stage engineering assessment"})).toBeVisible();
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Open engineering context stage"}).click();
+ await expect(page.getByRole("heading",{name:"Understand the part in its assembly"})).toBeVisible();
+ await page.getByLabel("Upload assembly documents").setInputFiles({
+  name:"public-assembly-notes.txt",mimeType:"text/plain",
+  buffer:Buffer.from("Mounting bracket for a demonstration assembly. A proposed 1800 N service load requires engineer verification.\\n")
+ });
+ await expect(page.locator(".oaDocumentItem")).toContainText("public-assembly-notes.txt");
+ await page.getByLabel("Component function").fill("Synthetic mounting bracket");
+ await page.getByLabel("Assembly relationships").fill("Demonstration assembly with bolted interface");
+ await page.getByRole("button",{name:"Review relevance"}).first().click();
+ await page.getByLabel("Evidence review rationale").fill("Relevant to candidate assembly; proposed load is explicitly unverified.");
+ await page.getByRole("button",{name:"Confirm passage relevance"}).click();
+ await page.getByLabel("Message ORIENTAI").fill("What assembly load does the document describe?");
+ await page.getByRole("button",{name:"Send message"}).click();
+ await expect(page.getByText(/Relevant excerpts \(not independently verified\)/)).toBeVisible();
+
+ await page.reload();
+ await page.getByRole("button",{name:"Open engineering context stage"}).click();
+ await expect(page.getByLabel("Component function")).toHaveValue("Synthetic mounting bracket");
+ await expect(page.locator(".oaReviewedList")).toContainText("D1");
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Unassessed mechanisms");
+ const download=page.waitForEvent("download");
+ await page.getByRole("button",{name:"Export evidence PDF"}).click();
+ expect((await download).suggestedFilename()).toContain("-engineering-evidence.pdf");
+ await page.getByRole("link",{name:/Advanced report details/}).click();
+ await expect(page).toHaveURL(/stage=results/);
+ await expect(page.getByRole("heading",{name:"Inspect actual results"})).toBeVisible();
+ await expect(page.getByRole("button",{name:"Export engineering review PDF"})).toBeVisible();
 });
 test("auto-open model can be resized by keyboard and closed on mobile",async({page})=>{
  await page.goto("/copilot");
@@ -66,12 +98,15 @@ test("conversation persists after reload for the active part and its dimensions 
  await expect(page.getByRole("button",{name:"Confirm units & dimensions"})).toBeEnabled();
  await expect(page.getByRole("button",{name:"Run geometry screening"})).toBeDisabled();
 });
-test("chat only runs numerical service workers after explicit engineering approval and never labels them print physics",async({page})=>{
+test("service calculations remain engineer-approved and cannot qualify print defects",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Not assessed");
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.getByRole("region",{name:"Failure assessment workspace"})).toContainText("Not assessed");
  await expect(page.getByText("Print-induced distortion and residual stress")).toBeVisible();
+ await page.getByRole("button",{name:"Open part geometry view"}).click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review inputs and run numerical studies"}).click();
  const service=page.getByRole("region",{name:"Engineer-approved numerical studies"});
  const run=service.getByRole("button",{name:"Run All Applicable Analyses"});
@@ -81,21 +116,23 @@ test("chat only runs numerical service workers after explicit engineering approv
  await run.click();
  await expect(page.getByText("All three result fields computed.")).toBeVisible({timeout:100000});
  await expect(page.getByRole("region",{name:"Calculated service results"})).toContainText("Maximum stress");
- await expect(page.getByText(/Engineer-approved service study completed on the uploaded STL/)).toBeVisible();
  await page.getByRole("button",{name:"Stress",exact:true}).click();
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("2 calculated");
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.locator(".oaAssessmentMetrics > div:nth-child(2) strong")).toHaveText("2");
  const printRow=page.getByText("Print-induced distortion and residual stress").locator("..");
  await expect(printRow).toContainText("Not assessed");
+ await page.getByRole("button",{name:"Open part geometry view"}).click();
  await page.getByLabel("STL coordinate units").selectOption("25.4");
- await expect(page.getByRole("region",{name:"Calculated service results"})).toHaveCount(0);
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("0 calculated");
+ await page.getByRole("button",{name:"Open failure assessment and export stage"}).click();
+ await expect(page.locator(".oaAssessmentMetrics > div:nth-child(2) strong")).toHaveText("0");
 });
 
 test("LPBF solid-state thermal prototype requires approval and displays bounded real worker frames",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
  const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
  const run=panel.getByRole("button",{name:"Run research thermal worker"});
@@ -115,12 +152,11 @@ test("LPBF solid-state thermal prototype requires approval and displays bounded 
  expect(data.model).toBe("lpbf-solid-transient-0.1");
  expect(data.snapshots.length).toBeGreaterThan(0);
  expect(data.summary.relativeEnergyImbalance).toBeLessThan(1e-4);
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Coarse solid-state LPBF heat-flow prototype");
  const history=page.getByRole("group",{name:"LPBF temperature history"}).or(page.locator(".oaLpbfFrameControls"));
  await expect(history).toBeVisible();
  await page.getByLabel("Thermal snapshot frame").fill("0");
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
- await expect(page.getByText("Solid-state LPBF research temperature")).toBeVisible();
+ await expect(page.locator(".viewerLegend > summary")).toHaveText("Solid-state LPBF research temperature");
  await page.getByLabel("STL coordinate units").selectOption("25.4");
  await expect(panel.getByLabel("Research thermal result")).toHaveCount(0);
  await expect(page.locator(".oaLpbfFrameControls")).toHaveCount(0);
@@ -130,6 +166,7 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
  const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
  await panel.getByLabel("Thermal model").selectOption("moving");
@@ -147,7 +184,6 @@ test("Moving Gaussian enthalpy mode requires new approval and exports a real dis
  expect(data.model).toBe("lpbf-raster-enthalpy-0.1");
  expect(data.inputs.latentHeatJKg).toBeGreaterThan(0);
  expect(data.summary.relativeEnergyImbalance).toBeLessThan(1e-4);
- await expect(page.getByRole("region",{name:"Failure mode assessment coverage"})).toContainText("Experimental moving-raster LPBF enthalpy heat flow");
  await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
  await page.getByRole("button",{name:"Restart temperature history"}).click();
  await expect(page.getByLabel("Thermal snapshot frame")).toHaveValue("0");
@@ -164,6 +200,7 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByRole("button",{name:"Review process thermal inputs"}).click();
  const panel=page.getByRole("region",{name:"LPBF process thermal research study"});
  await panel.getByLabel("Thermal model").selectOption("imported");
@@ -298,9 +335,52 @@ test("Imported numerical laser CSV runs with exact path hash and invalidates on 
 test("measurement questions open the appropriate study panel without claiming NIST validation",async({page})=>{
  await page.goto("/copilot");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await page.locator(".oaAdvancedToolsDisclosure > summary").click();
  await page.getByLabel("Message ORIENTAI").fill("Can you validate my thermography measurement against NIST AM Bench?");
  await page.getByRole("button",{name:"Send message"}).click();
  await expect(page.getByRole("region",{name:"LPBF process thermal research study"})).toBeVisible();
  await expect(page.getByText(/cannot yet validate NIST AM Bench time-above-melt/)).toBeVisible();
  await expect(page.getByRole("button",{name:"Run research thermal worker"})).toBeDisabled();
+});
+
+
+test("professional study stepper keeps all three names readable with no overlap",async({page})=>{
+ await page.setViewportSize({width:1600,height:900});
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ const nav=page.getByRole("navigation",{name:"Assessment stages"});
+ const labels=["Part Geometry","Engineering Context","Failure Assessment"];
+ for(const label of labels)await expect(nav.getByText(label,{exact:true})).toBeVisible();
+ const positions=await nav.locator("button").evaluateAll(buttons=>buttons.map(el=>{
+  const r=el.getBoundingClientRect();return {x:r.x,right:r.right,top:r.top,bottom:r.bottom,width:r.width};
+ }));
+ expect(positions).toHaveLength(3);
+ expect(positions[0].right).toBeLessThan(positions[1].x);
+ expect(positions[1].right).toBeLessThan(positions[2].x);
+ expect(positions[0].width).toBeGreaterThan(120);
+ const next=page.locator(".oaAssessmentNext");
+ const rect=await next.boundingBox();
+ expect(rect).not.toBeNull();
+ expect(rect!.y).toBeGreaterThan(positions[0].bottom);
+ await expect(page.getByRole("region",{name:"STL mesh facts"})).toContainText("Triangles");
+ await expect(page.getByRole("region",{name:"Dimensions and STL units"})).toContainText("Bounds");
+});
+
+test("WebGL-disabled browsers show actual STL via Canvas 2D instead of a blocking error card",async({page})=>{
+ await page.addInitScript(()=>{
+  const original=HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,type:string,...args:unknown[]){
+   if(type==="webgl"||type==="webgl2"||type==="experimental-webgl")return null;
+   return Reflect.apply(original,this,[type,...args]);
+  } as typeof HTMLCanvasElement.prototype.getContext;
+ });
+ await page.goto("/copilot");
+ await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("complementary",{name:"Expanded 3D engineering model"})).toBeVisible();
+ const preview=page.getByRole("img",{name:"Orthographic projection of the uploaded STL geometry"});
+ await expect(preview).toBeVisible({timeout:25000});
+ await expect(page.getByText("WebGL unavailable. Showing the uploaded STL with the 2D renderer.")).toBeVisible();
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("button",{name:"Run geometry screening"}).click();
+ await expect(page.getByText(/Geometric orientation screening completed/)).toBeVisible({timeout:35000});
 });

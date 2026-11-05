@@ -329,3 +329,205 @@
 
 .oaMetalBuildPlayback{display:flex;gap:7px;flex-wrap:wrap}
 .oaMetalBuildPlayback button:first-child{background:var(--oa-strong);color:var(--oa-bg);border-color:var(--oa-strong)}
+
+/* Compact guided workflow: the model and engineering conversation retain viewport space. */
+.oaAssessmentJourney{flex-shrink:0;display:grid;gap:7px;padding:10px 14px;background:var(--oa-bg);border-bottom:1px solid var(--oa-border);color:var(--oa-text);position:relative;z-index:17}
+.oaAssessmentHeading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.oaAssessmentHeading strong{font-size:12px;font-weight:700}
+.oaAssessmentHeading small{font-size:10px;color:var(--oa-muted);white-space:nowrap}
+.oaAssessmentStages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.oaAssessmentStep{min-width:0;display:flex;align-items:center;gap:8px;text-decoration:none;text-align:left;color:var(--oa-text);background:var(--oa-card);border:1px solid var(--oa-border);border-radius:9px;padding:7px 8px}
+.oaAssessmentStep:hover,.oaAssessmentStep:focus-visible{border-color:var(--oa-strong)}
+.oaAssessmentStepNumber{width:25px;height:25px;border-radius:7px;background:var(--oa-bg);display:grid;place-items:center;font-size:11px;flex:0 0 25px;color:var(--oa-muted);font-weight:700}
+.oaAssessmentStepText{min-width:0;flex:1;display:block}
+.oaAssessmentStep strong,.oaAssessmentStep small{display:block;line-height:1.3}
+.oaAssessmentStep strong{font-size:11px;font-weight:700}
+.oaAssessmentStep small{color:var(--oa-muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oaAssessmentNext{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:11px;min-width:0}
+.oaAssessmentNext>svg{color:#188a78;flex:0 0 16px}
+.oaAssessmentNext>span{flex:1 1 190px;min-width:0;line-height:1.4}
+.oaAssessmentNext>span strong{margin-right:3px}
+.oaAssessmentNext button,.oaAssessmentNext a{border:1px solid var(--oa-border);border-radius:8px;background:var(--oa-card);color:var(--oa-text);padding:6px 9px;font-size:10px;text-decoration:none;white-space:nowrap}
+.oaAssessmentNext button:hover,.oaAssessmentNext a:hover{border-color:var(--oa-strong)}
+.oaAssessmentNext .oaAssessmentUploadButton{position:relative;display:flex;align-items:center;gap:5px;padding:7px 9px;background:var(--oa-strong);color:var(--oa-bg);border-radius:8px;font-size:10px;font-weight:650;cursor:pointer;white-space:nowrap}
+.oaAssessmentUploadButton:focus-within{outline:2px solid #3b82f6;outline-offset:2px}
+.oaAssessmentUploadButton input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:0;bottom:0}
+.oaAssessmentSources{display:flex;gap:5px;align-items:center;flex-wrap:wrap;font-size:10px}
+.oaAssessmentSources span{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid var(--oa-border);border-radius:6px;padding:3px 6px}
+.oaAssessmentSources a{font-size:10px;font-weight:650;color:var(--oa-text);text-decoration:underline}
+.oaAssessmentNotice{color:var(--oa-text);font-size:10px;margin:0}
+.oaAssessmentLimitations{font-size:10px;color:var(--oa-muted)}
+.oaAssessmentLimitations summary{cursor:pointer;width:max-content;max-width:100%;text-decoration:underline}
+.oaAssessmentLimitations p{line-height:1.45;margin:5px 0 0;max-width:650px}
+@media(max-width:1100px){.oaAssessmentHeading small{display:none}.oaAssessmentStep{gap:5px}.oaAssessmentStepNumber{width:21px;flex-basis:21px;height:24px}}
+@media(max-width:850px){.oaAssessmentJourney{padding:8px 10px;gap:6px}.oaAssessmentStages{grid-template-columns:repeat(3,minmax(0,1fr))}.oaAssessmentStep{padding:6px}.oaAssessmentStep strong{font-size:10px}.oaAssessmentStep small{display:none}.oaAssessmentStepNumber{display:none}.oaAssessmentNext{font-size:10px}.oaAssessmentNext>span{flex-basis:100%;}.oaAssessmentLimitations{display:none}}
+@media(max-width:450px){.oaAssessmentStep strong{font-size:9px}.oaAssessmentNext .oaAssessmentUploadButton{padding:6px}}
+
+/* Failure-mechanism status is available when requested, not a wall of unassessed rows. */
+.oaCoverageDisclosure{margin-top:12px;border-top:1px solid var(--oa-border);padding-top:9px}
+.oaCoverageDisclosure>summary{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--oa-text);font-size:12px;font-weight:650;list-style:none}
+.oaCoverageDisclosure>summary::-webkit-details-marker{display:none}
+.oaCoverageDisclosure>summary svg{transition:transform .15s ease}
+.oaCoverageDisclosure[open]>summary svg{transform:rotate(180deg)}
+.oaCoverageDisclosure .oaCoverageRows{margin-top:8px}
+@media(prefers-reduced-motion:reduce){.oaCoverageDisclosure>summary svg{transition:none}}
+
+/* Professional focused engineering workbench — one primary task at a time.
+   Conservative evidence/status accents; no implied qualification or synthetic scores. */
+.oaStudyFeed{gap:15px;padding:18px clamp(14px,2vw,30px) 24px}
+.oaAssessmentJourney{gap:9px;padding:13px clamp(14px,2vw,25px);border-bottom:1px solid var(--oa-border);background:var(--oa-bg)}
+.oaAssessmentHeading>div{display:flex;align-items:baseline;gap:10px}
+.oaAssessmentHeading>div small{font-size:9px;letter-spacing:.08em;font-weight:700;color:var(--oa-muted)}
+.oaAssessmentHeading>div strong{font-size:13px;letter-spacing:-.015em}
+.oaAssessmentHeading>span{font-size:10px;color:var(--oa-muted);max-width:37%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.oaAssessmentStages{gap:7px}
+.oaAssessmentStep{gap:8px;padding:9px 11px;background:transparent;border:1px solid var(--oa-border);border-radius:9px;transition:border-color .12s,background .12s}
+.oaAssessmentStep:hover{background:var(--oa-card)}
+.oaAssessmentStep.is-active{background:var(--oa-card);border-color:#63829e;box-shadow:inset 0 0 0 1px #63829e55}
+.oaAssessmentStep.is-complete .oaAssessmentStepNumber{background:#173e35;color:#8be1c1}
+.oaAssessmentStepNumber{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:var(--oa-card);color:var(--oa-muted)}
+.oaAssessmentStepText{overflow:hidden}
+.oaAssessmentStepText strong{font-size:11px;line-height:1.25;white-space:normal;overflow:visible}
+.oaAssessmentStepText small{font-size:10px;line-height:1.3;margin-top:3px}
+.oaAssessmentStepArrow{flex:0 0 15px;color:#94b9de}
+.oaAssessmentNext{gap:10px;padding:0 1px}
+.oaAssessmentNext>span{display:flex;align-items:center;gap:8px;flex:1 1 0;min-width:0;color:var(--oa-muted);font-size:11px}
+.oaAssessmentNext>span strong{color:var(--oa-text);font-size:11px;white-space:nowrap}
+.oaAssessmentNext button{display:inline-flex;gap:5px;align-items:center;background:var(--oa-card);border-color:var(--oa-border);font-weight:600;padding:7px 11px}
+.oaAssessmentNext button svg{color:var(--oa-text)}
+.oaStageWorkspace{display:grid;gap:16px;min-width:0;width:100%}
+.oaStageIntro{display:grid;gap:5px;margin:0 0 5px}
+.oaStageEyebrow{color:var(--oa-muted);font-size:10px;font-weight:750;letter-spacing:.08em}
+.oaStageIntro h1{font-size:23px;line-height:1.2;letter-spacing:-.025em;margin:0;font-weight:700}
+.oaStageIntro p{font-size:12px;color:var(--oa-muted);line-height:1.6;margin:0;max-width:760px}
+.oaPartIntro{margin-bottom:0}
+.oaStageCaution{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:9px;color:var(--oa-text);font-size:11px}
+.oaStageCaution svg{flex-shrink:0;color:#d1a662}
+.oaProCard{background:var(--oa-bg);border:1px solid var(--oa-border);border-radius:12px;padding:16px;min-width:0}
+.oaProCardHeading{display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0;margin-bottom:12px}
+.oaProCardHeading>div{display:flex;align-items:center;gap:8px;min-width:0}
+.oaProCardHeading svg{color:var(--oa-muted);flex-shrink:0}
+.oaProCardHeading strong{font-size:13px;font-weight:700}
+.oaProCardHeading>span{font-size:10px;color:var(--oa-muted);white-space:nowrap}
+.oaContextGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.oaDocumentDrop{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;border:1px dashed #6b8296;border-radius:10px;background:var(--oa-card);padding:22px 13px;position:relative;cursor:pointer}
+.oaDocumentDrop.is-dragging,.oaDocumentDrop:focus-within{outline:2px solid #709fc5;outline-offset:1px}
+.oaDocumentDrop>svg{color:#a6c9eb}
+.oaDocumentDrop strong{font-size:12px}
+.oaDocumentDrop small{font-size:10px;color:var(--oa-muted);line-height:1.5}
+.oaDocumentDrop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.oaDocumentDrop input:disabled{cursor:not-allowed}
+.oaQuietCopy{font-size:11px;line-height:1.6;color:var(--oa-muted);margin:8px 0 0}
+.oaDocumentList{display:grid;gap:7px;margin-top:11px}
+.oaDocumentItem{border:1px solid var(--oa-border);border-radius:9px;background:var(--oa-card);min-width:0}
+.oaDocumentItem>summary{display:flex;align-items:center;gap:9px;padding:8px;cursor:pointer;list-style:none;min-width:0}
+.oaDocumentItem>summary::-webkit-details-marker{display:none}
+.oaDocumentId{flex-shrink:0;background:var(--oa-bg);border:1px solid var(--oa-border);border-radius:5px;font-size:10px;font-weight:750;padding:5px}
+.oaDocumentName{display:grid;gap:2px;flex:1;min-width:0}
+.oaDocumentName strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oaDocumentName small{font-size:10px;color:var(--oa-muted);line-height:1.4}
+.oaDocumentDetails{display:grid;gap:12px;padding:11px;border-top:1px solid var(--oa-border)}
+.oaDocumentDetails pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;max-height:180px;overflow:auto}
+.oaContextFields{display:grid;gap:10px}
+.oaContextFields label,.oaDocumentDetails label,.oaEvidenceReview label{display:grid;gap:5px;color:var(--oa-text);font-size:11px;font-weight:600}
+.oaContextFields input,.oaContextFields textarea,.oaDocumentDetails textarea,.oaEvidenceReview textarea{display:block;width:100%;min-width:0;box-sizing:border-box;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.5;color:var(--oa-text);font-weight:400;resize:vertical}
+.oaContextFields input:focus,.oaContextFields textarea:focus,.oaDocumentDetails textarea:focus,.oaEvidenceReview textarea:focus{outline:2px solid #668baa;outline-offset:1px}
+.oaTextButton{display:inline-flex;align-items:center;gap:6px;background:transparent;border:0;padding:5px 1px;color:var(--oa-text);font-size:11px;text-decoration:underline;cursor:pointer;width:max-content}
+.oaDocumentSafety{display:block;font-size:10px;line-height:1.5;color:var(--oa-muted);margin-top:9px}
+.oaStageNotice{background:var(--oa-card);border-left:3px solid #6f9fca;border-radius:6px;padding:9px 11px;font-size:11px;line-height:1.45}
+.oaEvidenceCard{display:grid;gap:4px}
+.oaEvidenceCandidates{display:grid;gap:9px}
+.oaEvidenceItem{padding:10px;border:1px solid var(--oa-border);border-radius:9px;background:var(--oa-card)}
+.oaEvidenceItem>div:first-child{display:flex;gap:8px;align-items:center;min-width:0}
+.oaEvidenceItem small{font-size:10px;color:var(--oa-muted);overflow-wrap:anywhere}
+.oaEvidenceItem p{font-size:11px;line-height:1.55;margin:9px 0;color:var(--oa-text)}
+.oaEvidenceTag{border:1px solid var(--oa-border);font-weight:700;border-radius:5px;padding:4px 6px;font-size:10px;text-transform:capitalize}
+.oaEvidenceReview{display:grid;gap:8px;margin-top:9px}
+.oaEvidenceReview button,.oaNextQuestion button,.oaAssessmentActions button,.oaStageContinue button{border:1px solid #456e91;background:#214b70;color:#f7fbff;border-radius:8px;padding:9px 12px;font-weight:650;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;width:max-content}
+.oaEvidenceReview button:disabled,.oaAssessmentActions button:disabled{opacity:.45;cursor:not-allowed}
+.oaReviewedList{display:grid;gap:7px;margin-bottom:8px}
+.oaReviewedList>div{display:flex;gap:8px;align-items:start;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:8px;padding:9px;font-size:11px;line-height:1.5}
+.oaReviewedList svg{color:#7fc9a7;flex-shrink:0}
+.oaInlineLink{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--oa-text);text-decoration:underline;margin-top:10px}
+.oaNextQuestion,.oaAssessmentReport{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--oa-card)}
+.oaNextQuestion h2,.oaAssessmentReport h2{margin:5px 0;font-size:15px}
+.oaNextQuestion p,.oaAssessmentReport p{margin:0;color:var(--oa-muted);font-size:11px;line-height:1.6}
+.oaNextQuestion button,.oaAssessmentReport a{flex-shrink:0}
+.oaAssessmentMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.oaAssessmentMetrics>div{display:flex;gap:10px;align-items:center;min-width:0;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:10px;padding:12px}
+.oaAssessmentMetrics svg{color:var(--oa-muted);flex-shrink:0}
+.oaAssessmentMetrics span{display:grid;gap:2px;min-width:0}
+.oaAssessmentMetrics strong{font-size:20px;font-weight:750}
+.oaAssessmentMetrics small{font-size:10px;line-height:1.3;color:var(--oa-muted)}
+.oaAssessmentActions{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--oa-card)}
+.oaAssessmentActions strong{font-size:12px}
+.oaAssessmentActions p{font-size:11px;line-height:1.55;margin:5px 0 0;color:var(--oa-muted)}
+.oaAssessmentActions button{flex-shrink:0}
+.oaAssessmentOrientation{display:flex;flex-wrap:wrap;gap:8px;font-size:11px}
+.oaAssessmentOrientation span{border:1px solid var(--oa-border);background:var(--oa-card);border-radius:7px;padding:7px 8px}
+.oaAssessmentOrientation small{color:var(--oa-muted);flex-basis:100%}
+.oaActualFinding{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--oa-border);padding:11px 0}
+.oaActualFinding>div{flex:1}
+.oaActualFinding strong{font-size:12px}
+.oaActualFinding p{margin:5px 0;font-size:11px;line-height:1.55}
+.oaActualFinding small{color:var(--oa-muted);font-size:10px}
+.oaFindingPriority{font-size:10px;border:1px solid var(--oa-border);color:var(--oa-text);border-radius:6px;padding:4px 6px}
+.oaFindingPriority.is-blocker{color:#e8b3a6;border-color:#a95f55}
+.oaRiskGrid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.oaRiskRows{display:grid}
+.oaRiskRow{border-top:1px solid var(--oa-border)}
+.oaRiskRow>summary{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:11px 0;cursor:pointer;list-style:none;font-size:11px}
+.oaRiskRow>summary::-webkit-details-marker{display:none}
+.oaRiskRow>summary>span:first-child{flex:1}
+.oaRiskRow>div{font-size:10px;line-height:1.5;padding:0 0 9px;color:var(--oa-muted)}
+.oaRiskRow p{margin:3px 0}
+.oaRiskStatus{flex-shrink:0;font-size:9px;font-weight:700;border-radius:6px;padding:4px 6px;background:var(--oa-card);border:1px solid var(--oa-border);white-space:nowrap}
+.oaRiskStatus-screened,.oaRiskStatus-calculated{color:#96d6b9;border-color:#416e5e}
+.oaRiskStatus-not-assessed{color:var(--oa-muted)}
+.oaAssessmentReport a{display:inline-flex;align-items:center;gap:7px;border:1px solid #456e91;background:#214b70;color:#fff;border-radius:8px;text-decoration:none;padding:10px 12px;font-size:11px;font-weight:650}
+.oaStageFootnote{font-size:10px;color:var(--oa-muted);line-height:1.6;margin:0}
+.oaStudyTranscript{border-top:1px solid var(--oa-border);padding-top:13px;display:grid;gap:14px}
+.oaTranscriptHeading{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--oa-text)}
+.oaTranscriptHeading span{margin-left:auto;color:var(--oa-muted);font-size:10px}
+.oaAdvancedToolsDisclosure{border:1px solid var(--oa-border);border-radius:11px;background:var(--oa-card)}
+.oaAdvancedToolsDisclosure>summary{display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 14px;list-style:none;font-size:12px;font-weight:700}
+.oaAdvancedToolsDisclosure>summary::-webkit-details-marker{display:none}
+.oaAdvancedToolsDisclosure>summary svg:last-child{margin-left:auto}
+.oaAdvancedToolsDisclosure[open]>summary{border-bottom:1px solid var(--oa-border)}
+.oaAdvancedToolsBody{display:grid;gap:14px;padding:14px;background:var(--oa-bg)}
+.oaStageContinue{display:flex;justify-content:flex-end}
+.oaInChatModel{box-shadow:none}
+.oaStudySplit .oaSideViewHint{display:none}
+.oaStudyArtifact{background:var(--oa-bg);border-left:1px solid var(--oa-border)}
+.oaMetalEngineeringTools{border-color:var(--oa-border);background:var(--oa-card);padding:12px}
+.oaMetalEngineeringTools>div button{font-weight:600}
+.oaMetalEngineeringTools button[aria-pressed=true]{border-color:#6187a9;box-shadow:inset 0 0 0 1px #6187a9}
+.oaMetalBuildPlayback button:first-child{background:#214b70;color:#f7fbff;border-color:#456e91}
+@media(max-width:1270px){.oaContextGrid,.oaRiskGrid{grid-template-columns:1fr}}
+@media(max-width:850px){
+ .oaStageIntro h1{font-size:19px}
+ .oaAssessmentHeading>span{display:none}
+ .oaAssessmentStepNumber{display:none}
+ .oaAssessmentStepText strong{font-size:10px}
+ .oaAssessmentStepText small{display:none}
+ .oaAssessmentNext>span{flex:1 1 100%}
+ .oaAssessmentMetrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .oaProCard{padding:12px}
+ .oaNextQuestion,.oaAssessmentReport,.oaAssessmentActions{align-items:stretch;flex-direction:column}
+ .oaNextQuestion button,.oaAssessmentReport a,.oaAssessmentActions button{width:100%}
+ .oaStudyFeed{padding:14px 12px 24px}
+}
+@media(max-width:400px){.oaAssessmentMetrics{grid-template-columns:1fr}.oaAssessmentStep{padding:7px 6px}}
+@media(prefers-reduced-motion:reduce){.oaAssessmentStep{transition:none}}
+
+.oaViewerContextNote{display:grid;gap:5px;background:var(--oa-card);border:1px solid var(--oa-border);border-radius:9px;padding:11px 12px}
+.oaViewerContextNote strong{font-size:12px}
+.oaViewerContextNote span{font-size:11px;color:var(--oa-text)}
+.oaViewerContextNote small{font-size:10px;line-height:1.45;color:var(--oa-muted)}
+
+.oaReportActions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.oaReportActions button{display:inline-flex;align-items:center;gap:7px;border:1px solid #456e91;background:#214b70;color:#fff;border-radius:8px;padding:10px 12px;font-size:11px;font-weight:650;cursor:pointer}
+.oaReportActions button:disabled{opacity:.45;cursor:not-allowed}
+.oaReportActions a{background:var(--oa-bg);color:var(--oa-text);border-color:var(--oa-border);padding:9px 10px}
+.oaReportActions .oaStudyError{flex-basis:100%}
+@media(max-width:850px){.oaReportActions,.oaReportActions button,.oaReportActions a{width:100%;justify-content:center}}

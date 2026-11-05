@@ -1,0 +1,185 @@
+/* ORIENTAI Engineering Workbench v2
+   A separate, last-imported layout layer instead of accumulating header fixes.
+   Scoped to the current study; older numerical pages keep their own styling. */
+.oaRoot:has(.oaStudy){
+ --oa-bg:#0d1421;--oa-sidebar:#101923;--oa-card:#172231;--oa-hover:#203146;
+ --oa-text:#edf3f9;--oa-muted:#a5b6c8;--oa-border:#304052;--oa-strong:#f0f6fb;
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+.oaRoot:not(.oaIsCollapsed):has(.oaStudy) .oaSidebar{width:238px;flex-basis:238px;padding:16px 11px}
+.oaRoot:has(.oaStudy) .oaNavActive{background:#1c3450;color:#f5fbff}
+.oaRoot:has(.oaStudy) .oaBrandSymbol{border-color:#5d9dd8}
+.oaRoot:has(.oaStudy) .oaTopbar{border-bottom:1px solid var(--oa-border)!important}
+.oaRoot:has(.oaStudy) .oaBottomDisclaimer{border-top:1px solid var(--oa-border);padding:6px 10px 8px;font-size:10px}
+.oaRoot:has(.oaStudy) .oaStudy{height:100%;min-height:0;overflow:hidden;gap:0;padding:0}
+.oaRoot:has(.oaStudy) .oaStudyChat{margin:0;min-height:0;min-width:0;flex:1 1 0;width:auto;overflow:hidden;display:flex;flex-direction:column;container-type:inline-size;container-name:study}
+.oaRoot:has(.oaStudy) .oaStudyFeed{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:22px clamp(16px,2.5vw,34px) 32px;gap:17px}
+.oaRoot:has(.oaStudy) .oaStudyComposerArea{flex:0 0 auto;position:relative;bottom:auto;background:#0d1421;border-top:1px solid #233448;padding:13px clamp(16px,2.5vw,34px) 10px;box-shadow:0 -8px 22px #06101b66}
+.oaRoot:has(.oaStudy) .oaStudyComposer{border-radius:13px;background:#182333;border:1px solid #3a5068;padding:8px 10px}
+.oaRoot:has(.oaStudy) .oaStudyComposer textarea{min-height:40px;font-size:13px;line-height:1.5}
+.oaRoot:has(.oaStudy) .oaStudyComposerActions .oaStudySend{background:#368acb;color:#fff;border-radius:9px}
+.oaRoot:has(.oaStudy) .oaStudyComposerArea>small{margin-top:7px;font-size:9px;color:#a6b5c2}
+
+/* Force each navigational section onto its own full-width row. */
+.oaRoot:has(.oaStudy) .oaStudyChat > .oaAssessmentJourney{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;
+ flex:0 0 auto!important;position:relative!important;top:auto!important;
+ width:100%!important;height:auto!important;min-height:0!important;min-width:0!important;
+ overflow:visible!important;margin:0!important;gap:10px!important;
+ padding:14px clamp(16px,2.5vw,34px) 13px!important;
+ border:0!important;border-bottom:1px solid #304052!important;background:#101a27!important;
+}
+.oaRoot:has(.oaStudy) .oaAssessmentHeading{width:100%;min-width:0;display:flex;gap:16px;align-items:center;justify-content:space-between}
+.oaRoot:has(.oaStudy) .oaAssessmentTitle{display:flex;gap:11px;align-items:center;min-width:0}
+.oaRoot:has(.oaStudy) .oaAssessmentTitle small{font-size:10px;letter-spacing:.065em;color:#94afcb;white-space:nowrap}
+.oaRoot:has(.oaStudy) .oaAssessmentTitle strong{font-size:15px;line-height:1.25;color:#f6f9fd;letter-spacing:-.015em;overflow-wrap:anywhere}
+.oaRoot:has(.oaStudy) .oaAssessmentHeading>span{display:flex;align-items:center;gap:9px;max-width:42%;min-width:0;font-size:11px;color:#c0cbd8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oaRoot:has(.oaStudy) .oaAssessmentHeading>span em{font-style:normal;border:1px solid #355067;border-radius:7px;padding:3px 7px;font-size:10px;color:#a9b9c8}
+.oaRoot:has(.oaStudy) .oaAssessmentStages{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ grid-auto-flow:row!important;align-items:stretch!important;gap:9px!important;
+ width:100%!important;min-width:0!important;margin:0!important;padding:0!important;
+}
+.oaRoot:has(.oaStudy) .oaAssessmentStep{
+ display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;
+ width:100%!important;min-width:0!important;min-height:57px!important;
+ padding:9px 12px!important;gap:10px!important;
+ text-align:left!important;white-space:normal!important;color:#e7f0fb!important;
+ border:1px solid #35485c!important;border-radius:10px!important;background:#182534!important;
+ box-shadow:none!important;
+}
+.oaRoot:has(.oaStudy) .oaAssessmentStep.is-active{border-color:#73a5d0!important;background:#20364f!important;box-shadow:inset 0 0 0 1px #5487b0!important}
+.oaRoot:has(.oaStudy) .oaAssessmentStep.is-complete .oaAssessmentStepNumber{background:#254d49;color:#8fe1c1}
+.oaRoot:has(.oaStudy) .oaAssessmentStepNumber{display:grid!important;place-items:center;flex:0 0 29px!important;width:29px!important;height:29px!important;min-width:29px!important;font-size:12px}
+.oaRoot:has(.oaStudy) .oaAssessmentStepText{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-width:0!important;max-width:none!important;visibility:visible!important;opacity:1!important;overflow:visible!important}
+.oaRoot:has(.oaStudy) .oaAssessmentStepText strong{display:block!important;font-size:12px!important;font-weight:700!important;line-height:1.25!important;white-space:normal!important;color:#f4f8fd!important;overflow-wrap:anywhere!important}
+.oaRoot:has(.oaStudy) .oaAssessmentStepText small{display:block!important;font-size:10px!important;line-height:1.3!important;margin-top:4px!important;white-space:normal!important;color:#b6c4d2!important}
+.oaRoot:has(.oaStudy) .oaAssessmentStepIcon{color:#8daec9;flex:0 0 16px}
+.oaRoot:has(.oaStudy) .oaAssessmentNext{
+ display:flex!important;gap:12px!important;align-items:center!important;flex-wrap:nowrap!important;
+ width:100%!important;min-height:39px;padding:7px 11px!important;margin:0!important;
+ border:1px solid #284760;border-radius:9px;background:#142637;
+}
+.oaRoot:has(.oaStudy) .oaAssessmentNext>div{display:flex;gap:9px;align-items:baseline;flex:1 1 auto;min-width:0}
+.oaRoot:has(.oaStudy) .oaAssessmentNext>div strong{font-size:11px;color:#d4e7f8;white-space:nowrap}
+.oaRoot:has(.oaStudy) .oaAssessmentNext>div span{font-size:11px;line-height:1.35;color:#b4c6d6}
+.oaRoot:has(.oaStudy) .oaAssessmentNext button{
+ display:flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;
+ font-size:11px;font-weight:650;white-space:nowrap;padding:8px 11px;
+ color:#eef8ff;border:1px solid #45789c;border-radius:7px;background:#234768;
+}
+
+/* Real mesh and unit data, no duplicate thumbnail or artificial "validation score". */
+.oaRoot:has(.oaStudy) .oaStageIntro h1{font-size:24px;line-height:1.22;letter-spacing:-.025em}
+.oaRoot:has(.oaStudy) .oaStageIntro p{font-size:12px;line-height:1.55}
+.oaRoot:has(.oaStudy) .oaInChatModel.oaGeometryOverview{padding:0!important;overflow:hidden;border-radius:12px;background:#131d2a;border-color:#35485a;box-shadow:none}
+.oaRoot:has(.oaStudy) .oaGeometryOverview > header{
+ display:flex!important;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ padding:15px 17px!important;margin:0!important;height:auto!important;min-height:52px!important;
+ background:#1b2a3a!important;border-bottom:1px solid #35485a!important;
+}
+.oaRoot:has(.oaStudy) .oaGeometryOverview > header span{font-size:13px;font-weight:700}
+.oaRoot:has(.oaStudy) .oaGeometryOverview > header button{border:1px solid #405970;border-radius:8px;padding:7px 10px;font-size:11px}
+.oaRoot:has(.oaStudy) .oaGeometryCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:15px}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard{border:1px solid #32465b;background:#162231;border-radius:10px;padding:15px;min-width:0}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard h2{font-size:13px;font-weight:700;margin:0 0 13px;display:flex;align-items:center;gap:8px;color:#edf4fb}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard h2 svg{color:#91b6d6}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard dl{display:grid;gap:0;margin:0}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard dl>div{display:flex;justify-content:space-between;gap:7px;align-items:baseline;padding:7px 0;border-bottom:1px solid #2b4052}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard dl>div:last-child{border-bottom:0}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard dt{font-size:11px;color:#b7c5d3}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard dd{margin:0;font-size:11px;font-weight:650;text-align:right;color:#f1f6fb;font-variant-numeric:tabular-nums}
+.oaRoot:has(.oaStudy) .oaGeometryFactCard>p{font-size:10px;color:#a4b5c7;line-height:1.5;margin:12px 0 0}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelMetadata{display:flex;flex-direction:column;align-items:flex-start;gap:5px;border-bottom:1px solid #2b4052;padding:0 0 12px;margin:0 0 9px;font-size:11px}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelMetadata span{color:#b9c7d5}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelMetadata strong{font-size:13px;color:#fff}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelControls{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px;padding:0}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelControls label{flex:1 1 120px;font-size:11px;color:#b4c4d2;display:grid;gap:6px}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelControls select{min-width:0;width:100%;height:36px;border-radius:7px;background:#0f1b29;border:1px solid #4d6275;color:#eef3f8;padding:5px 9px;font-size:11px}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelControls button{flex:1 1 145px;min-height:36px;border-radius:7px;border:1px solid #477b9f;background:#265372;color:#fff;font-size:11px;font-weight:700;padding:8px 10px}
+.oaRoot:has(.oaStudy) .oaGeometryUnitsCard .oaModelControls button:disabled{opacity:.75;background:#205044;border-color:#3f8069;color:#d2f3e7}
+.oaRoot:has(.oaStudy) .oaGeometryOverview .oaInlineViewer{margin:14px 15px 0;height:300px}
+.oaRoot:has(.oaStudy) .oaGeometryOverview .oaSideViewHint{margin:10px 17px 0;font-size:10px;color:#afc5d7}
+.oaRoot:has(.oaStudy) .oaUnitScaleWarning{margin:0 15px 15px}
+
+/* Engineering activity is an expandable detail, never a huge first-screen wall. */
+.oaRoot:has(.oaStudy) .oaProcessCard{padding:15px 16px;border-radius:11px;background:#131d2a;border-color:#32465b;box-shadow:none}
+.oaRoot:has(.oaStudy) .oaProcessCard header{padding-bottom:10px!important}
+.oaRoot:has(.oaStudy) .oaProcessSteps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+.oaRoot:has(.oaStudy) .oaProcessSteps>div{min-width:0;padding:7px 8px;background:#192737;border-radius:7px;border:1px solid #283e51}
+.oaRoot:has(.oaStudy) .oaProcessSteps>div span{font-size:10px}
+.oaRoot:has(.oaStudy) .oaProcessSteps>div small{font-size:10px}
+.oaRoot:has(.oaStudy) .oaRunActions{margin-top:12px;display:flex;flex-wrap:wrap;gap:9px}
+.oaRoot:has(.oaStudy) .oaRunButton{background:#275b88;border-color:#437fa7}
+.oaRoot:has(.oaStudy) .oaStageContinue button{background:#275b88;border-color:#478ab9}
+.oaRoot:has(.oaStudy) .oaAdvancedToolsDisclosure{border:1px solid #364b60;background:#172435;border-radius:10px}
+.oaRoot:has(.oaStudy) .oaAdvancedToolsDisclosure>summary{padding:12px 15px;color:#e6f0f9}
+.oaRoot:has(.oaStudy) .oaStudyTranscript{margin-top:8px;border-top:1px solid #33475b}
+
+/* Dedicated CAD rail and viewport, naturally shrink-to-fit rather than pushing controls off-screen. */
+.oaRoot:has(.oaStudy) .oaStudyArtifact{
+ display:flex;flex-direction:column;gap:9px;padding:12px 13px;overflow-y:auto;
+ background:#101b29;border-left:1px solid #304457;min-height:0;scrollbar-gutter:stable;
+}
+.oaRoot:has(.oaStudy) .oaStudyArtifact>header{flex:0 0 auto!important;min-height:41px!important;padding:4px 1px!important}
+.oaRoot:has(.oaStudy) .oaArtifactCanvas{flex:1 0 270px;min-height:270px;max-height:none;border:1px solid #34495d;border-radius:12px;overflow:hidden;background:#0e1826}
+.oaRoot:has(.oaStudy) .oaMetalEngineeringTools{flex:0 0 auto;margin:0;background:#172435;border:1px solid #34475a;border-radius:11px;padding:12px;gap:10px}
+.oaRoot:has(.oaStudy) .oaMetalEngineeringTools strong{font-size:12px;letter-spacing:.01em}
+.oaRoot:has(.oaStudy) .oaMetalEngineeringTools>div{gap:7px}
+.oaRoot:has(.oaStudy) .oaMetalEngineeringTools>div button{border-radius:7px;border:1px solid #455a6d;background:#1d2e40;color:#e8eff7;padding:7px 9px;font-size:11px;font-weight:650}
+.oaRoot:has(.oaStudy) .oaMetalEngineeringTools>div button[aria-pressed=true]{background:#28527a;border-color:#76a8d5;box-shadow:none}
+.oaRoot:has(.oaStudy) .oaMetalBuildPlayback button:first-child{background:#28649a;border-color:#4688bf}
+.oaRoot:has(.oaStudy) .oaMetalEngineeringTools label{color:#c0cfdd;font-size:11px;gap:6px}
+.oaRoot:has(.oaStudy) .oaMetalEngineeringTools small{font-size:10px;line-height:1.45}
+.oaRoot:has(.oaStudy) .oaStudyArtifact>p{font-size:10px;margin:2px 0;color:#b0c3d2}
+.oaRoot:has(.oaStudy) .oaStudyArtifact>a{font-size:11px;flex-shrink:0}
+.oaRoot:has(.oaStudy) .oaViewerContextNote{border-color:#364a5e}
+.oaRoot:has(.oaStudy) .oaArtifactResize{background:#102033;width:9px;flex-basis:9px}
+.oaRoot:has(.oaStudy) .oaArtifactResize:before{left:4px}
+
+/* Real STL Canvas 2D renderer, including WebGL-disabled browsers. */
+.oaWebGLFallback{display:flex;flex-direction:column;position:relative;width:100%;height:100%;min-height:250px;background:#0e1927;color:#e7f2fc}
+.oaCanvasFallback{flex:1;min-height:0;width:100%;position:relative;overflow:hidden}
+.oaCanvasFallback>canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+.oaCanvasFallback>canvas:active{cursor:grabbing}
+.oaFallbackLabel{position:absolute;top:12px;left:12px;display:grid;gap:3px;background:#0b1826dd;border:1px solid #415971;border-radius:8px;padding:8px 11px;pointer-events:none}
+.oaFallbackLabel strong{font-size:12px}
+.oaFallbackLabel span{font-size:10px;color:#bdd0e2}
+.oaFallbackCaveat,.oaFallbackLoading{position:absolute;bottom:48px;left:12px;right:12px;padding:9px 10px;background:#162535df;border:1px solid #405972;border-radius:8px;font-size:11px}
+.oaWebGLNotice{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:8px 11px;background:#152638;border-top:1px solid #385069;font-size:10px;line-height:1.45}
+.oaWebGLNotice button{flex-shrink:0;background:#285a82;color:#eef6ff;border:1px solid #5b96bf;border-radius:6px;padding:5px 8px;font-size:10px}
+.oaWebGLDiagnostic{font-size:9px;color:#a7bfd5;padding:0 11px 6px}
+.oaWebGLDiagnostic summary{cursor:pointer}
+.oaWebGLDiagnostic code{white-space:pre-wrap;overflow-wrap:anywhere}
+@container study (max-width:750px){
+ .oaRoot:has(.oaStudy) .oaAssessmentStep{padding:8px!important;gap:7px!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepIcon{display:none}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepNumber{min-width:24px!important;width:24px!important;flex-basis:24px!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepText strong{font-size:11px!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepText small{font-size:9px!important}
+ .oaRoot:has(.oaStudy) .oaGeometryCards{grid-template-columns:1fr}
+ .oaRoot:has(.oaStudy) .oaProcessSteps{grid-template-columns:1fr}
+}
+@media(max-width:850px){
+ .oaRoot:has(.oaStudy) .oaStudy{overflow:visible}
+ .oaRoot:has(.oaStudy) .oaStudyChat{width:100%;min-height:0}
+ .oaRoot:has(.oaStudy) .oaStudyArtifact{position:fixed;inset:60px 0 0;width:100%;height:calc(100dvh - 60px);max-width:none;z-index:45}
+ .oaRoot:has(.oaStudy) .oaAssessmentHeading>span{display:none}
+ .oaRoot:has(.oaStudy) .oaAssessmentTitle{flex-wrap:wrap;gap:5px}
+ .oaRoot:has(.oaStudy) .oaAssessmentNext{align-items:stretch;flex-direction:column}
+ .oaRoot:has(.oaStudy) .oaAssessmentNext button{width:100%}
+ .oaRoot:has(.oaStudy) .oaAssessmentStages{gap:5px!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStep{padding:8px 6px!important;gap:5px!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepIcon{display:none}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepText strong{font-size:10px!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepText small{display:none!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepNumber{min-width:22px!important;width:22px!important;flex-basis:22px!important}
+}
+@media(max-width:400px){
+ .oaRoot:has(.oaStudy) .oaStudyChat>.oaAssessmentJourney{padding:10px!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepNumber{display:none!important}
+ .oaRoot:has(.oaStudy) .oaAssessmentStepText strong{font-size:9px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .oaRoot:has(.oaStudy) .oaAssessmentStep{transition:none!important}
+}

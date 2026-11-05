@@ -36,6 +36,11 @@ export default function EngineeringCopilot(){
  const [draft,setDraft]=useState("");
  const [intakeDraft,setIntakeDraft]=useState("");
  const [activeTab,setActiveTab]=useState<"part"|"documents"|"requirements"|"run"|"results">("part");
+ // Main-study stage links open the existing source-review/solver/report workflow directly.
+ useEffect(()=>{
+  const requested=new URLSearchParams(window.location.search).get("stage");
+  if(requested==="part"||requested==="documents"||requested==="requirements"||requested==="run"||requested==="results")setActiveTab(requested);
+ },[]);
  const factsRef=useRef<HTMLDetailsElement|null>(null);
  const docsRef=useRef<HTMLDetailsElement|null>(null);
  const evidenceRef=useRef<HTMLDetailsElement|null>(null);

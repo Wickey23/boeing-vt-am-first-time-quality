@@ -13,7 +13,7 @@ test("chat-first home supports local STL attachment and first-message handoff",a
  await page.getByLabel("Message ORIENTAI").fill("What should I verify before analyzing this bracket?");
  await page.getByRole("button",{name:"Start conversation"}).click();
  await expect(page).toHaveURL(/\/copilot$/);
- await expect(page.getByRole("region",{name:"Engineering conversation"})).toBeVisible();
+ await expect(page.getByRole("region",{name:"Engineering conversation",exact:true})).toBeVisible();
  await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toBeVisible();
  await expect(page.getByRole("region",{name:"Analysis workflow"})).toBeVisible();
  await expect(page.getByText("What should I verify before analyzing this bracket?")).toBeVisible();
