@@ -168,8 +168,21 @@ export default function ProfessionalStudy(){
     unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),knowledge:k,
     reviewedEvidence:ctx.reviewed,approvedBindings,readiness,
     coverage,
-    geometricConcerns:[...meshFindings.map(f=>({code:f.code,message:f.message,basis:"STL mesh-topology audit"})),
-     ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis})):[])]
+    geometricConcerns:[...meshFindings.map(f=>({code:f.code,message:f.message,basis:"STL mesh-topology audit",severity:f.level})),
+     ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis,severity:f.severity})):[])],
+    geometry:inspect.data?{
+     dimensionsMm:inspect.data.dimensions,
+     triangles:inspect.data.audit.triangles,
+     openEdges:inspect.data.audit.openEdges,
+     nonManifoldEdges:inspect.data.audit.nonManifoldEdges,
+     disconnectedShells:inspect.data.audit.disconnectedShells,
+     smallestEdgeMm:inspect.data.audit.smallestEdgeMm
+    }:undefined,
+    selectedOrientation:selected?{
+     id:selected.id,buildHeightMm:selected.buildHeightMm,downFacingAreaMm2:selected.downFacingAreaMm2,
+     supportProxyMm3:selected.supportProxyMm3,overhangFraction:selected.overhangFraction,
+     contactAreaMm2:selected.contactAreaMm2,rotation:selected.rotation
+    }:undefined
    });
    pdf.save("orientai-engineering-evidence-"+partHash.slice(0,8)+".pdf");
   }catch(e){setError(e instanceof Error?e.message:"Unable to export engineering evidence.");}
