@@ -126,11 +126,11 @@ pre-build failure-mechanism screening**.
 
 ## Test suites and release
 
-- Unit regressions: `npm run test:engineering` (including `tests/prebuild-assessment.test.ts`,
+- Unit regressions: `npm test` (including `tests/prebuild-assessment.test.ts`,
   `tests/part-inspection-feedback.test.ts`, `tests/mesh-audit.test.ts`).
 - TypeScript: `npm run typecheck`.
 - Production build: `npm run build`.
-- Browser: `tests/browser/professional-workbench.spec.ts` and
-  `tests/browser/professional-prebuild.spec.ts`.
+- Browser: `npm run test:e2e` (including `tests/browser/professional-workbench.spec.ts` and
+  `tests/browser/professional-prebuild.spec.ts`).
 - Deploy workbench from **feature/frontend-mockup-rebuild-20261105**, keep
   `main` and teammate branches intact until source review and passing tests.
