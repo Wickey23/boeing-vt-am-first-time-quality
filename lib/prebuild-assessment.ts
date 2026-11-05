@@ -96,7 +96,7 @@ export function evaluatePrebuild(input:PrebuildInputs):PrebuildAssessment{
    evidence:[evidence("mesh","disconnectedShells="+m.disconnectedShells)],
    location:"mesh-wide"
   }));
-  if(m.smallestEdgeMm>0&&m.smallestEdgeMm<0.2)add(make({
+  if(input.unitsConfirmed&&m.smallestEdgeMm>0&&m.smallestEdgeMm<0.2)add(make({
    id:"FINE_TRIANGLES",domain:"geometry",status:"observed",priority:"medium",
    title:"Small tessellation edges",
    observation:"Minimum STL triangle edge is "+m.smallestEdgeMm.toFixed(4)+" mm.",
