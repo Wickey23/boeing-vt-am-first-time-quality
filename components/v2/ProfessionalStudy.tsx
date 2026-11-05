@@ -23,6 +23,7 @@ import {explainPartFailureModes} from "@/lib/part-failure-explanation";
 import {activeParameterBindings} from "@/lib/engineering-parameter-binding";
 import {activeServiceCase} from "@/lib/service-plan";
 import {useStudioContext} from "./useStudioContext";
+import {usePartFeedback} from "./usePartFeedback";
 import StudioCanvasFallback from "./StudioCanvasFallback";
 import ProfessionalGeometryStage from "./ProfessionalGeometryStage";
 import ProfessionalProcessPanel from "./ProfessionalProcessPanel";
@@ -111,6 +112,7 @@ export default function ProfessionalStudy(){
   return()=>window.cancelAnimationFrame(id);
  },[stage,a.file]);
  const ctx=useStudioContext(partHash);
+ const feedback=usePartFeedback(partHash);
  useEffect(()=>{
   const key=partHash?"orientai.lpbf.window.v1:"+partHash+":"+a.settings.unitScale:null;
   setProcessStoreKey(null);
@@ -183,7 +185,8 @@ export default function ProfessionalStudy(){
   hasPart:Boolean(a.file),unitsConfirmed:isConfirmed,hasGeometryRun:currentRun,
   hasAssemblyContext:Boolean(ctx.knowledge?.componentName&&ctx.knowledge.assemblyContext),
   hasReviewedEvidence:ctx.reviewed.length>0,
-  hasRiskAssessment:currentRun&&isConfirmed,hasBlockers:prebuild.disposition==="geometry-blocked"
+  hasRiskAssessment:currentRun&&isConfirmed,hasBlockers:prebuild.disposition==="geometry-blocked",
+  hasExternalTestResults:feedback.records.length>0
  });
  const candidates=useMemo(()=>ctx.candidates.filter(c=>!ctx.reviewed.some(r=>r.key===c.key)),[ctx.candidates,ctx.reviewed]);
  const next=!a.file?{title:"Upload STL",detail:"Select the component you want to assess.",action:"Upload part",to:"geometry" as Stage}:
@@ -280,7 +283,7 @@ export default function ProfessionalStudy(){
     projectName:a.projectName,partName:a.file.name,partSha256:partHash,process:a.journey.process,modelFile:a.file,
     unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),knowledge:k,
     reviewedEvidence:ctx.reviewed,approvedBindings,readiness,
-    coverage,prebuild,manufacturingFlow,
+    coverage,prebuild,manufacturingFlow,feedbackRecords:feedback.records,
     processWindow:a.journey.process==="PBF_LB_METAL"?processAssessment:null,
     geometricConcerns:[...meshFindings.map(f=>({code:f.code,message:f.message,basis:"STL mesh-topology audit",severity:f.level})),
      ...(currentRun?findings.map(f=>({code:f.code,message:f.message,basis:f.basis,severity:f.severity})):[])],
@@ -406,6 +409,8 @@ export default function ProfessionalStudy(){
      assessment={prebuild} coverage={coverage} flow={manufacturingFlow}
      hasPart={Boolean(a.file)} canExport={Boolean(a.file&&partHash&&isConfirmed)}
      hasGeometry={currentRun} exportBusy={exportBusy}
+     feedback={feedback.records} feedbackError={feedback.error}
+     onAddFeedback={feedback.add} onRemoveFeedback={feedback.remove}
      onExport={()=>void exportEvidence()} onGeometryExport={()=>void exportGeometry()}
      onJsonExport={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}}
      onNavigate={nextStage=>{setStage(nextStage);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}
