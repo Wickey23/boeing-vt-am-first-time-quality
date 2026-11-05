@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import {usePathname,useRouter} from "next/navigation";
-import {useState} from "react";
+import {useEffect,useState} from "react";
 import {useAnalysis} from "@/components/AnalysisProvider";
-import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck} from "lucide-react";
+import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck,LayoutDashboard,Cloud,Layers,HelpCircle,Settings2,PanelLeftClose,PanelLeftOpen} from "lucide-react";
 import "./chat-shell.css";
 import EngineeringBuildTicker from "./EngineeringBuildTicker";
 
@@ -13,39 +13,51 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
  const path=usePathname();
  const router=useRouter();
  const analysis=useAnalysis();
+ const professional=path==="/copilot/workbench";
  const [mobileOpen,setMobileOpen]=useState(false);
  const [collapsed,setCollapsed]=useState(false);
+ const [navPreferenceLoaded,setNavPreferenceLoaded]=useState(false);
+ useEffect(()=>{
+  if(!professional)return;
+  try{setCollapsed(window.localStorage.getItem("orientai-workbench-nav-collapsed-v1")==="true");}catch{}
+  setNavPreferenceLoaded(true);
+ },[professional]);
+ useEffect(()=>{
+  if(!professional||!navPreferenceLoaded)return;
+  try{window.localStorage.setItem("orientai-workbench-nav-collapsed-v1",String(collapsed));}catch{}
+ },[collapsed,professional,navPreferenceLoaded]);
  const newStudy=()=>{
   analysis.startUploadedProject();
   if(typeof window!=="undefined")window.dispatchEvent(new Event("orientai-new-study"));
   setMobileOpen(false);
-  router.push("/");
+  router.push("/copilot/workbench");
  };
  const toggle=()=>{
   if(typeof window!=="undefined"&&window.matchMedia("(max-width: 780px)").matches)setMobileOpen(v=>!v);
   else setCollapsed(v=>!v);
  };
  const nav=(href:string,label:string,Icon:typeof MessageSquare)=>(
-  <Link href={href} onClick={()=>setMobileOpen(false)}
+  <Link href={href} onClick={()=>setMobileOpen(false)} aria-label={label}
    className={"oaNavItem"+(path===href?" oaNavActive":"")}
    aria-current={path===href?"page":undefined} title={label}>
    <Icon size={18} strokeWidth={1.85}/><span className="oaNavText">{label}</span>
   </Link>
  );
- return <div className={"oaRoot"+(collapsed?" oaIsCollapsed":"")}>
+ return <div className={"oaRoot"+(collapsed?" oaIsCollapsed":"")+(professional?" oaProfessionalShell":"")}>
   {mobileOpen&&<button className="oaScrim" aria-label="Close sidebar" onClick={()=>setMobileOpen(false)}/>}
-  <aside className={"oaSidebar"+(mobileOpen?" oaMobileOpen":"")} aria-label="Workspace sidebar">
+  <aside id="oa-workbench-navigation" className={"oaSidebar"+(mobileOpen?" oaMobileOpen":"")} aria-label="Workspace sidebar">
    <div className="oaSidebarTop">
-    <Link href="/" className="oaBrand" onClick={()=>setMobileOpen(false)} title="ORIENTAI home">
-     <span className="oaBrandSymbol">O</span><span className="oaBrandText">ORIENTAI</span>
+    <Link href="/copilot/workbench" className="oaBrand" onClick={()=>setMobileOpen(false)} title="ORIENTAI home">
+     <span className="oaBrandSymbol">O</span><span className="psBrandStack"><span className="oaBrandText">ORIENTAI</span>{professional&&<small>Engineering AI for<br/>Metal Additive Manufacturing</small>}</span>
     </Link>
     <button className="oaMobileClose" aria-label="Close sidebar" onClick={()=>setMobileOpen(false)}><X size={20}/></button>
    </div>
-   <button type="button" className="oaNewChat" onClick={newStudy} title="New study">
+   <button type="button" className="oaNewChat" onClick={newStudy} title="New study" aria-label="New study">
     <SquarePen size={19}/><span className="oaNavText">New study</span>
    </button>
    <nav className="oaNavigation" aria-label="Primary navigation">
-    {nav("/copilot","Current study",MessageSquare)}
+    {nav("/copilot/workbench","Current study",MessageSquare)}
+    
     {nav("/report","Engineering reports",FileText)}
    </nav>
    <div className="oaSidebarSection">
@@ -55,9 +67,9 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
     </div>
    </div>
    <details className="oaAdvanced">
-    <summary><FlaskConical size={17}/><span className="oaNavText">Engineering tools</span><ChevronDown className="oaAdvancedArrow" size={15}/></summary>
+    <summary aria-label="Engineering tools" title="Engineering tools" onClick={e=>{if(professional&&collapsed){e.preventDefault();setCollapsed(false);}}}><FlaskConical size={17}/><span className="oaNavText">Engineering tools</span><ChevronDown className="oaAdvancedArrow" size={15}/></summary>
     <div className="oaAdvancedLinks">
-     <Link href="/orientation" onClick={()=>setMobileOpen(false)}>Orientation workspace</Link>
+     <Link href="/orientation" onClick={()=>setMobileOpen(false)}>Legacy research orientation tools</Link>
      <Link href="/simulation/benchmarks" onClick={()=>setMobileOpen(false)}>Simulation benchmarks</Link>
      <Link href="/ml" onClick={()=>setMobileOpen(false)}>ML experiments</Link>
      <Link href="/orientation?example=ded" onClick={()=>setMobileOpen(false)}>Launch DED example</Link>
@@ -65,13 +77,35 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
      <Link href="/how-it-works" onClick={()=>setMobileOpen(false)}><BookOpen size={14}/> Technical guide</Link>
     </div>
    </details>
-   <EngineeringBuildTicker/>
+   {!professional&&<EngineeringBuildTicker/>}
+   {professional&&<div className="psSidebarLinks">
+    <Link href="/copilot/advanced" title="Engineering settings" aria-label="Engineering settings" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Advanced research studies</Link>
+    <Link href="/how-it-works" title="Help and support" aria-label="Help and support" onClick={()=>setMobileOpen(false)}><HelpCircle size={16}/> Help & support</Link>
+   </div>}
    <div className="oaSidebarFooter">
-    <ShieldCheck size={17}/><span className="oaNavText">Virginia Tech · Research prototype</span>
+    {professional?<span className="psVTIcon">VT</span>:<ShieldCheck size={17}/>}
+    <span className="oaNavText">{professional?<>Virginia Tech<small>Research prototype</small></>:"Virginia Tech · Research prototype"}</span>
    </div>
   </aside>
   <div className="oaBody">
-   <header className="oaTopbar">
+   {professional?   <header className="oaTopbar">
+    <div className="psTopbarIdentity">
+     <button type="button" className="oaIconButton psDesktopSidebarButton"
+      onClick={()=>setCollapsed(value=>!value)} aria-controls="oa-workbench-navigation" aria-expanded={!collapsed}
+      aria-label={collapsed?"Expand navigation":"Collapse navigation"} title={collapsed?"Expand navigation":"Collapse navigation"}>
+      {collapsed?<PanelLeftOpen size={18}/>:<PanelLeftClose size={18}/>}
+     </button>
+     <button type="button" className="oaIconButton psMobileSidebarButton" onClick={toggle}
+      aria-label={mobileOpen?"Close navigation":"Open navigation"} aria-controls="oa-workbench-navigation"
+      aria-expanded={mobileOpen} title="Toggle navigation"><PanelLeft size={20}/></button>
+     <Box size={24} strokeWidth={1.9}/>
+     <div><strong>ORIENTAI</strong><span>· Engineering Study</span></div>
+    </div>
+    <div className="psTopbarActions">
+     <span className="psSaveState" role="status"><Cloud size={16}/>{!analysis.ready?"Loading study…":analysis.storageError?"Local save issue":analysis.saving?"Saving locally…":"Saved locally"}</span>
+     <Link className="psProcessLink" href="/copilot/advanced?stage=process"><Layers size={17}/> Metal AM <ChevronDown size={15}/></Link>
+    </div>
+   </header>:   <header className="oaTopbar">
     <div className="oaTopLeft">
      <button type="button" className="oaIconButton" onClick={toggle} aria-label="Toggle sidebar" title="Toggle sidebar">
       <PanelLeft size={20}/>
@@ -80,7 +114,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
      <div className="oaModelName">{title==="ORIENTAI"?"ORIENTAI":title}<span className="oaModelSuffix"> · Engineering AI</span></div>
     </div>
     <span className="oaResearchLabel">Research prototype</span>
-   </header>
+   </header>}
    <main className="oaMain" id="main-content">{children}</main>
    <div className="oaBottomDisclaimer">ORIENTAI supports engineering review. Results do not certify a part or guarantee first-time quality.</div>
   </div>

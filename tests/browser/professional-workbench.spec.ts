@@ -1,0 +1,260 @@
+import {test,expect} from "@playwright/test";
+
+test("new professional study keeps a readable three-stage interface and actual geometry inspection",async({page})=>{
+ await page.setViewportSize({width:1600,height:900});
+ await page.goto("/copilot/workbench");
+ await expect(page.getByRole("heading",{name:"Part Geometry",exact:true})).toBeVisible();
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const stepper=page.getByRole("navigation",{name:"Assessment stages"});
+ for(const label of ["Part Geometry","Engineering Context","Failure Assessment"])await expect(stepper.getByText(label,{exact:true})).toBeVisible();
+ const items=await stepper.getByRole("button").evaluateAll(elements=>elements.map(element=>element.getBoundingClientRect().toJSON()));
+ expect(items).toHaveLength(3);
+ expect(items[0].right).toBeLessThanOrEqual(items[1].left);
+ expect(items[1].right).toBeLessThanOrEqual(items[2].left);
+ await expect(page.getByRole("region",{name:"Mesh inspection"})).toContainText("Triangles");
+ await expect(page.getByRole("region",{name:"Dimensions and units"})).toContainText("mm");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await page.getByRole("region",{name:"Recommended workflow action"}).getByRole("button",{name:"Run screening"}).click();
+ await expect(page.getByText(/Geometry screening results · selected orientation/)).toBeVisible({timeout:60000});
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
+ await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
+});
+
+test("assembly text remains part-specific and report stage distinguishes unassessed mechanisms",async({page})=>{
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
+ await page.getByLabel("Upload assembly documents").setInputFiles({
+  name:"sample-assembly.txt",mimeType:"text/plain",
+  buffer:Buffer.from("Mounting bracket for a demonstration assembly.\nProposed 1200 N bolt load is unverified.\n")
+ });
+ await expect(page.getByText("sample-assembly.txt",{exact:true})).toBeVisible();
+ await page.getByPlaceholder("e.g. Mounting bracket for actuator").fill("Demo mounting bracket");
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Failure Assessment/}).click();
+ await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
+ await expect(page.getByText("Lack-of-fusion porosity")).toBeVisible();
+ await expect(page.getByText("Not assessed",{exact:true}).first()).toBeVisible();
+ await expect(page.getByRole("button",{name:"Export assessment PDF"})).toBeDisabled();
+});
+
+test("WebGL failure displays geometry-only STL projection rather than blocking the study",async({page})=>{
+ await page.addInitScript(()=>{
+  const original=HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,type:string,...args:unknown[]){
+   if(type==="webgl"||type==="webgl2"||type==="experimental-webgl")return null;
+   return Reflect.apply(original,this,[type,...args]);
+  } as typeof HTMLCanvasElement.prototype.getContext;
+ });
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("complementary",{name:"Persistent engineering model viewer"}).getByRole("img",{name:"Canvas projection of uploaded STL geometry"})).toBeVisible({timeout:30000});
+ await expect(page.getByText(/WebGL unavailable · showing/)).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Part Geometry",exact:true})).toBeVisible();
+});
+
+test("fit-screen mode uses the desktop viewport for engineering work instead of oversized chrome",async({page})=>{
+ await page.setViewportSize({width:1744,height:888});
+ await page.goto("/copilot/workbench");
+ const root=page.locator(".psRoot");
+ await expect(root).toHaveClass(/psFit/);
+ await expect(page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button")).toHaveCount(3);
+ const geometry=await page.evaluate(()=>{
+  function rect(selector:string){
+   const r=document.querySelector(selector)?.getBoundingClientRect();
+   if(!r)throw new Error("Missing layout element: "+selector);
+   return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};
+  }
+  return {stageHeader:rect(".psWorkspaceHeader"),stageViewport:rect(".psStageScroll"),
+   composer:rect(".psAssistant"),viewer:rect(".psViewerFrame"),
+   viewerControls:rect(".psReferenceViewSettings"),sidebar:rect(".oaSidebar"),
+   bodyScroll:document.body.scrollHeight,windowHeight:window.innerHeight,
+   docWidth:document.documentElement.scrollWidth,windowWidth:window.innerWidth};
+ });
+ expect(geometry.stageHeader.height).toBeLessThan(95);
+ expect(geometry.viewer.height).toBeGreaterThan(365);
+ expect(geometry.composer.height).toBeLessThan(115);
+ expect(geometry.sidebar.width).toBeGreaterThan(199);
+ expect(geometry.sidebar.width).toBeLessThan(236);
+ expect(geometry.docWidth).toBeLessThanOrEqual(geometry.windowWidth+2);
+ expect(geometry.bodyScroll).toBeLessThanOrEqual(geometry.windowHeight+3);
+ await expect(page.getByRole("heading",{name:"Upload the part you want to evaluate"})).toBeInViewport();
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
+ await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeInViewport();
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:"Part Geometry"}).click();
+ await expect(page.locator(".psReferenceTopGrid")).toBeVisible();
+ await expect(page.locator(".psReferenceBottomGrid")).toBeVisible();
+});
+
+
+test("reference geometry layout uses two card rows, recommendation and persistent right CAD panel",async({page})=>{
+ await page.setViewportSize({width:1672,height:941});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("region",{name:"Dimensions and units"})).toBeVisible();
+ const cards=await page.evaluate(()=>{
+  const rect=(s:string)=>{const r=document.querySelector(s)?.getBoundingClientRect();if(!r)throw Error(s);return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,height:r.height,width:r.width};};
+  return {model:rect(".psReferenceModel"),mesh:rect(".psReferenceMesh"),
+   dimensions:rect(".psReferenceDimensions"),units:rect(".psReferenceConfirmation"),
+   action:rect(".psWorkflowBar"),viewer:rect(".psViewerFrame"),
+   sidebar:rect(".oaSidebar"),stepper:rect(".psStepper")};
+ });
+ expect(cards.model.y).toBeCloseTo(cards.mesh.y,0);
+ expect(cards.model.right).toBeLessThan(cards.mesh.x);
+ expect(cards.dimensions.y).toBeCloseTo(cards.units.y,0);
+ expect(cards.model.bottom).toBeLessThan(cards.dimensions.y);
+ expect(cards.action.bottom).toBeLessThan(cards.model.y);
+ expect(cards.viewer.height).toBeGreaterThan(365);
+ expect(cards.sidebar.width).toBeGreaterThan(199);
+ await expect(page.getByRole("button",{name:"Quick view"})).toBeVisible();
+ await page.getByRole("button",{name:"Quick view"}).click();
+ await expect(page.locator(".psRoot")).toHaveClass(/psViewerExpanded/);
+ await page.getByRole("button",{name:"Close expanded viewer"}).click();
+ await expect(page.locator(".psRoot")).not.toHaveClass(/psViewerExpanded/);
+});
+
+
+test("CAD viewport owns the right pane, with secondary controls collapsed by default",async({page})=>{
+ await page.setViewportSize({width:1707,height:855});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const viewer=page.getByRole("complementary",{name:"Persistent engineering model viewer"});
+ const inspector=viewer.locator("details.psEngineeringInspector");
+ await expect(inspector).not.toHaveAttribute("open");
+ await expect(viewer.getByRole("toolbar",{name:"3D model navigation"})).toBeVisible();
+ await expect(viewer.getByRole("combobox",{name:"Geometry display mode"})).toBeVisible();
+ const v=await page.evaluate(()=>{
+  const a=document.querySelector(".psViewerFrame")?.getBoundingClientRect();
+  const b=document.querySelector(".psReferenceViewerCard")?.getBoundingClientRect();
+  if(!a||!b)throw Error("Missing viewer");
+  return {viewerHeight:a.height,cardHeight:b.height,ratio:a.height/b.height,
+   pageWidth:document.documentElement.scrollWidth,clientWidth:window.innerWidth};
+ });
+ expect(v.viewerHeight).toBeGreaterThan(370);
+ expect(v.ratio).toBeGreaterThan(.68);
+ expect(v.pageWidth).toBeLessThanOrEqual(v.clientWidth+2);
+ await inspector.locator("summary").first().click();
+ await expect(inspector).toHaveAttribute("open","");
+ await viewer.getByRole("checkbox",{name:"Preview geometric overhang overlay"}).check();
+ await expect(viewer.getByRole("combobox",{name:"Geometry display mode"})).toHaveValue("overhangs");
+ await viewer.getByRole("combobox",{name:"Geometry display mode"}).selectOption("solid");
+ await expect(viewer.getByRole("checkbox",{name:"Preview geometric overhang overlay"})).not.toBeChecked();
+});
+
+
+test("desktop navigation collapses into accessible icon rail and persists after reload",async({page})=>{
+ await page.setViewportSize({width:1707,height:855});
+ await page.goto("/copilot/workbench");
+ const sidebar=page.getByRole("complementary",{name:"Workspace sidebar"});
+ const collapse=page.getByRole("button",{name:"Collapse navigation"});
+ await expect(collapse).toBeVisible();
+ await expect(collapse).toHaveAttribute("aria-expanded","true");
+ const old=await sidebar.boundingBox();expect(old).not.toBeNull();
+ await collapse.click();
+ const expand=page.getByRole("button",{name:"Expand navigation"});
+ await expect(expand).toBeVisible();
+ await expect(expand).toHaveAttribute("aria-expanded","false");
+ await expect(sidebar).toHaveCSS("width","58px");
+ const next=await sidebar.boundingBox();
+ expect(next!.width).toBeLessThan(old!.width-100);
+ await expect(sidebar.getByRole("link",{name:"Current study"})).toBeVisible();
+ await expect(sidebar.getByRole("link",{name:"Engineering reports"})).toBeVisible();
+ await page.reload();
+ await expect(page.getByRole("button",{name:"Expand navigation"})).toBeVisible();
+ await expect(sidebar).toHaveCSS("width","58px");
+ await page.getByRole("button",{name:"Expand navigation"}).click();
+ await expect(page.getByRole("button",{name:"Collapse navigation"})).toBeVisible();
+ await expect(sidebar).toHaveCSS("width","218px");
+ const again=await sidebar.boundingBox();expect(again!.width).toBeGreaterThan(190);
+});
+
+test("study pane can be hidden and restored while CAD pane keeps its controls",async({page})=>{
+ await page.setViewportSize({width:1707,height:855});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const viewer=page.getByRole("complementary",{name:"Persistent engineering model viewer"});
+ const separator=page.getByRole("separator",{name:"Resize study and 3D viewer panels"});
+ await expect(separator).toHaveAttribute("aria-valuenow","42");
+ await separator.focus();await page.keyboard.press("ArrowLeft");
+ await expect(separator).toHaveAttribute("aria-valuenow","44");
+ await page.keyboard.press("Home");
+ await expect(separator).toHaveAttribute("aria-valuenow","35");
+ await page.keyboard.press("End");
+ await expect(separator).toHaveAttribute("aria-valuenow","64");
+ await page.getByRole("button",{name:"Hide study panel"}).click();
+ await expect(page.locator(".psRoot")).toHaveClass(/psStudyHidden/);
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await expect(viewer.getByRole("combobox",{name:"Geometry display mode"})).toBeVisible();
+ await expect(separator).toHaveCount(0);
+ const dimensions=await viewer.boundingBox();
+ expect(dimensions!.width).toBeGreaterThan(1050);
+ await page.getByRole("button",{name:"Show study panel"}).click();
+ await expect(page.getByRole("heading",{name:"Part Geometry",exact:true})).toBeVisible();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeVisible();
+ await expect(page.getByRole("separator",{name:"Resize study and 3D viewer panels"})).toHaveAttribute("aria-valuenow","64");
+ const pageWidth=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(pageWidth).toBeLessThanOrEqual(2);
+});
+
+test("mobile navigation remains an accessible overlay rather than collapsed desktop rail",async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto("/copilot/workbench");
+ await expect(page.getByRole("button",{name:"Collapse navigation"})).toBeHidden();
+ const toggle=page.getByRole("button",{name:"Open navigation"});
+ await expect(toggle).toBeVisible();
+ await expect(toggle).toHaveAttribute("aria-expanded","false");
+ await toggle.click();
+ await expect(page.getByRole("button",{name:"Close navigation"})).toHaveAttribute("aria-expanded","true");
+ await expect(page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("link",{name:"Current study"})).toBeVisible();
+ await page.getByRole("complementary",{name:"Workspace sidebar"}).getByRole("button",{name:"Close sidebar"}).click();
+ await expect(page.getByRole("button",{name:"Open navigation"})).toHaveAttribute("aria-expanded","false");
+});
+
+
+test("pre-build PDF export is available directly after dimensional confirmation",async({page})=>{
+ await page.setViewportSize({width:1680,height:920});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ const workflow=page.getByRole("region",{name:"Recommended workflow action"});
+ await expect(workflow.getByRole("button",{name:"Open pre-build assessment report"})).toBeVisible();
+ await workflow.getByRole("button",{name:"Open pre-build assessment report"}).click();
+ const exportButton=page.getByRole("button",{name:"Export assessment PDF"});
+ await expect(exportButton).toBeEnabled({timeout:30000});
+ const event=page.waitForEvent("download");
+ await exportButton.click();
+ const download=await event;
+ expect(download.suggestedFilename()).toMatch(/^orientai-engineering-evidence-[a-f0-9]{8}\.pdf$/);
+});
+
+test("workbench answers failure questions with actual screening status and missing physics",async({page})=>{
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("textbox",{name:"Ask ORIENTAI"}).fill("How can this part fail during metal printing?");
+ await page.getByRole("button",{name:"Send message"}).click();
+ const answer=page.getByRole("log",{name:"Engineering assistant messages"});
+ await expect(answer).toContainText("PART-SPECIFIC PRE-BUILD RISK REVIEW");
+ await expect(answer).toContainText("NOT PREDICTED");
+ await expect(answer).toContainText("NOT a trained");
+ await expect(answer).toContainText("Lack-of-fusion porosity");
+});
+
+test("geometry action and first-row mesh values fit without duplicate preview and vertical scrolling",async({page})=>{
+ await page.setViewportSize({width:1728,height:950});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.getByRole("region",{name:"Recommended workflow action"})).toBeVisible();
+ const metrics=await page.evaluate(()=>{
+  const scroll=document.querySelector(".psStageScroll") as HTMLElement|null;
+  const top=document.querySelector(".psReferenceTopGrid")?.getBoundingClientRect();
+  const bottom=document.querySelector(".psReferenceBottomGrid")?.getBoundingClientRect();
+  const hidden=document.querySelector(".psReferenceRecommendation");
+  return {scrollHeight:scroll?.scrollHeight??0,clientHeight:scroll?.clientHeight??0,
+   top:top?.top??0,bottom:bottom?.bottom??0,duplicate:!!hidden&&getComputedStyle(hidden).display==="none",
+   thumb:getComputedStyle(document.querySelector(".psModelThumbnail") as Element).display};
+ });
+ expect(metrics.duplicate).toBe(true);
+ expect(metrics.thumb).toBe("none");
+ expect(metrics.bottom-metrics.top).toBeLessThan(350);
+ expect(metrics.scrollHeight-metrics.clientHeight).toBeLessThan(40);
+});

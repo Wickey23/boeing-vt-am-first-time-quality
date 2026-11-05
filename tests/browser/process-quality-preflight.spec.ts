@@ -2,7 +2,7 @@ import {test,expect} from "@playwright/test";
 
 test("LPBF process-window checker flags out-of-range settings and alerts the engineer without AI",async({page})=>{
  const posts:string[]=[];page.on("request",r=>{if(r.method()==="POST"&&r.url().includes("/api/engineering-copilot"))posts.push(r.url());});
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByRole("button",{name:/Try synthetic cantilever bracket/}).click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const card=page.getByRole("region",{name:"Deterministic LPBF process quality review"});
@@ -34,7 +34,7 @@ test("LPBF process-window checker flags out-of-range settings and alerts the eng
 });
 
 test("development ticker remains present and is clearly not a quality score",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  const ticker=page.locator(".oaBuildTicker");
  await expect(ticker).toBeVisible();
  await expect(ticker).toContainText("QUALITY ENGINE DEVELOPMENT");
@@ -43,7 +43,7 @@ test("development ticker remains present and is clearly not a quality score",asy
 });
 
 test("a new STL resets machine-specific process review to prevent stale qualified claims",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByRole("button",{name:/Try synthetic cantilever bracket/}).click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const card=page.getByRole("region",{name:"Deterministic LPBF process quality review"});

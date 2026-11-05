@@ -8,7 +8,7 @@ test("main chat never calls ARC without approval, then labels a mocked AI respon
   posts.push(request.postData()??"");
   return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({text:"Simulated ARC reply. Upload an STL and confirm units before geometric screening.",mode:"ai",simulationsExecuted:false,sourceIds:[]})});
  });
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await expect(page.getByLabel("Authorize AI messages from main chat")).toBeVisible();
  await page.getByLabel("Message ORIENTAI").fill("What can you analyze?");
  await page.getByRole("button",{name:"Send message"}).click();
@@ -32,7 +32,7 @@ test("a failed provider call is not mislabeled as a local-only guide",async({pag
   if(route.request().method()==="GET")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({enabled:true,requiresApproval:true})});
   return route.fulfill({status:502,contentType:"application/json",body:JSON.stringify({error:"VT ARC rejected the API key (HTTP 401)."})});
  });
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Authorize AI messages from main chat").check();
  await page.getByLabel("Message ORIENTAI").fill("Check the upstream model.");
  await page.getByRole("button",{name:"Send message"}).click();

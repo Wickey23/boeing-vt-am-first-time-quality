@@ -2,7 +2,7 @@ import {test,expect} from "@playwright/test";
 import {readFile} from "node:fs/promises";
 
 test("STL receives automatic, evidence-labeled LPBF risk screening after unit confirmation",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
  await expect(preflight).toContainText("Awaiting confirmed STL units");
@@ -30,7 +30,7 @@ test("tilted closed geometry produces a selectable 3D face warning, not defect p
    const xx=Number(x),yy=Number(y),zz=Number(z);
    return "vertex "+xx+" "+(yy*cos-zz*sin).toFixed(5)+" "+(yy*sin+zz*cos).toFixed(5);
   });
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles({
   name:"tilted-cube.stl",mimeType:"model/stl",buffer:Buffer.from(tilted)});
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
@@ -44,7 +44,7 @@ test("tilted closed geometry produces a selectable 3D face warning, not defect p
 });
 
 test("one-click synthetic cantilever example triggers a real geometric support-review finding",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByRole("button",{name:/Try synthetic cantilever bracket/}).click();
  await expect(page.getByRole("article",{name:"Uploaded STL model in chat"})).toContainText("lpbf-demo-cantilever-30mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
@@ -60,7 +60,7 @@ test("one-click synthetic cantilever example triggers a real geometric support-r
 });
 
 test("machine envelope changes recompute risk blockers instead of leaving stale geometry results",async({page})=>{
- await page.goto("/copilot");
+ await page.goto("/copilot/legacy");
  await page.getByLabel("Attach STL in conversation").setInputFiles("public/verification/cube-10mm.stl");
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const preflight=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});

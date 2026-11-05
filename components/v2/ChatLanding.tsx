@@ -38,7 +38,7 @@ export default function ChatLanding(){
   }
   try{sessionStorage.setItem("orientai-pending-message-v1",prompt||"Help me review this uploaded part before analysis.");}
   catch{setError("This browser cannot save the initial message. You can still continue in the study.");}
-  router.push("/copilot");
+  router.push("/copilot/workbench");
  };
  return <section className="oaHome" aria-label="Start an engineering conversation">
   <h1 className="oaGreeting">What are we working on today?</h1>
@@ -70,7 +70,7 @@ export default function ChatLanding(){
     <button type="button" className="oaExample" onClick={()=>setMessage("What engineering inputs are needed before I can run reliable failure-risk analyses?")}>Plan an analysis</button>
     <button type="button" className="oaExample" onClick={()=>setMessage("Explain the differences between LPBF and DED failure mechanisms.")}>Explore failure mechanisms</button>
    </div>
-   {analysis.file&&<div className="oaExisting">Current saved part: {analysis.file.name} · <Link href="/copilot">Open existing study</Link></div>}
+   {analysis.file&&<div className="oaExisting">Current saved part: {analysis.file.name} · <Link href="/copilot/workbench">Open existing study</Link></div>}
    <p className="oaHomeHelp"><ShieldCheck size={13} style={{verticalAlign:"middle",marginRight:5}}/>STL files are processed locally. External AI use requires separate authorization in the engineering study.</p>
   </div>
  </section>;

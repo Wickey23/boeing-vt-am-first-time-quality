@@ -1,0 +1,503 @@
+/* Professional ORIENTAI workspace interaction layer.
+   Application layout, accessible collapsible navigation and resizable engineering panels.
+   Loaded last for /copilot/workbench only. */
+
+/* Persistent sidebar toggle. The topbar control stays available in both states. */
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psDesktopSidebarButton{
+ display:grid!important;place-items:center!important;
+ width:29px;height:29px;flex:0 0 29px;
+ color:#b6c5d2;border:1px solid transparent;border-radius:4px;
+}
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psDesktopSidebarButton:hover{
+ color:#f5f8fa;background:#303d48;border-color:#526473;
+}
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psMobileSidebarButton{display:none!important}
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psTopbarIdentity{gap:8px}
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psTopbarIdentity>div{min-width:0}
+.oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psTopbarIdentity>div span{
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* Compact icon rail: do not leave hidden labels / footer consuming width. */
+@media(min-width:781px){
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaSidebar{
+  width:58px!important;flex:0 0 58px!important;
+  min-width:58px!important;max-width:58px!important;
+  padding:12px 6px 8px!important;
+  overflow-x:visible;gap:7px;align-items:stretch;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaSidebarTop{
+  min-height:37px!important;height:37px!important;
+  padding:0!important;display:flex;justify-content:center;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaBrand{
+  justify-content:center;align-items:center;width:100%;gap:0;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .psBrandStack,
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaSidebarSectionTitle,
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaNavText,
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaAdvancedArrow,
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaAdvancedLinks{
+  display:none!important;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaNavigation{
+  align-items:stretch;gap:5px;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot)
+ :is(.oaNewChat,.oaNavItem,.oaCurrentStudy,.oaAdvanced>summary){
+  width:42px!important;min-width:42px!important;max-width:42px!important;
+  height:41px!important;min-height:41px!important;
+  padding:9px!important;justify-content:center!important;
+  align-items:center!important;gap:0!important;margin:0 auto!important;
+  border-radius:6px!important;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot)
+ :is(.oaNewChat,.oaNavItem,.oaCurrentStudy,.oaAdvanced>summary) svg{
+  width:18px;height:18px;flex:0 0 18px;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaSidebarSection{
+  margin:8px 0 0!important;padding:10px 0 0!important;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaAdvanced{
+  margin:2px 0 0!important;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .psSidebarLinks{
+  padding:9px 0 7px!important;gap:4px!important;
+  display:grid!important;justify-items:center!important;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .psSidebarLinks>a{
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  width:42px;height:40px;padding:10px!important;
+  overflow:hidden;white-space:nowrap;font-size:0!important;gap:0!important;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .psSidebarLinks>a svg{
+  flex:0 0 17px;width:17px;height:17px;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaSidebarFooter{
+  margin:0!important;padding:10px 0 4px!important;
+  justify-content:center;gap:0;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .oaSidebarFooter .oaNavText{
+  display:none!important;
+ }
+ .oaRoot.oaProfessionalShell.oaIsCollapsed:has(.psReferenceRoot) .psVTIcon{
+  height:29px;width:29px;flex:0 0 29px;
+ }
+}
+
+/* Real resizable split. "minmax(0,1fr)" prevents long tables from forcing overflow.
+   React writes only --ps-viewer-width; existing DOM stays mounted when hidden. */
+@media(min-width:1101px){
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(380px,var(--ps-viewer-width,42%))!important;
+  overflow:hidden;
+ }
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psStudyHidden{
+  grid-template-columns:minmax(0,1fr)!important;
+ }
+ .psRoot.psReferenceRoot.psStudyHidden .psWorkingColumn{display:none!important}
+ .psRoot.psReferenceRoot.psStudyHidden .psViewerColumn{min-width:0!important}
+ .psRoot.psReferenceRoot.psStudyHidden .psViewerFrame.psReferenceViewport{
+  min-height:340px;
+ }
+ .psRoot.psReferenceRoot .psPaneResizeHandle{
+  position:absolute;z-index:9;
+  right:calc(var(--ps-viewer-width,42%) - 6px);
+  top:0;bottom:0;width:12px;display:flex;align-items:center;justify-content:center;
+  cursor:col-resize;touch-action:none;user-select:none;color:#8ca6ba;
+  border:0;background:transparent;
+ }
+ .psRoot.psReferenceRoot .psPaneResizeHandle::before{
+  content:"";position:absolute;top:0;bottom:0;left:5px;width:1px;
+  background:#435361;
+ }
+ .psRoot.psReferenceRoot .psPaneResizeHandle>svg{
+  position:relative;z-index:1;
+  background:#283744;border:1px solid #596d7d;border-radius:3px;
+  height:30px;width:14px;padding:2px;opacity:0;transition:opacity .12s;
+ }
+ .psRoot.psReferenceRoot .psPaneResizeHandle:hover>svg,
+ .psRoot.psReferenceRoot .psPaneResizeHandle:focus-visible>svg,
+ .psRoot.psReferenceRoot.psResizing .psPaneResizeHandle>svg{opacity:1}
+ .psRoot.psReferenceRoot .psPaneResizeHandle:hover::before,
+ .psRoot.psReferenceRoot.psResizing .psPaneResizeHandle::before{
+  width:2px;background:#829eb2;
+ }
+ .psRoot.psReferenceRoot.psResizing,
+ .psRoot.psReferenceRoot.psResizing *{cursor:col-resize!important}
+}
+.oaRoot.oaProfessionalShell .psRoot.psReferenceRoot .psWorkingColumn,
+.oaRoot.oaProfessionalShell .psRoot.psReferenceRoot .psViewerColumn{
+ min-width:0;
+}
+.psRoot.psReferenceRoot .psStageScroll{
+ min-height:0;overflow-y:auto;overflow-x:hidden;
+ scrollbar-gutter:stable;overflow-anchor:none;scroll-padding-top:12px;
+}
+.psRoot.psReferenceRoot .psWorkspaceHeader{flex:0 0 auto}
+.psRoot.psReferenceRoot .psViewerHeaderActions>button{
+ display:grid!important;place-items:center!important;
+}
+.psRoot.psReferenceRoot .psViewerHeaderActions>button[aria-expanded=false]{
+ background:#2d3e4d;border-color:#577084;color:#dceaf5;
+}
+.psRoot.psReferenceRoot .psViewerHeaderActions>button:focus-visible,
+.psRoot.psReferenceRoot .psPaneResizeHandle:focus-visible{
+ outline:2px solid #a9c9de;outline-offset:2px;
+}
+
+/* Keep mobile navigation as an overlay with its own accessible open/close button. */
+@media(max-width:1100px){
+ .psRoot.psReferenceRoot .psPaneResizeHandle{display:none!important}
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psStudyHidden{
+  display:flex!important;flex-direction:column;min-height:0;
+ }
+ .psRoot.psReferenceRoot.psStudyHidden .psWorkingColumn{display:none!important}
+ .psRoot.psReferenceRoot.psStudyHidden .psViewerColumn{flex:1 1 0;min-height:0}
+}
+@media(max-width:780px){
+ .oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psDesktopSidebarButton{display:none!important}
+ .oaRoot.oaProfessionalShell:has(.psReferenceRoot) .psMobileSidebarButton{display:grid!important}
+ .oaRoot.oaProfessionalShell:has(.psReferenceRoot) .oaSidebar.oaMobileOpen{
+  width:min(275px,85vw)!important;flex-basis:auto!important;
+  max-width:85vw!important;min-width:0!important;
+ }
+ .psRoot.psReferenceRoot.psStudyHidden .psViewerColumn{
+  height:calc(100dvh - 98px);overflow:auto;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .psRoot.psReferenceRoot .psPaneResizeHandle>svg{transition:none}
+}
+
+/* Resize-aware content: adapt to the pane's width, not the browser width.
+   A user can widen the CAD canvas without forcing desktop-width cards to overflow. */
+.psRoot.psReferenceRoot .psWorkingColumn{
+ container-type:inline-size;
+ container-name:engineering-study;
+}
+@container engineering-study (max-width:650px){
+ .psReferenceRoot .psReferenceTopGrid,
+ .psReferenceRoot .psReferenceBottomGrid{
+  grid-template-columns:minmax(0,1fr)!important;
+ }
+ .psReferenceRoot .psReferenceRecommendation{
+  flex-wrap:wrap;
+ }
+ .psReferenceRoot .psReferenceRecommendation button{
+  max-width:100%;margin-left:auto;
+ }
+ .psReferenceRoot .psReferenceHeading h2{font-size:20px}
+}
+@container engineering-study (max-width:510px){
+ .psReferenceRoot .psStep{gap:5px!important;padding:6px!important}
+ .psReferenceRoot .psStepContent strong{font-size:10px!important}
+ .psReferenceRoot .psStepCount{
+  width:18px!important;height:18px!important;flex:0 0 18px!important;
+ }
+ .psReferenceRoot .psModelContents{gap:8px}
+ .psReferenceRoot .psModelThumbnail{min-width:110px}
+ .psReferenceRoot .psReferenceRecommendation button{
+  width:100%;max-width:none;
+ }
+ .psReferenceRoot .psReferenceHeading p{font-size:10px}
+}
+@media(min-width:1101px){
+ .psRoot.psReferenceRoot .psPaneResizeHandle>svg{opacity:.34}
+}
+
+/* Single persistent action strip; essential work is reachable without scrolling. */
+.psReferenceRoot .psWorkflowBar{
+ flex:0 0 auto;min-height:39px;padding:6px 17px;display:flex;align-items:center;
+ justify-content:space-between;gap:10px;background:#252d35;
+ border-bottom:1px solid #424d58;color:#e4edf3
+}
+.psReferenceRoot .psWorkflowSummary{
+ display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+ white-space:nowrap;overflow:hidden
+}
+.psReferenceRoot .psWorkflowSummary strong{
+ font-size:10px;font-weight:700;white-space:nowrap;color:#e8f1f7
+}
+.psReferenceRoot .psWorkflowSummary span{
+ color:#9fb0bf;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.psReferenceRoot .psWorkflowBar button{
+ display:flex;align-items:center;justify-content:center;gap:6px;
+ flex:0 0 auto;border-radius:4px;padding:6px 9px;
+ background:#42617a;color:#eff5fa;border:1px solid #66869d;
+ font-size:10px;font-weight:640;min-height:28px
+}
+.psReferenceRoot .psWorkflowBar button:disabled{opacity:.55;cursor:not-allowed}
+.psReferenceRoot .psWorkflowBar button.psWorkflowReport{
+ background:#2c3742;border-color:#506172;color:#cbdbe7
+}
+.psReferenceRoot .psReferenceGeometry .psReferenceRecommendation{
+ display:none!important
+}
+/* An upload thumbnail duplicates the persistent live CAD model on the right.
+   Remove this redundancy from the study pane to reclaim vertical space. */
+@media(min-width:1101px){
+ .psReferenceRoot .psReferenceGeometry .psModelThumbnail{display:none}
+ .psReferenceRoot .psReferenceGeometry .psModelContents{min-height:80px}
+ .psReferenceRoot .psReferenceGeometry .psModelDescription{gap:6px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceGrid .psPanel{
+  padding:9px 11px
+ }
+ .psReferenceRoot .psReferenceGeometry .psReferenceCardHeading{
+  padding-bottom:5px;margin-bottom:5px
+ }
+ .psReferenceRoot .psReferenceGeometry .psReferenceTopGrid{min-height:0}
+ .psReferenceRoot .psReferenceGeometry .psReferenceBottomGrid{min-height:0}
+ .psReferenceRoot .psReferenceGeometry .psReferenceHeading{padding:0;gap:3px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceHeading h2{font-size:19px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceHeading p{font-size:10px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceGrid{gap:9px}
+ .psReferenceRoot .psReferenceGeometry .psReferenceMesh dl>div{padding:3px 0}
+ .psReferenceRoot .psReferenceGeometry .psReferenceDimensions dl>div{padding:4px 0}
+}
+.psReferenceRoot .psAssistant{padding:0 15px 8px!important}
+.psReferenceRoot .psAskBox{
+ display:flex;align-items:center;gap:8px;min-height:43px;
+ padding:6px 9px!important;
+}
+.psReferenceRoot .psAskBox textarea{
+ flex:1 1 0;min-width:0;width:auto;min-height:28px!important;
+ max-height:70px;resize:vertical;
+ margin:0;padding:4px!important;line-height:1.4;
+}
+.psReferenceRoot .psAskBox>div{flex:0 0 auto;display:flex;align-items:center}
+.psReferenceRoot .psAskBox>div span{display:none}
+.psReferenceRoot .psAskBox>div button{width:29px;height:29px}
+.psReferenceRoot .psSectionHead{padding-bottom:8px;margin:0}
+.psReferenceRoot .psSectionHead h2{font-size:19px;margin:2px 0 3px}
+.psReferenceRoot .psSectionHead p{font-size:10px;line-height:1.4}
+.psReferenceRoot .psContextPanel .psDocumentDrop{
+ min-height:67px;padding:9px 14px;display:grid;
+ grid-template-columns:25px minmax(0,1fr);grid-template-rows:auto auto;
+ gap:2px 10px;justify-content:flex-start;align-items:center;text-align:left;
+ background:#26313b;border-radius:4px
+}
+.psReferenceRoot .psContextPanel .psDocumentDrop>svg{
+ width:22px;height:22px;grid-column:1;grid-row:1/span 2
+}
+.psReferenceRoot .psContextPanel .psDocumentDrop>strong{
+ grid-column:2;grid-row:1;font-size:11px
+}
+.psReferenceRoot .psContextPanel .psDocumentDrop>span{
+ grid-column:2;grid-row:2;font-size:9px
+}
+.psReferenceRoot .psContextFields{
+ grid-template-columns:repeat(2,minmax(0,1fr));gap:7px
+}
+.psReferenceRoot .psContextFields label:nth-child(n){grid-column:span 1}
+.psReferenceRoot .psContextFields label{font-size:10px;gap:4px}
+.psReferenceRoot .psContextFields textarea{min-height:40px;max-height:100px;resize:vertical}
+.psReferenceRoot .psContextFields input{min-height:32px}
+.psReferenceRoot .psContextPanel .psCaveat{font-size:9px;line-height:1.3}
+.psReferenceRoot .psSummaryGrid{gap:7px}
+.psReferenceRoot .psSummaryGrid>div{padding:8px 10px;border-radius:4px}
+.psReferenceRoot .psSummaryGrid strong{font-size:16px}
+.psReferenceRoot .psRiskColumns{gap:9px}
+.psReferenceRoot .psRiskItem>summary{padding:7px 0}
+.psReferenceRoot .psRiskItem>summary small{padding:2px 5px;font-size:9px}
+.psReferenceRoot .psReportCard{gap:10px;padding:11px}
+.psReferenceRoot .psReportCard h3{font-size:13px}
+.psReferenceRoot .psReportCard p{font-size:10px;line-height:1.35}
+/* The report/export controls appear above the long mechanism register. */
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psSectionHead{order:-4}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psSummaryGrid{order:-3}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psReportCard{order:-2}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psRiskColumns{order:1}
+.psReferenceRoot .psStage[aria-label="Failure assessment stage"]>.psCaveat{order:2}
+@container engineering-study (max-width:650px){
+ .psReferenceRoot .psContextFields{grid-template-columns:minmax(0,1fr)}
+ .psReferenceRoot .psContextFields label:nth-child(n){grid-column:span 1}
+ .psReferenceRoot .psWorkflowSummary span{display:none}
+}
+@media(max-width:780px){
+ .psReferenceRoot .psWorkflowBar{padding:5px 9px;gap:5px}
+ .psReferenceRoot .psWorkflowBar button{padding:5px 6px;font-size:9px}
+ .psReferenceRoot .psWorkflowBar .psWorkflowSummary span{display:none}
+ .psReferenceRoot .psWorkflowSummary strong{font-size:9px}
+ .psReferenceRoot .psAskBox{min-height:39px}
+ .psReferenceRoot .psContextFields{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Integrated failure assessment: dense CAD/CAE panel and tabbed detail, no page-length risk checklist. */
+.psReferenceRoot .psDecisionStage{gap:9px;min-width:0}
+.psReferenceRoot .psDecisionStatus{display:flex;gap:10px;align-items:center;justify-content:space-between;
+ background:#283542;border:1px solid #526577;border-left:3px solid #7b9aad;padding:9px 11px;border-radius:5px}
+.psReferenceRoot .psDecisionStatus>div:first-child{flex:1 1 0;min-width:0}
+.psReferenceRoot .psDecisionStatus strong{display:flex;gap:7px;align-items:center;font-size:11px;line-height:1.3}
+.psReferenceRoot .psDecisionStatus strong svg{flex:0 0 16px;color:#b4cbd9}
+.psReferenceRoot .psDecisionStatus p{margin:4px 0 0;font-size:10px;color:#acbbc7}
+.psReferenceRoot .psDecisionCounts{display:flex;gap:8px;flex:0 0 auto}
+.psReferenceRoot .psDecisionCounts span{display:grid;text-align:center;gap:2px;font-size:9px;color:#acbdca;white-space:nowrap}
+.psReferenceRoot .psDecisionCounts b{font-size:15px;font-variant-numeric:tabular-nums;color:#e8f1f7}
+.psReferenceRoot .psDecisionExport{display:flex;align-items:center;justify-content:space-between;padding:10px 12px!important;gap:12px}
+.psReferenceRoot .psDecisionExport>div:first-child{min-width:0;flex:1 1 0}
+.psReferenceRoot .psDecisionExport h3{margin:1px 0 4px;font-size:12px}
+.psReferenceRoot .psDecisionExport .psEyebrow{font-size:9px}
+.psReferenceRoot .psDecisionExport p{max-width:480px;font-size:9.5px;line-height:1.35;margin:0}
+.psReferenceRoot .psDecisionExport .psReportButtons{min-width:160px;max-width:208px;display:grid;gap:4px}
+.psReferenceRoot .psDecisionExport .psReportButtons>.psPrimary{padding:8px 9px;min-height:32px}
+.psReferenceRoot .psSecondaryExports{display:flex;gap:5px}
+.psReferenceRoot .psSecondaryExports button{flex:1 1 0;min-width:0;font-size:9px;padding:5px 5px;line-height:1.15}
+.psReferenceRoot .psDecisionTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:0;border-bottom:1px solid #495765;margin-top:2px}
+.psReferenceRoot .psDecisionTabs button{min-height:34px;display:flex;gap:6px;align-items:center;justify-content:center;
+ padding:6px 6px;border:0;border-bottom:2px solid transparent;background:transparent;color:#b5c2cf;
+ font-size:10px;font-weight:580;white-space:normal;line-height:1.2;border-radius:0}
+.psReferenceRoot .psDecisionTabs button:hover{background:#293541}
+.psReferenceRoot .psDecisionTabs button.psSelected{border-bottom-color:#8ba8bb;background:#2b3742;color:#eef4f7}
+.psReferenceRoot .psDecisionTabs svg{flex:0 0 14px}
+.psReferenceRoot .psDecisionView{min-width:0}
+.psReferenceRoot .psDecisionSectionBar{display:flex;gap:10px;justify-content:space-between;align-items:center;
+ padding:7px 0 8px}
+.psReferenceRoot .psDecisionSectionBar>div:first-child{display:grid;gap:3px}
+.psReferenceRoot .psDecisionSectionBar strong{font-size:11px}
+.psReferenceRoot .psDecisionSectionBar small{font-size:9px;color:#a6b5c1}
+.psReferenceRoot .psDecisionFilters{display:flex;gap:3px}
+.psReferenceRoot .psDecisionFilters button{font-size:9px;padding:4px 7px;border:1px solid #445564;
+ border-radius:4px;color:#cad5df;background:#26323b}
+.psReferenceRoot .psDecisionFilters button[aria-pressed=true]{background:#3d5265;color:#f0f5f9;border-color:#70889a}
+.psReferenceRoot .psDecisionFindings{display:grid;gap:3px}
+.psReferenceRoot .psDecisionFinding{border:1px solid #3c4c59;border-radius:4px;background:#222c35;min-width:0}
+.psReferenceRoot .psDecisionFinding>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:8px 9px;
+ cursor:pointer;min-width:0}
+.psReferenceRoot .psDecisionFinding>summary::-webkit-details-marker{display:none}
+.psReferenceRoot .psDecisionFinding>summary>svg{flex:0 0 14px;color:#9cacba}
+.psReferenceRoot .psDecisionFinding[open]>summary>svg{transform:rotate(180deg)}
+.psReferenceRoot .psPriority{flex:0 0 auto;border-radius:3px;padding:3px 5px;min-width:54px;text-align:center;
+ font-size:9px;font-weight:670;letter-spacing:.012em;text-transform:uppercase;align-self:center}
+.psReferenceRoot .psPriority-critical{color:#ecc3c3;background:#493537;border-color:#775354}
+.psReferenceRoot .psPriority-high{color:#efdbc0;background:#4b3e2e;border-color:#8c744e}
+.psReferenceRoot .psPriority-medium{color:#c8dce9;background:#344657;border-color:#66839a}
+.psReferenceRoot .psPriority-information{color:#c5d1dc;background:#33404b;border-color:#53677a}
+.psReferenceRoot .psDecisionFindingTitle{display:grid;gap:3px;min-width:0;flex:1 1 0}
+.psReferenceRoot .psDecisionFindingTitle strong{font-size:10px;font-weight:670;line-height:1.2}
+.psReferenceRoot .psDecisionFindingTitle small{font-size:9px;color:#aabac7;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap}
+.psReferenceRoot .psFindingState{font-size:9px;white-space:nowrap;color:#a6b9c6}
+.psReferenceRoot .psFindingDetails{padding:8px 12px;border-top:1px solid #42535f;color:#c9d6e0}
+.psReferenceRoot .psFindingDetails p{margin:2px 0 8px;line-height:1.4;font-size:10px}
+.psReferenceRoot .psFindingDetails small{font-size:9px;color:#9cb0bf}
+.psReferenceRoot .psUnassessedStrip{display:flex;align-items:flex-start;gap:9px;margin-top:9px;
+ padding:9px 10px;background:#2b3035;border:1px solid #4b4e50;border-radius:4px}
+.psReferenceRoot .psUnassessedStrip>svg{flex:0 0 15px;color:#b7afa6}
+.psReferenceRoot .psUnassessedStrip strong{font-size:10px}
+.psReferenceRoot .psUnassessedStrip p{margin:4px 0 0;font-size:9px;color:#bac4cc;line-height:1.4}
+.psReferenceRoot .psDecisionActions,.psReferenceRoot .psManufacturingFlow{padding:0;margin:0;display:grid;gap:4px;list-style:none}
+.psReferenceRoot .psDecisionActions>li{display:flex;align-items:center;gap:8px;border:1px solid #3e4e5d;
+ border-radius:4px;background:#242e38;padding:9px}
+.psReferenceRoot .psDecisionActions>li>div{flex:1 1 0;min-width:0}
+.psReferenceRoot .psDecisionActions strong{font-size:10px;line-height:1.35}
+.psReferenceRoot .psDecisionActions p{margin:4px 0 0;font-size:9px;color:#b0bfcd;line-height:1.4}
+.psReferenceRoot .psDecisionActions button{display:flex;align-items:center;gap:4px;font-size:9px;
+ padding:6px 8px;border:1px solid #5c7387;border-radius:4px;background:#344a5e;color:#e9f4fc}
+.psReferenceRoot .psManufacturingFlow>li{display:flex;align-items:flex-start;gap:10px;padding:10px 8px;
+ background:#242e38;border:1px solid #40515e;border-radius:4px}
+.psReferenceRoot .psFlowNumber{width:23px;height:23px;border:1px solid #627a8d;border-radius:4px;
+ display:grid;place-items:center;font-size:10px;flex:0 0 23px}
+.psReferenceRoot .psManufacturingFlow>li>div{flex:1;min-width:0}
+.psReferenceRoot .psFlowTitle{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap}
+.psReferenceRoot .psFlowTitle strong{font-size:11px}
+.psReferenceRoot .psFlowTitle small{font-size:9px;color:#a8bccb;display:flex;gap:4px;align-items:center}
+.psReferenceRoot .psManufacturingFlow p{font-size:9px;color:#bac7d1;margin:4px 0}
+.psReferenceRoot .psManufacturingFlow details{font-size:9px;color:#b8c7d3}
+.psReferenceRoot .psManufacturingFlow summary{list-style:none;display:flex;gap:5px;align-items:center;
+ cursor:pointer;padding:4px 0;color:#9fc1d9}
+.psReferenceRoot .psManufacturingFlow summary::-webkit-details-marker{display:none}
+
+/* Part-scoped process window editor, expanded only for engineers who have actual source limits. */
+.psReferenceRoot .psProcessContext{padding:0!important}
+.psReferenceRoot .psProcessContext>details>summary{list-style:none;margin:0;padding:10px 12px;
+ display:flex;gap:8px;cursor:pointer}
+.psReferenceRoot .psProcessContext>details>summary::-webkit-details-marker{display:none}
+.psReferenceRoot .psProcessContext>details>summary span{display:flex;align-items:center;gap:5px;
+ font-size:9px;color:#a9b8c4;flex:0 0 auto}
+.psReferenceRoot .psProcessContext>details>summary strong{font-size:11px;min-width:0}
+.psReferenceRoot .psProcessContext>details[open]>summary{border-bottom:1px solid #495866}
+.psReferenceRoot .psProcessContext>details>p{padding:8px 12px}
+.psReferenceRoot .psProcessIdentity{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+ padding:4px 12px 10px}
+.psReferenceRoot .psProcessIdentity label{display:grid;gap:4px;font-size:9px;color:#b4c2ce}
+.psReferenceRoot .psProcessIdentity input{min-width:0;width:100%;background:#1c2630;
+ color:#e9f1f6;border:1px solid #526270;border-radius:4px;padding:7px;font-size:10px}
+.psReferenceRoot .psProcessTableWrap{padding:0 12px;max-width:100%;overflow:auto}
+.psReferenceRoot .psProcessTableWrap table{border-collapse:collapse;width:100%;table-layout:fixed}
+.psReferenceRoot .psProcessTableWrap th{font-size:9px;font-weight:660;text-align:left;color:#b2c4d1;
+ border-bottom:1px solid #455361;padding:6px}
+.psReferenceRoot .psProcessTableWrap td{padding:3px 5px;border-bottom:1px solid #374651}
+.psReferenceRoot .psProcessTableWrap th:first-child{width:35%}
+.psReferenceRoot .psProcessTableWrap small{display:block;font-size:9px;color:#94a9bb;margin-top:2px}
+.psReferenceRoot .psProcessTableWrap input{width:100%;min-width:0;padding:6px 5px;
+ border:1px solid #4a5b68;border-radius:3px;font-size:10px;background:#202d37;color:#edf4f9}
+.psReferenceRoot .psProcessApproval{display:flex;gap:8px;align-items:flex-start;
+ padding:10px 12px;font-size:10px;color:#b8c7d2;line-height:1.4}
+.psReferenceRoot .psProcessApproval input{flex:0 0 auto;margin:2px 0}
+.psReferenceRoot .psProcessOutcome{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;
+ border-top:1px solid #455360;font-size:9px;color:#b6c8d5}
+.psReferenceRoot .psProcessOutcome span{background:#30404c;padding:4px 7px;border-radius:3px}
+.psReferenceRoot .psProcessFlag{padding:7px 12px;margin:0;color:#edd0be;background:#40372e;font-size:9px}
+@container engineering-study (max-width:650px){
+ .psReferenceRoot .psDecisionExport{flex-direction:column;align-items:stretch}
+ .psReferenceRoot .psDecisionExport .psReportButtons{max-width:none;min-width:0;width:100%}
+ .psReferenceRoot .psDecisionCounts{display:none}
+ .psReferenceRoot .psDecisionTabs button{font-size:9px;gap:3px}
+ .psReferenceRoot .psProcessIdentity{grid-template-columns:1fr}
+}
+@container engineering-study (max-width:480px){
+ .psReferenceRoot .psDecisionTabs button svg{display:none}
+ .psReferenceRoot .psFindingState{display:none}
+ .psReferenceRoot .psDecisionActions>li{flex-wrap:wrap}
+ .psReferenceRoot .psDecisionActions button{margin-left:auto}
+}
+
+/* Optional external model: concise consent, never implicitly selected. */
+.psReferenceRoot .psExternalAiSwitch{padding:3px 2px 6px;color:#93a7b7;font-size:9px}
+.psReferenceRoot .psExternalAiSwitch>label{display:flex;align-items:flex-start;gap:6px;line-height:1.4;cursor:pointer}
+.psReferenceRoot .psExternalAiSwitch input{flex:0 0 auto;margin:1px 0 0;accent-color:#779aaf}
+.psReferenceRoot .psExternalAiSwitch>span{display:block;font-size:9px}
+.psReferenceRoot .psAssistant{min-height:0;padding-top:4px!important}
+.psReferenceRoot .psAskBox{min-height:39px}
+.psReferenceRoot .psAskBox textarea{resize:none;max-height:75px}
+/* Optional inspection and test feedback for the external validation portion of the flow. */
+.psReferenceRoot .psFeedbackPanel{padding:11px;margin-top:10px;background:#232c34;border:1px solid #41515f;border-radius:5px}
+.psReferenceRoot .psFeedbackPanel>.psPanelHeading{margin:0 0 6px}
+.psReferenceRoot .psFeedbackPanel>.psPanelHeading>strong{font-size:11px}
+.psReferenceRoot .psFeedbackPanel>.psPanelHeading>span{font-size:9px;color:#a3b6c4}
+.psReferenceRoot .psFeedbackPanel .psCaveat{font-size:9px;line-height:1.4;color:#aabcc8}
+.psReferenceRoot .psFeedbackPanel>details{border-top:1px solid #3c4e5b;margin-top:10px}
+.psReferenceRoot .psFeedbackPanel>details>summary{display:flex;align-items:center;gap:6px;
+ font-size:10px;color:#d9e4ec;cursor:pointer;list-style:none;padding:10px 0}
+.psReferenceRoot .psFeedbackPanel>details>summary::-webkit-details-marker{display:none}
+.psReferenceRoot .psFeedbackCounts{display:flex;gap:6px;flex-wrap:wrap;padding:6px 0}
+.psReferenceRoot .psFeedbackCounts span{background:#31404d;border:1px solid #526676;
+ border-radius:3px;padding:5px 7px;font-size:9px;color:#bcd1df}
+.psReferenceRoot .psFeedbackItem{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+ background:#28333d;border:1px solid #3e5160;border-radius:4px;padding:9px;margin:5px 0}
+.psReferenceRoot .psFeedbackItem>div{min-width:0;flex:1}
+.psReferenceRoot .psFeedbackItem strong{font-size:10px}
+.psReferenceRoot .psFeedbackItem small{display:block;font-size:9px;color:#a7b9c6;padding-top:4px;overflow-wrap:anywhere}
+.psReferenceRoot .psFeedbackItem p{font-size:10px;line-height:1.4;margin:6px 0;color:#d5e2eb}
+.psReferenceRoot .psFeedbackItem>button{border:1px solid #536575;border-radius:3px;padding:6px;
+ background:#344351;color:#d3e3eb}
+.psReferenceRoot .psFeedbackForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px;margin:7px 0 10px}
+.psReferenceRoot .psFeedbackForm label{display:grid;gap:4px;min-width:0;font-size:9px;color:#b9c8d4}
+.psReferenceRoot .psFeedbackForm :is(input:not([type="checkbox"]),select,textarea){
+ min-width:0;width:100%;font-size:10px;color:#e7f0f6;background:#1a2630;
+ border:1px solid #526373;padding:7px 8px;border-radius:4px;line-height:1.3
+}
+.psReferenceRoot .psFeedbackForm .psFeedbackObservation{grid-column:1/-1}
+.psReferenceRoot .psFeedbackForm .psFeedbackReview{grid-column:1/-1;display:flex;flex-direction:row;
+ align-items:flex-start;gap:7px;line-height:1.45}
+.psReferenceRoot .psFeedbackReview input{flex:0 0 auto;accent-color:#7c9eb7;margin:2px 0}
+.psReferenceRoot .psFeedbackForm>.psPrimary{grid-column:1/-1;justify-self:end;min-width:160px}
+@container engineering-study (max-width:560px){
+ .psReferenceRoot .psFeedbackForm{grid-template-columns:minmax(0,1fr)}
+}
