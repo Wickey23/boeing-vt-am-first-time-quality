@@ -17,6 +17,7 @@ import EngineeringAssessmentJourney,{type AssessmentStage} from "@/components/v2
 import EngineeringContextStage from "@/components/v2/EngineeringContextStage";
 import EngineeringAssessmentResults from "@/components/v2/EngineeringAssessmentResults";
 import {usePartKnowledge} from "@/components/v2/usePartKnowledge";
+import {localCopilotReply} from "@/lib/copilot-context";
 import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
 import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
 import {activeParameterBindings} from "@/lib/engineering-parameter-binding";
@@ -361,7 +362,14 @@ export default function ChatStudy(){
   }
   const lower=question.toLowerCase();
   let response:string;
-  if(/\b(measur(?:e|ed|ement|ements)|thermograph(?:y|ic)|benchmark|validat(?:e|ion)|temperature trace|experiment(?:al)? data)\b/.test(lower)){
+  if(/\b(assembly|documents?|references?|requirements?|interfaces?|load(?:s|ing)?|mount(?:s|ing)?|fixture|part.function)\b/.test(lower)&&context.knowledge){
+   const local=localCopilotReply(context.knowledge,question,{
+    partName:a.file?.name??null,confirmed:isConfirmed,hasOrientation:currentRun,
+    loadsReviewed:context.reviewed.some(e=>e.category==="load"),process:a.journey.process
+   });
+   response=local.text+"\n\nOpen Engineering context to review the source passages and confirm their applicability.";
+   setActiveStage("context");
+  }else if(/\b(measur(?:e|ed|ement|ements)|thermograph(?:y|ic)|benchmark|validat(?:e|ion)|temperature trace|experiment(?:al)? data)\b/.test(lower)){
     response=a.file?
      "To compare a measured thermal trace, first run an approved LPBF thermal study below, then open the Measured thermal trace panel. Upload time_s,temperature_c,uncertainty_c,x_mm,y_mm,z_mm CSV data, identify the source and confirm position/time alignment. ORIENTAI reports exploratory temperature differences only; it cannot yet validate NIST AM Bench time-above-melt or cooling-rate observables, and no print-defect probability is available.":
      "Upload an STL and confirm units first. Benchmark comparisons also need an approved thermal research run, source-identified measurements, registered coordinates and the same time origin.";
