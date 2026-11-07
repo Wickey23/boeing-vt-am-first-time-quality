@@ -36,3 +36,29 @@ test("compatibility routes direct to current workbench without losing named stag
  await expect(page).toHaveURL(/\/copilot\/workbench\?stage=assessment$/);
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
 });
+
+test("landing and help use one consistent engineering theme and sidebar",async({page})=>{
+ await page.setViewportSize({width:1600,height:900});
+ await page.goto("/");
+ await expect(page.getByRole("heading",{name:"What are we working on today?"})).toBeVisible();
+ const landing=await page.evaluate(()=>({
+  bg:getComputedStyle(document.querySelector(".oaRoot")!).backgroundColor,
+  sidebar:getComputedStyle(document.querySelector(".oaSidebar")!).backgroundColor,
+  font:getComputedStyle(document.querySelector(".oaRoot")!).fontFamily,
+  width:document.documentElement.scrollWidth
+ }));
+ await page.goto("/how-it-works");
+ await expect(page.getByRole("heading",{name:"One part. Three stages. One engineering assessment."})).toBeVisible();
+ const guide=await page.evaluate(()=>({
+  bg:getComputedStyle(document.querySelector(".oaRoot")!).backgroundColor,
+  sidebar:getComputedStyle(document.querySelector(".oaSidebar")!).backgroundColor,
+  font:getComputedStyle(document.querySelector(".oaRoot")!).fontFamily,
+  width:document.documentElement.scrollWidth
+ }));
+ expect(landing.bg).toBe(guide.bg);
+ expect(landing.sidebar).toBe(guide.sidebar);
+ expect(landing.font).toBe(guide.font);
+ expect(landing.width).toBeLessThanOrEqual(1602);
+ expect(guide.width).toBeLessThanOrEqual(1602);
+ await expect(page.getByRole("navigation",{name:"Primary navigation"}).getByRole("link",{name:"Current study"})).toBeVisible();
+});
