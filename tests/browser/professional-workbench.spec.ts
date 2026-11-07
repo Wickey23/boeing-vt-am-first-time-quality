@@ -258,3 +258,32 @@ test("geometry action and first-row mesh values fit without duplicate preview an
  expect(metrics.bottom-metrics.top).toBeLessThan(350);
  expect(metrics.scrollHeight-metrics.clientHeight).toBeLessThan(40);
 });
+
+
+test("external AI consent checkbox stays compact and label text remains readable",async({page})=>{
+ await page.setViewportSize({width:1640,height:900});
+ await page.route("**/api/engineering-copilot",async route=>{
+  if(route.request().method()==="GET")await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({enabled:true})});
+  else await route.continue();
+ });
+ await page.goto("/copilot/workbench");
+ const label=page.locator(".psExternalAiSwitch label");
+ const checkbox=label.locator('input[type="checkbox"]');
+ await expect(checkbox).toBeVisible();
+ const bounds=await page.evaluate(()=>{
+  const parent=document.querySelector(".psExternalAiSwitch label");
+  const input=parent?.querySelector('input[type="checkbox"]');
+  const pane=document.querySelector(".psWorkingColumn");
+  if(!parent||!input||!pane)throw Error("Missing consent or workbench pane");
+  return {input:input.getBoundingClientRect().width,
+   label:parent.getBoundingClientRect().width,
+   pane:pane.getBoundingClientRect().width,
+   doc:document.documentElement.scrollWidth,
+   viewport:window.innerWidth};
+ });
+ expect(bounds.input).toBeLessThanOrEqual(22);
+ expect(bounds.label).toBeGreaterThan(300);
+ expect(bounds.label).toBeLessThanOrEqual(bounds.pane);
+ expect(bounds.doc).toBeLessThanOrEqual(bounds.viewport+2);
+ await expect(label).toContainText("This sends my message");
+});
