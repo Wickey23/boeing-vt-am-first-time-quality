@@ -1,0 +1,120 @@
+/* Shared visual language for ORIENTAI landing and technical guide.
+ * Scoped to the non-workbench ChatAppShell. The CAD/CAE viewport retains its own CSS. */
+.oaRoot:not(.oaProfessionalShell){
+ --oa-bg:#1a2027;--oa-sidebar:#1d252e;--oa-card:#26323d;
+ --oa-hover:#304251;--oa-text:#edf3f8;--oa-muted:#b2c2cf;
+ --oa-border:#445767;--oa-strong:#edf6fc;
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+ background:#1a2027;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSidebar{
+ background:#1d252e;border-right:1px solid #364653;
+ width:235px;flex-basis:235px;padding:16px 12px 12px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSidebarTop{
+ height:60px;min-height:60px;padding:0 8px 12px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaBrand{
+ gap:10px;font-size:16px;font-weight:730;letter-spacing:-.02em;
+}
+.oaRoot:not(.oaProfessionalShell) .oaBrandSymbol{
+ width:34px;height:34px;flex:0 0 34px;
+ border:1px solid #91b7d1;border-radius:9px;background:#263f52;
+ color:#e8f5fd;font-size:14px;
+}
+.oaRoot:not(.oaProfessionalShell) :is(.oaNewChat,.oaNavItem,.oaAdvanced>summary,.oaCurrentStudy){
+ font-size:12px;min-height:43px;padding:10px 12px;border-radius:6px;gap:10px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaNavActive{
+ background:#304b62;border:1px solid #527a96;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSidebarSection{
+ border-top:1px solid #364653;padding-top:15px;margin-top:14px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSidebarSectionTitle{
+ font-size:10px;letter-spacing:.09em;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSidebarFooter{border-top:1px solid #364653}
+.oaRoot:not(.oaProfessionalShell) .oaTopbar{
+ background:#20272f!important;color:#eaf3fa!important;
+ border-bottom:1px solid #394957!important;
+ height:62px!important;flex-basis:62px!important;
+}
+.oaRoot:not(.oaProfessionalShell) .oaModelName{font-size:15px;font-weight:700}
+.oaRoot:not(.oaProfessionalShell) .oaModelSuffix{color:#aebecb;font-size:12px}
+.oaRoot:not(.oaProfessionalShell) .oaMain,
+.oaRoot:not(.oaProfessionalShell) .oaBottomDisclaimer{background:#1a2027}
+.oaRoot:not(.oaProfessionalShell) .oaBottomDisclaimer{
+ border-top:1px solid #2c3945;font-size:9px;padding:6px 12px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaHome{
+ min-height:calc(100dvh - 106px);
+ padding:32px 20px 55px;
+ background:radial-gradient(ellipse at 55% 40%,#263e5255 0%,transparent 60%),#1a2027;
+}
+.oaRoot:not(.oaProfessionalShell) .oaGreeting{
+ font-size:clamp(27px,3vw,36px);font-weight:720;letter-spacing:-.035em;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSubGreeting{font-size:13px;color:#b1c2d0}
+.oaRoot:not(.oaProfessionalShell) .oaComposerArea{width:min(100%,790px)}
+.oaRoot:not(.oaProfessionalShell) .oaComposer{
+ border:1px solid #526779;border-radius:11px;
+ background:#25323e;box-shadow:0 14px 42px #050c1555;
+ padding:13px 15px 12px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaComposer:focus-within{border-color:#7aa9cb}
+.oaRoot:not(.oaProfessionalShell) .oaComposer textarea{
+ color:#edf3f8;font-size:14px;line-height:1.5;min-height:62px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaComposer textarea::placeholder{color:#a9bac7}
+.oaRoot:not(.oaProfessionalShell) .oaComposerAction{
+ border-radius:6px;font-size:12px;padding:7px 9px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSend{
+ border-radius:6px;background:#456b88;color:#f2faff;
+ width:36px;height:36px;border:1px solid #7194ac;
+}
+.oaRoot:not(.oaProfessionalShell) .oaSend:enabled:hover{background:#5487aa}
+.oaRoot:not(.oaProfessionalShell) .oaSend:disabled{opacity:.5}
+.oaRoot:not(.oaProfessionalShell) .oaExample{
+ border:1px solid #455a6a;border-radius:7px;
+ background:#222d37;color:#e2edf5;font-size:11px;padding:9px 12px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaExample:hover{background:#30475a}
+.oaRoot:not(.oaProfessionalShell) .oaHomeHelp{color:#a9bac7}
+.oaRoot:not(.oaProfessionalShell) .oaAttachment{
+ background:#1d2935;border-color:#526779;
+}
+.oaRoot:not(.oaProfessionalShell) .oaBuildTicker{
+ border-color:#394e60;background:#233140;border-radius:7px;
+}
+.oaRoot:not(.oaProfessionalShell) .oaBuildTickerPulse{background:#78bca4}
+.oaRoot:not(.oaProfessionalShell) .oaRoot :focus-visible{outline-color:#8dbbdb}
+/* Guide page follows the same shell and surface hierarchy. */
+.oaGuide{width:min(100%,1160px);margin:0 auto;padding:34px clamp(18px,3vw,44px) 65px;display:grid;gap:24px}
+.oaGuideIntro{display:grid;gap:10px}
+.oaGuideEyebrow{color:#9fbdcf;letter-spacing:.09em;font-size:11px;font-weight:700;text-transform:uppercase}
+.oaGuide h1{font-size:clamp(23px,2.6vw,32px);line-height:1.2;color:#f2f7fb;margin:0}
+.oaGuide h2{font-size:17px;line-height:1.35;margin:0 0 12px;color:#e8f3fb}
+.oaGuide p{color:#b7c7d3;font-size:13px;line-height:1.6;margin:0}
+.oaGuideGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.oaGuideCard{border:1px solid #405462;background:#232e39;border-radius:8px;padding:18px;display:grid;align-content:start;gap:9px;min-width:0}
+.oaGuideNumber{color:#91bedb;font-size:10px;letter-spacing:.1em;font-weight:750}
+.oaGuideCard h3{font-size:15px;color:#edf5fa;margin:0}
+.oaGuideActions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.oaGuideLink{display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;border-radius:6px;padding:9px 12px;font-size:12px;font-weight:650;color:#edf5fa;background:#2c3b48;border:1px solid #526779}
+.oaGuideLink:hover{background:#385269}
+.oaGuideLinkPrimary{background:#426b8a;border-color:#6b97b5}
+.oaGuideSection{border-top:1px solid #3c4b58;padding-top:20px;display:grid;gap:10px}
+.oaGuideNote{border-left:3px solid #7898b0;padding:10px 14px;background:#23313e}
+@media(max-width:850px){
+ .oaGuideGrid{grid-template-columns:1fr}
+}
+@media(max-width:780px){
+ .oaRoot:not(.oaProfessionalShell) .oaSidebar{width:min(85vw,282px)!important;flex-basis:auto!important}
+ .oaRoot:not(.oaProfessionalShell) .oaHome{padding:28px 16px 45px}
+ .oaGuide{padding:25px 16px 45px}
+}
+@media(prefers-reduced-motion:reduce){
+ .oaRoot:not(.oaProfessionalShell) *{scroll-behavior:auto}
+}
