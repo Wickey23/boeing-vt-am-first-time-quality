@@ -5,6 +5,7 @@ import {useEffect,useState} from "react";
 import {useAnalysis} from "@/components/AnalysisProvider";
 import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck,LayoutDashboard,Cloud,Layers,HelpCircle,Settings2,PanelLeftClose,PanelLeftOpen} from "lucide-react";
 import "./chat-shell.css";
+import "./orientai-unified.css";
 import EngineeringBuildTicker from "./EngineeringBuildTicker";
 
 /** The chat-first shell is intentionally isolated from the legacy engineering dashboard.
