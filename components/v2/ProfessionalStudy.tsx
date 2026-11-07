@@ -152,6 +152,7 @@ export default function ProfessionalStudy(){
  },[a.file]);
  useEffect(()=>{const requested=new URLSearchParams(window.location.search).get("stage");setStage(requested==="assessment"||requested==="context"?requested:"geometry");setLayer(100);setPlaying(false);setThread([]);},[a.file]);
  useEffect(()=>{try{const pending=sessionStorage.getItem("orientai-pending-message-v1");if(pending){setDraft(pending);setShowThread(true);sessionStorage.removeItem("orientai-pending-message-v1");}}catch{}},[]);
+ useEffect(()=>{const open=(e:Event)=>{const requested=(e as CustomEvent<string>).detail;if(requested==="geometry"||requested==="context"||requested==="assessment"){setStage(requested);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}};window.addEventListener("orientai-open-stage",open);return()=>window.removeEventListener("orientai-open-stage",open);},[]);
  useEffect(()=>{
   if(!playing)return;
   const id=setInterval(()=>setLayer(n=>Math.min(100,n+1)),95);
