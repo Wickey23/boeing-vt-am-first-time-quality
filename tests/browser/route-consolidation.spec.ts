@@ -23,7 +23,7 @@ test("technical guide matches the three-stage workbench",async({page})=>{
 
 test("legacy report from guided research stays in the legacy report route",async({page})=>{
  await page.goto("/orientation");
- await expect(page.getByRole("link",{name:"Legacy research tools"})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Guided research workflow"})).toBeVisible();
  await page.goto("/report/legacy");
  await expect(page).toHaveURL(/\/report\/legacy$/);
  await expect(page.getByRole("heading",{name:"Consolidated engineering report"}).first()).toBeVisible();
