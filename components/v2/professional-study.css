@@ -97,7 +97,7 @@
 .psThreeStats>div{border:1px solid #3c5266;background:#1b2d40;border-radius:9px;padding:12px 9px;display:grid;gap:4px}
 .psThreeStats span{color:#b0c6d8;font-size:10px}
 .psThreeStats strong{font-size:14px;font-variant-numeric:tabular-nums}
-.psFinding{display:flex;align-items:start;gap:8px;color:#c9d6e2;font-size:11px;margin:13px 0}
+.psFinding{display:flex;align-items:flex-start;gap:8px;color:#c9d6e2;font-size:11px;margin:13px 0}
 .psFinding svg{color:#e7b67c;flex-shrink:0}
 .psTechnicalDisclosure{border:1px solid #334b60;border-radius:10px;background:#172738;overflow:hidden;font-size:12px}
 .psTechnicalDisclosure>summary{display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 14px;font-weight:700;list-style:none}
@@ -166,7 +166,7 @@
 .psRiskFindings strong{font-size:12px}
 .psRiskFindings p{margin:4px 0;line-height:1.5}
 .psRiskFindings small{color:#aebfd1}
-.psPriority{align-self:start;border:1px solid #6e6372;border-radius:6px;padding:5px 7px;font-size:10px;text-transform:capitalize}
+.psPriority{align-self:flex-start;border:1px solid #6e6372;border-radius:6px;padding:5px 7px;font-size:10px;text-transform:capitalize}
 .psReportCard{display:flex;gap:18px;justify-content:space-between;align-items:center}
 .psReportCard h3{font-size:16px;margin:5px 0}
 .psReportCard p{font-size:11px;line-height:1.6;color:#aebfcf;margin:0}
@@ -220,7 +220,7 @@
 .psRoot :is(button,select,input,textarea,a,summary):focus-visible{outline:2px solid #78bdf1;outline-offset:2px}
 @media(max-width:1420px){.psRoot{grid-template-columns:minmax(0,1fr) minmax(360px,43%)}.psRiskColumns,.psFactGrid{grid-template-columns:1fr}.psStep{gap:7px;padding:9px}.psStep>svg{display:none}}
 @media(max-width:1050px){.psRoot{grid-template-columns:1fr}.oaRoot:has(.psRoot) .oaBody{overflow:auto;height:auto}.oaRoot:has(.psRoot) .oaMain{overflow:visible}.psWorkingColumn{height:calc(100dvh - 105px)}.psViewerColumn{min-height:500px;overflow:visible}.psViewerFrame{height:420px;flex:none}.psFactGrid,.psRiskColumns{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:780px){.psWorkspaceHeader{padding:13px 13px 10px}.psStageScroll{padding:16px 13px 25px}.psAssistant{padding:9px 12px}.psHeadline{align-items:start}.psHeadline>div:first-child{display:grid;gap:3px}.psHeadline h1{font-size:14px}.psHeaderMeta{display:none}.psStep{padding:8px 6px;min-height:55px}.psStepCount{flex-basis:23px;width:23px;height:23px}.psStepContent strong{font-size:10px}.psStepContent small{display:none}.psNextAction{flex-wrap:wrap}.psNextAction>div{display:grid;gap:3px}.psNextAction button{width:100%}.psSectionHead h2{font-size:22px}.psFactGrid,.psRiskColumns{grid-template-columns:1fr}.psSummaryGrid{gap:6px}.psSummaryGrid>div{padding:10px;gap:3px}.psSummaryGrid strong{font-size:17px}.psReportCard{align-items:stretch;flex-direction:column}.psReportButtons{width:100%}.psViewerColumn{padding:12px}}
+@media(max-width:780px){.psWorkspaceHeader{padding:13px 13px 10px}.psStageScroll{padding:16px 13px 25px}.psAssistant{padding:9px 12px}.psHeadline{align-items:flex-start}.psHeadline>div:first-child{display:grid;gap:3px}.psHeadline h1{font-size:14px}.psHeaderMeta{display:none}.psStep{padding:8px 6px;min-height:55px}.psStepCount{flex-basis:23px;width:23px;height:23px}.psStepContent strong{font-size:10px}.psStepContent small{display:none}.psNextAction{flex-wrap:wrap}.psNextAction>div{display:grid;gap:3px}.psNextAction button{width:100%}.psSectionHead h2{font-size:22px}.psFactGrid,.psRiskColumns{grid-template-columns:1fr}.psSummaryGrid{gap:6px}.psSummaryGrid>div{padding:10px;gap:3px}.psSummaryGrid strong{font-size:17px}.psReportCard{align-items:stretch;flex-direction:column}.psReportButtons{width:100%}.psViewerColumn{padding:12px}}
 @media(max-width:400px){.psStepCount{display:none}.psStepContent strong{font-size:9px}.psNextAction button{min-width:0}.psContextFields{grid-template-columns:1fr}.psContextFields label:nth-child(n){grid-column:span 1}}
 @media(prefers-reduced-motion:reduce){.psRoot *{scroll-behavior:auto!important;transition:none!important}}
 
