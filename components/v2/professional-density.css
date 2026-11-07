@@ -143,9 +143,9 @@
 .psFit .psViewerControls .psPanelHeading>strong{font-size:11px}
 .psFit .psToggleRow{grid-column:1/-1;flex-wrap:nowrap;gap:5px}
 .psFit .psToggleRow button{font-size:10px;padding:6px 8px;white-space:nowrap}
-.psFit .psBuildRow{grid-column:1;grid-row:3;align-self:end;font-size:10px;gap:6px}
+.psFit .psBuildRow{grid-column:1;grid-row:3;align-self:flex-end;font-size:10px;gap:6px}
 .psFit .psViewerControls input[type="range"]{grid-column:1;grid-row:4;width:100%;height:7px;margin:0}
-.psFit .psPlayback{grid-column:2;grid-row:3 / span 2;align-items:end;align-self:center;display:flex;gap:5px}
+.psFit .psPlayback{grid-column:2;grid-row:3 / span 2;align-items:flex-end;align-self:center;display:flex;gap:5px}
 .psFit .psPlayback button{font-size:10px;padding:6px 8px;gap:5px}
 .psFit .psViewerControls>small{grid-column:1/-1;font-size:9px;line-height:1.35;display:block}
 .psFit .psViewerBottom{flex:0 0 auto;padding:7px 10px;border-radius:8px;gap:6px}
