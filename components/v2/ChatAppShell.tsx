@@ -79,7 +79,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
    </details>
    {!professional&&<EngineeringBuildTicker/>}
    {professional&&<div className="psSidebarLinks">
-    <Link href="/copilot/advanced" title="Engineering settings" aria-label="Engineering settings" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Advanced research studies</Link>
+    <Link href="/copilot/advanced" title="Advanced research studies" aria-label="Advanced research studies" onClick={()=>setMobileOpen(false)}><Settings2 size={16}/> Advanced research studies</Link>
     <Link href="/how-it-works" title="Help and support" aria-label="Help and support" onClick={()=>setMobileOpen(false)}><HelpCircle size={16}/> Help & support</Link>
    </div>}
    <div className="oaSidebarFooter">
@@ -103,7 +103,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
     </div>
     <div className="psTopbarActions">
      <span className="psSaveState" role="status"><Cloud size={16}/>{!analysis.ready?"Loading study…":analysis.storageError?"Local save issue":analysis.saving?"Saving locally…":"Saved locally"}</span>
-     <Link className="psProcessLink" href="/copilot/advanced?stage=process"><Layers size={17}/> Metal AM <ChevronDown size={15}/></Link>
+     <button type="button" className="psProcessLink" aria-label="Open Metal AM process settings" title="Open process parameters in Engineering Context" onClick={()=>window.dispatchEvent(new CustomEvent("orientai-open-stage",{detail:"context"}))}><Layers size={17}/> Metal AM <ChevronDown size={15}/></button>
     </div>
    </header>:   <header className="oaTopbar">
     <div className="oaTopLeft">
