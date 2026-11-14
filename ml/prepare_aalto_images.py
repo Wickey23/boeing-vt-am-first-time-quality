@@ -67,7 +67,14 @@ def collect(source: Path, target: Path, metadata: Path):
         writer.writerows(records)
     summary = {"dataset": DATASET, "source_zip_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                "images": len(records), "good": counts[0], "defects": counts[1],
-               "skipped_non_images": skipped, "duplicate_groups": len(duplicates),\n               "quarantined_duplicate_images": sum(len(group) for group in duplicates),\n               "cross_label_duplicate_groups": conflict,\n               "quarantined_examples": [{"sha256": group[0]["sha256"],\n                                         "members": [r["archive_member"] for r in group[:6]],\n                                         "label_conflict": len({r["image_label"] for r in group}) > 1}\n                                        for group in duplicates[:40]],\n               "training_ready": False,
+               "skipped_non_images": skipped, "duplicate_groups": len(duplicates),
+               "quarantined_duplicate_images": sum(len(group) for group in duplicates),
+               "cross_label_duplicate_groups": conflict,
+               "quarantined_examples": [{"sha256": group[0]["sha256"],
+                                         "members": [r["archive_member"] for r in group[:6]],
+                                         "label_conflict": len({r["image_label"] for r in group}) > 1}
+                                        for group in duplicates[:40]],
+               "training_ready": False,
                "reason": "Exact duplicate images quarantined; source grouping and modality require reviewed provenance. Folder labels are visual image classes, not inspected part failures"}
     metadata.parent.mkdir(parents=True, exist_ok=True)
     metadata.write_text(json.dumps(summary, indent=2) + "\n")
