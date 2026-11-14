@@ -75,6 +75,9 @@ def audit(paths, output, max_rows=1000000):
                     "left_distinct_sampled": len(leftvals),
                     "right_distinct_sampled": len(rightvals),
                     "common_distinct_sampled": len(common),
+                    "left_only_distinct_sampled": len(leftvals - rightvals),
+                    "right_only_distinct_sampled": len(rightvals - leftvals),
+                    "all_sampled_ids_joinable": len(leftvals - rightvals) == 0 and len(rightvals - leftvals) == 0,
                 })
     for result in results:
         del result["_identities"]
