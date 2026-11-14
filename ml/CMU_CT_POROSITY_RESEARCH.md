@@ -8,7 +8,7 @@ Primary public source: Justin Miner and Sneha Prabha Narra (2024), *Dataset of X
 
 ## Run source audit
 
-The `Audit CMU CT porosity public source files` GitHub Actions workflow downloads original CSVs into a temporary CI runner, validates Figshare file sizes and MD5 checksums, and emits an audit JSON artifact. The next stage attempts an explicit Name-based specimen summary and **fails closed if any pore Name is not listed in the parameter file**. Such a failure indicates a source-data mapping blocker, not a failed upload. It intentionally does not publish datasets, labels, model artifacts, or live API predictions.
+The `Audit CMU CT porosity public source files` GitHub Actions workflow downloads original CSVs into a temporary CI runner, validates Figshare file sizes and MD5 checksums, and emits an audit JSON artifact. The workflow deliberately reports **AWAITING_SPECIMEN_PROVENANCE_REVIEW**, with no attempted join, because the first million pore rows already show missing/mismatched identifiers and the full source has not yet been reviewed. The standalone `prepare_cmu_ct_specimens.py` refuses unknown pore specimen Names and is only an optional descriptive aggregation after identities have been resolved. There is no model training in this workflow. It intentionally does not publish datasets, labels, model artifacts, or live API predictions.
 
 To run locally:
 
