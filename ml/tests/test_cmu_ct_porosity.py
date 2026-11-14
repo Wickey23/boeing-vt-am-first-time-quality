@@ -36,6 +36,21 @@ class CMUSourceAuditTests(unittest.TestCase):
             self.assertEqual(result["files"][1]["rows_sampled"], 3)
             self.assertEqual(json.loads(report_path.read_text())["status"], "SCHEMA_AUDITED_NOT_TRAINED")
 
+    def test_extra_pore_names_are_counted_without_fabricating_joins(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            parameters = root / "parameters.csv"
+            pores = root / "poredf.csv"
+            parameters.write_text("Name,Power (W)\\nA,350\\nB,400\\n".replace("\\n", "\n"))
+            pores.write_text("Name,Diameter\\nA,5\\nB,6\\nPowder,3\\nPowder,4\\n".replace("\\n", "\n"))
+            report = audit([parameters, pores], root / "report.json")
+            matched = report["same_named_identity_overlap_candidates"][0]
+            self.assertEqual(matched["common_distinct_sampled"], 2)
+            self.assertEqual(matched["left_only_exact_ids"], [])
+            self.assertEqual(matched["right_only_exact_ids"], ["Powder"])
+            self.assertEqual(report["files"][1]["identity_columns"]["Name"]["counts_by_id"]["Powder"], 2)
+            self.assertFalse(report["training_ready"])
+
     def test_bad_csv_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
