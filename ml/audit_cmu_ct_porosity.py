@@ -43,6 +43,8 @@ def audit_csv(path, max_rows=1000000):
                             identity_examples[key].append(normalized[:80])
             if rows >= max_rows:
                 break
+        with path.open("rb") as binary:
+            content_sha256 = hashlib.file_digest(binary, "sha256").hexdigest()
         return {
             "name": path.name,
             "sha256": content_sha256,
