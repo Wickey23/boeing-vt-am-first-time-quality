@@ -34,7 +34,8 @@ test("assembly text remains part-specific and report stage distinguishes unasses
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
  await expect(page.getByText("Lack-of-fusion porosity")).toBeVisible();
  await expect(page.getByText("Not assessed",{exact:true}).first()).toBeVisible();
- await expect(page.getByRole("button",{name:"Export assessment PDF"})).toBeDisabled();
+ await page.locator("details.psDecisionExport > summary").click();
+ await expect(page.locator("details.psDecisionExport").getByRole("button",{name:"Export assessment PDF"})).toBeDisabled();
 });
 
 test("WebGL failure displays geometry-only STL projection rather than blocking the study",async({page})=>{
@@ -219,7 +220,8 @@ test("pre-build PDF export is available directly after dimensional confirmation"
  const workflow=page.getByRole("region",{name:"Recommended workflow action"});
  await expect(workflow.getByRole("button",{name:"Open pre-build assessment report"})).toBeVisible();
  await workflow.getByRole("button",{name:"Open pre-build assessment report"}).click();
- const exportButton=page.getByRole("button",{name:"Export assessment PDF"});
+ await page.locator("details.psDecisionExport > summary").click();
+ const exportButton=page.locator("details.psDecisionExport").getByRole("button",{name:"Export assessment PDF"});
  await expect(exportButton).toBeEnabled({timeout:30000});
  const event=page.waitForEvent("download");
  await exportButton.click();
