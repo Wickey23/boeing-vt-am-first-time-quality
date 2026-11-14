@@ -62,17 +62,15 @@ def load_verified_shape(source: Path):
 
 def evaluate(source: Path, output: Path):
     data, x, y = load_verified_shape(source)
-    split = GroupShuffleSplit(n_splits=25, test_size=.3, random_state=42)
-    eligible = []
-    for train, test in split.split(x, y, groups=data.build_id):
-        if len(set(data.build_id.iloc[train]) & set(data.build_id.iloc[test])):
-            raise ValueError("Build leakage detected")
-        if y.iloc[train].nunique() == 2 and y.iloc[test].nunique() == 2 and len(set(data.build_id.iloc[test])) >= 2:
-            eligible.append((train, test))
-    if not eligible:
-        raise ValueError("No valid build-grouped split with both measured classes in train and holdout")
-    # Fixed, deterministic selection. No model-selection or tuning on holdout outcomes.
-    train, test = eligible[0]
+    # One prespecified grouped split. Never search held-out outcomes for a favorable split.
+    train, test = next(GroupShuffleSplit(n_splits=1, test_size=.3, random_state=42)
+                       .split(x, y, groups=data.build_id))
+    if len(set(data.build_id.iloc[train]) & set(data.build_id.iloc[test])):
+        raise ValueError("Build leakage detected")
+    if y.iloc[train].nunique() != 2 or y.iloc[test].nunique() != 2:
+        raise ValueError("Prespecified split lacks both measured classes; collect more independent builds")
+    if len(set(data.build_id.iloc[test])) < 2:
+        raise ValueError("Require at least two independent held-out builds")
     model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000, C=1.0))
     model.fit(x.iloc[train], y.iloc[train])
     probabilities = model.predict_proba(x.iloc[test])[:, 1]
