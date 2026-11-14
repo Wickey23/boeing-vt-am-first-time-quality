@@ -1,0 +1,35 @@
+name: Audit CMU CT porosity public source files
+on:
+  push:
+    branches:
+      - feature/cmu-ct-porosity-source-audit-20261114
+      - main
+    paths:
+      - 'ml/audit_cmu_ct_porosity.py'
+      - 'ml/download_cmu_ct.py'
+      - '.github/workflows/cmu-ct-data-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch public CMU dataset into temporary workspace
+        run: python ml/download_cmu_ct.py /tmp/orientai-cmu-ct
+      - name: Audit keys and schema without joining pore rows as samples
+        run: |
+          python ml/audit_cmu_ct_porosity.py \
+            --parameters /tmp/orientai-cmu-ct/parameters.csv \
+            --pores /tmp/orientai-cmu-ct/poredf.csv \
+            --report /tmp/orientai-cmu-ct-schema.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cmu-ct-porosity-schema-audit
+          path: /tmp/orientai-cmu-ct-schema.json
+          retention-days: 30
