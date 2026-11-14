@@ -12,7 +12,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-IDENTITY_TERMS = ("sample", "specimen", "build", "coupon", "part", "scan", "id")
+IDENTITY_TERMS = ("name", "sample", "specimen", "build", "coupon", "part", "scan", "id")
 
 
 def audit_csv(path, max_rows=1000000):
@@ -45,7 +45,7 @@ def audit_csv(path, max_rows=1000000):
                 break
         return {
             "name": path.name,
-            "sha256": hashlib.file_digest(path.open("rb"), "sha256").hexdigest(),
+            "sha256": content_sha256,
             "rows_sampled": rows,
             "row_limit_reached": rows >= max_rows,
             "columns": columns,
