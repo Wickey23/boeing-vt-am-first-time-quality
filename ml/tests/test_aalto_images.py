@@ -72,6 +72,23 @@ class AaltoArchiveTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             collect(self.archive, self.manifest, self.audit)
 
+    def test_identical_images_are_quarantined_entirely(self):
+        self.make_archive()
+        with zipfile.ZipFile(self.archive, "a") as z:
+            original = "PB/Good/source0-sample0.png"
+            z.writestr("PB/Defects/duplicate-from-good.png", z.read(original))
+        result = collect(self.archive, self.manifest, self.audit)
+        self.assertEqual(result["duplicate_groups"], 1)
+        self.assertEqual(result["quarantined_duplicate_images"], 2)
+        self.assertEqual(result["cross_label_duplicate_groups"], 1)
+        self.assertEqual(result["images"], 79)
+        with self.manifest.open(newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertNotIn("PB/Good/source0-sample0.png",
+                         {row["archive_member"] for row in rows})
+        self.assertNotIn("PB/Defects/duplicate-from-good.png",
+                         {row["archive_member"] for row in rows})
+
     def test_tampered_manifest_hash_rejected(self):
         self.make_archive()
         collect(self.archive, self.manifest, self.audit)
