@@ -1,0 +1,46 @@
+name: Audit public Aalto LPBF image archive
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/prepare_aalto_images.py'
+      - '.github/workflows/aalto-data-audit.yml'
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download public original classification archive (not proprietary project data)
+        run: |
+          curl --fail --location --retry 3 --connect-timeout 30 --max-time 900 \
+            'https://zenodo.org/records/14996806/files/Croped%20Defects%20and%20Classification.zip?download=1' \
+            --output /tmp/aalto-crops.zip
+          unzip -t /tmp/aalto-crops.zip >/dev/null
+      - name: Audit archive without inventing build-group identities
+        run: |
+          python ml/prepare_aalto_images.py \
+            --zip /tmp/aalto-crops.zip \
+            --manifest /tmp/aalto-manifest.csv \
+            --audit /tmp/aalto-audit.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          audit=json.loads(Path('/tmp/aalto-audit.json').read_text())
+          assert audit['images']>0 and audit['good']>0 and audit['defects']>0
+          assert audit['training_ready'] is False
+          print('Original archive inventoried. Review source groups before training; not a part-failure label set.')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aalto-image-provenance-inventory
+          path: |
+            /tmp/aalto-manifest.csv
+            /tmp/aalto-audit.json
+          retention-days: 30
