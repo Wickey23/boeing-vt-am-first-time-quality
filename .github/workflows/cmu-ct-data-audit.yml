@@ -3,11 +3,11 @@ on:
   push:
     branches:
       - main
-      - investigation/cmu-full-specimen-id-reconciliation-20261114
     paths:
       - 'ml/audit_cmu_ct_porosity.py'
       - 'ml/download_cmu_ct.py'
       - 'ml/prepare_cmu_ct_specimens.py'
+      - 'ml/summarize_cmu_ct_pores.py'
       - '.github/workflows/cmu-ct-data-audit.yml'
   workflow_dispatch:
 permissions:
@@ -30,6 +30,13 @@ jobs:
             --pores /tmp/orientai-cmu-ct/poredf.csv \
             --report /tmp/orientai-cmu-ct-schema.json \
             --max-rows 100000000
+      - name: Summarize detected pores by specimen without training
+        run: |
+          python -m unittest discover -s ml/tests -p 'test_cmu_ct_descriptive.py' -v
+          python ml/summarize_cmu_ct_pores.py \
+            --parameters /tmp/orientai-cmu-ct/parameters.csv \
+            --pores /tmp/orientai-cmu-ct/poredf.csv \
+            --report /tmp/orientai-cmu-ct-descriptive.json
       - name: Record specimen join eligibility (no unreviewed joins)
         run: |
           python - <<'PY'
@@ -58,4 +65,5 @@ jobs:
           path: |
             /tmp/orientai-cmu-ct-schema.json
             /tmp/orientai-cmu-ct-aggregation.json
+            /tmp/orientai-cmu-ct-descriptive.json
           retention-days: 30
