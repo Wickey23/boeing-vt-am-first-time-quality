@@ -4,11 +4,11 @@ Primary public source: Justin Miner and Sneha Prabha Narra (2024), *Dataset of X
 
 **Why this source:** EOS M290 Ti-6Al-4V physical coupons with processing conditions and individually measured CT pore descriptors are more directly relevant to manufacturing-quality modeling than image appearance classifications.
 
-**Verified by the initial source-file audit:** Figshare's public files download successfully. `parameters.csv` contains 38 rows and columns including `Name`, `Power (W)`, `Velocity (mm/s)`, `Hatch Spacing (um)`, `Layer Height (um)`, `Volume (mm^3)` and `Threshold (um)`. `poredf.csv` contains **more than one million pore rows** (first million sampled) including `Name`, `Equivalent Spherical Diameter (um)`, `Aspect Ratio`, `Sphericity`. No known `build_id` column appears. The observed `Name` field is a **candidate specimen join key**, not verified physical independence.
+**Verified by the initial source-file audit:** Figshare's public files download successfully. `parameters.csv` contains 38 rows and columns including `Name`, `Power (W)`, `Velocity (mm/s)`, `Hatch Spacing (um)`, `Layer Height (um)`, `Volume (mm^3)` and `Threshold (um)`. `poredf.csv` contains **more than one million pore rows** (first million sampled) including `Name`, `Equivalent Spherical Diameter (um)`, `Aspect Ratio`, `Sphericity`. No known `build_id` column appears. The observed `Name` field is a **candidate specimen join key**, not verified physical independence. **The expanded audit found 38 distinct parameter Names, 39 pore Names in its first million rows, but only 37 shared names. At least one parameter specimen has no corresponding observed pore name in that sample and at least two pore names are not present in the parameter file.** We must resolve the mismatch against the original publication or author-provided metadata; no unreviewed join is allowed.
 
 ## Run source audit
 
-The `Audit CMU CT porosity public source files` GitHub Actions workflow downloads original CSVs into a temporary CI runner, validates Figshare file sizes and MD5 checksums, and emits an audit JSON artifact. It intentionally does not publish datasets, labels, model artifacts, or live API predictions.
+The `Audit CMU CT porosity public source files` GitHub Actions workflow downloads original CSVs into a temporary CI runner, validates Figshare file sizes and MD5 checksums, and emits an audit JSON artifact. The next stage attempts an explicit Name-based specimen summary and **fails closed if any pore Name is not listed in the parameter file**. Such a failure indicates a source-data mapping blocker, not a failed upload. It intentionally does not publish datasets, labels, model artifacts, or live API predictions.
 
 To run locally:
 
