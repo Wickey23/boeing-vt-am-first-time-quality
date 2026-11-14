@@ -9,7 +9,6 @@ import argparse
 import csv
 import hashlib
 import json
-import re
 import zipfile
 from pathlib import Path, PurePosixPath
 
@@ -29,7 +28,7 @@ def folder_label(member):
 
 def collect(source: Path, target: Path, metadata: Path):
     records, counts, skipped = [], {0: 0, 1: 0}, 0
-    seen = set()
+    by_digest, names = {}, set()
     with zipfile.ZipFile(source) as z:
         for member in sorted(z.infolist(), key=lambda item: item.filename):
             if member.is_dir() or PurePosixPath(member.filename).suffix.lower() not in IMAGE_SUFFIXES:
@@ -37,18 +36,28 @@ def collect(source: Path, target: Path, metadata: Path):
                 continue
             if member.filename.startswith("/") or ".." in PurePosixPath(member.filename).parts:
                 raise ValueError("Unsafe archive member")
+            if member.filename in names:
+                raise ValueError("Duplicate archive member path")
+            names.add(member.filename)
             if member.file_size > 30 * 1024 * 1024:
                 raise ValueError("Oversized individual image")
             label = folder_label(member.filename)
             digest = hashlib.sha256(z.read(member)).hexdigest()
-            if digest in seen:
-                raise ValueError("Duplicate image content; review crop/frame leakage")
-            seen.add(digest)
-            # No source group is invented from a filename or image position.
-            records.append({"archive_member": member.filename, "image_label": label,
-                            "source_group_id": "", "source_modality": "",
-                            "sha256": digest})
-            counts[label] += 1
+            by_digest.setdefault(digest, []).append({"archive_member": member.filename,
+                                                       "image_label": label,
+                                                       "source_group_id": "",
+                                                       "source_modality": "",
+                                                       "sha256": digest})
+    # All copies of a repeated image must be quarantined, not just its later
+    # occurrences. Otherwise an arbitrary ZIP member order determines labels.
+    duplicates = [group for group in by_digest.values() if len(group) > 1]
+    for group in by_digest.values():
+        if len(group) != 1:
+            continue
+        record = group[0]
+        records.append(record)
+        counts[record["image_label"]] += 1
+    conflict = sum(len({r["image_label"] for r in group}) > 1 for group in duplicates)
     if not all(counts.values()):
         raise ValueError("Both Good and Defects classes must be present")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -58,8 +67,8 @@ def collect(source: Path, target: Path, metadata: Path):
         writer.writerows(records)
     summary = {"dataset": DATASET, "source_zip_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                "images": len(records), "good": counts[0], "defects": counts[1],
-               "skipped_non_images": skipped, "training_ready": False,
-               "reason": "source_group_id and source_modality require reviewed provenance; folder labels are visual image classes, not measured part failures"}
+               "skipped_non_images": skipped, "duplicate_groups": len(duplicates),\n               "quarantined_duplicate_images": sum(len(group) for group in duplicates),\n               "cross_label_duplicate_groups": conflict,\n               "quarantined_examples": [{"sha256": group[0]["sha256"],\n                                         "members": [r["archive_member"] for r in group[:6]],\n                                         "label_conflict": len({r["image_label"] for r in group}) > 1}\n                                        for group in duplicates[:40]],\n               "training_ready": False,
+               "reason": "Exact duplicate images quarantined; source grouping and modality require reviewed provenance. Folder labels are visual image classes, not inspected part failures"}
     metadata.parent.mkdir(parents=True, exist_ok=True)
     metadata.write_text(json.dumps(summary, indent=2) + "\n")
     return summary
