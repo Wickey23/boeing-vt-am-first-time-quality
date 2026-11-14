@@ -7,8 +7,8 @@ test("guided entry explains the workflow and every workbench stage",async({page}
  await page.getByRole("button",{name:"Start conversation"}).click();
  await expect(page).toHaveURL(/\/copilot\/workbench$/);
  const guide=page.getByRole("region",{name:"Guided study instructions"});
- await expect(guide).toBeVisible();
- await expect(guide.getByRole("heading",{name:"Start with your part"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Part Geometry"})).toBeVisible();
+ await expect(page.getByRole("region",{name:"Recommended workflow action"})).toBeVisible();
  await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
  await expect(guide.getByRole("heading",{name:"Explain how the part will be used"})).toBeVisible();
  await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Failure Assessment/}).click();
