@@ -44,9 +44,16 @@ export default function ProfessionalAssessmentPanel({assessment,flow,coverage,ha
     <span><b>{assessment.counts.unassessed}</b> unknown items</span>
    </div>
   </div>
-  <article className="psPanel psReportCard psDecisionExport">
-   <div><span className="psEyebrow">TRACEABLE ENGINEERING DELIVERABLE</span><h3>Pre-build assessment dossier</h3>
-    <p>Includes measured geometry, current orientation, both failure domains, review actions, process-flow status, and explicit analytical limits.</p></div>
+  <div className="psDecisionQuickStart" aria-label="How to use the assessment" style={{display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",gap:12,padding:"14px 18px",margin:"12px 0 18px",border:"1px solid #557183",borderRadius:10}}>
+   <div style={{maxWidth:680}}>
+    <strong style={{display:"block",marginBottom:6}}>What should I do with these results?</strong>
+    <p style={{margin:0,fontSize:13,lineHeight:1.5}}>Start with the highest-priority findings, check the suggested corrections, then export the engineering evidence. Anything marked “not assessed” remains unknown.</p>
+   </div>
+   <button type="button" className="psPrimary" onClick={()=>setTab("actions")}><ClipboardList size={15}/> Show next actions <ArrowRight size={14}/></button>
+  </div>
+  <details className="psPanel psReportCard psDecisionExport" style={{padding:"14px 18px",marginBottom:14}}>
+   <summary style={{cursor:"pointer",fontWeight:700}}>Download engineering report and evidence <ChevronDown size={14} style={{verticalAlign:"middle"}}/></summary>
+   <p style={{fontSize:13}}>Export the current screening findings, inputs, and explicit limitations. This report does not approve a build.</p>
    <div className="psReportButtons">
     <button type="button" className="psPrimary" onClick={onExport} disabled={!canExport||exportBusy}>
      <FileText size={14}/> Export assessment PDF</button>
@@ -55,7 +62,7 @@ export default function ProfessionalAssessmentPanel({assessment,flow,coverage,ha
      <button type="button" className="psSecondary" onClick={onJsonExport} disabled={!hasGeometry}>Analysis JSON</button>
     </div>
    </div>
-  </article>
+  </details>
   <nav className="psDecisionTabs" aria-label="Assessment views">
    {([
     ["findings","Failure scenarios",ShieldAlert],
