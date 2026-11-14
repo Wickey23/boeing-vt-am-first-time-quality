@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - investigation/cmu-full-specimen-id-reconciliation-20261114
     paths:
       - 'ml/audit_cmu_ct_porosity.py'
       - 'ml/download_cmu_ct.py'
@@ -27,7 +28,8 @@ jobs:
           python ml/audit_cmu_ct_porosity.py \
             --parameters /tmp/orientai-cmu-ct/parameters.csv \
             --pores /tmp/orientai-cmu-ct/poredf.csv \
-            --report /tmp/orientai-cmu-ct-schema.json
+            --report /tmp/orientai-cmu-ct-schema.json \
+            --max-rows 100000000
       - name: Record specimen join eligibility (no unreviewed joins)
         run: |
           python - <<'PY'
