@@ -8,7 +8,8 @@ test("complete ORIENTAI prebuild workflow links geometry screening, failure scen
  await expect(page.getByText(/Geometry screening results · selected orientation/)).toBeVisible({timeout:60000});
  await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Failure Assessment/}).click();
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
- await expect(page.getByRole("button",{name:"Export assessment PDF"})).toBeEnabled();
+ await page.locator("details.psDecisionExport > summary").click();
+ await expect(page.locator("details.psDecisionExport").getByRole("button",{name:"Export assessment PDF"})).toBeEnabled();
  const nav=page.getByRole("navigation",{name:"Assessment views"});
  await expect(nav.getByRole("button",{name:"Failure scenarios"})).toHaveAttribute("aria-pressed","true");
  await expect(page.getByText("Lack-of-fusion porosity",{exact:false})).toBeVisible();
