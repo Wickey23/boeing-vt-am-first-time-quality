@@ -38,7 +38,6 @@ jobs:
           candidates=x['same_named_identity_overlap_candidates']
           complete=all(not f['row_limit_reached'] for f in x['files'])
           aligned=bool(candidates) and all(c['all_sampled_ids_joinable'] for c in candidates)
-          eligible=complete and aligned
           result={
             'status': 'AWAITING_SPECIMEN_PROVENANCE_REVIEW',
             'join_attempted': False,
