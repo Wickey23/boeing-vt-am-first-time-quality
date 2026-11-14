@@ -27,6 +27,7 @@ import {usePartFeedback} from "./usePartFeedback";
 import StudioCanvasFallback from "./StudioCanvasFallback";
 import ProfessionalGeometryStage from "./ProfessionalGeometryStage";
 import GuidedStudyHelp from "./GuidedStudyHelp";
+import RiskPreflight from "./RiskPreflight";
 import ProfessionalProcessPanel from "./ProfessionalProcessPanel";
 import ProfessionalAssessmentPanel from "./ProfessionalAssessmentPanel";
 import ViewerErrorBoundary from "@/components/ViewerErrorBoundary";
@@ -79,6 +80,9 @@ export default function ProfessionalStudy(){
  const [url,setUrl]=useState<string|undefined>();
  const [showOverhangs,setShowOverhangs]=useState(false);
  const [showSupports,setShowSupports]=useState(false);
+ const [highlightTriangles,setHighlightTriangles]=useState<number[]>([]);
+ const [riskEnvelope,setRiskEnvelope]=useState({x:250,y:250,z:300});
+ const [riskAngle,setRiskAngle]=useState(45);
  const [layer,setLayer]=useState(100);
  const [playing,setPlaying]=useState(false);
  const [exportBusy,setExportBusy]=useState(false);
@@ -421,6 +425,18 @@ export default function ProfessionalStudy(){
       {ctx.error&&<p className="psError" role="alert">{ctx.error}</p>}
      </>}
     </section>}
+    {stage==="assessment"&&a.file&&<div className="psPanel" aria-label="Part-localized LPBF geometry screening" style={{margin:"12px 18px",padding:16}}>
+     <RiskPreflight file={a.file} partHash={partHash} unitScale={a.settings.unitScale}
+      confirmed={isConfirmed} rotationDeg={modelRotation}
+      envelopeMm={riskEnvelope} overhangThresholdDeg={riskAngle}
+      onEnvelopeChange={(axis,value)=>setRiskEnvelope(prev=>({...prev,[axis]:value}))}
+      onAngleChange={setRiskAngle}
+      onFocus={triangles=>{setHighlightTriangles(triangles);if(triangles.length){setShowSupports(false);setShowOverhangs(false);setCameraView("iso");setLayer(100);}}}/>
+     {highlightTriangles.length>0&&<div role="status" style={{fontSize:12,padding:"10px 12px",borderRadius:7,marginTop:10,border:"1px solid currentColor"}}>
+      Highlighting {highlightTriangles.length.toLocaleString()} source-STL triangles in the adjacent 3D viewer. This marks geometric regions requiring review, not measured defects.
+      <button type="button" style={{marginLeft:12,padding:"5px 9px"}} onClick={()=>setHighlightTriangles([])}>Clear highlighted region</button>
+     </div>}
+    </div>}
     {stage==="assessment"&&<ProfessionalAssessmentPanel
      assessment={prebuild} coverage={coverage} flow={manufacturingFlow}
      hasPart={Boolean(a.file)} canExport={Boolean(a.file&&partHash&&isConfirmed)}
@@ -497,10 +513,13 @@ export default function ProfessionalStudy(){
       <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
-       buildFraction={layer/100}/>
+       buildFraction={layer/100} highlightTriangles={highlightTriangles}/>
      </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small></div>}
      <div className="psBuildAxis" aria-hidden="true"><b>+Z</b><span className="psAxisX">X</span><span className="psAxisY">Y</span></div>
      {showBuildDirection&&<div className="psBuildDirectionLabel" role="status">Build axis ↑ · visualization</div>}
+     {highlightTriangles.length>0&&<div role="status" style={{position:"absolute",left:12,bottom:12,padding:"6px 10px",fontSize:12,borderRadius:6,background:"#152c3b",color:"#ecf6ff",pointerEvents:"none"}}>
+      {highlightTriangles.length.toLocaleString()} geometric-risk triangles highlighted
+     </div>}
     </div>
     <div className="psViewerToolbar" role="toolbar" aria-label="3D model navigation">
      <div className="psCameraButtons">
