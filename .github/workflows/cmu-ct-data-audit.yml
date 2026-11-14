@@ -7,6 +7,7 @@ on:
     paths:
       - 'ml/audit_cmu_ct_porosity.py'
       - 'ml/download_cmu_ct.py'
+      - 'ml/prepare_cmu_ct_specimens.py'
       - '.github/workflows/cmu-ct-data-audit.yml'
   workflow_dispatch:
 permissions:
@@ -28,8 +29,17 @@ jobs:
             --parameters /tmp/orientai-cmu-ct/parameters.csv \
             --pores /tmp/orientai-cmu-ct/poredf.csv \
             --report /tmp/orientai-cmu-ct-schema.json
+      - name: Verify per-specimen CT aggregation without exporting a model
+        run: |
+          python ml/prepare_cmu_ct_specimens.py \
+            --parameters /tmp/orientai-cmu-ct/parameters.csv \
+            --pores /tmp/orientai-cmu-ct/poredf.csv \
+            --specimens /tmp/orientai-cmu-ct/specimens.csv \
+            --report /tmp/orientai-cmu-ct-aggregation.json
       - uses: actions/upload-artifact@v4
         with:
           name: cmu-ct-porosity-schema-audit
-          path: /tmp/orientai-cmu-ct-schema.json
+          path: |
+            /tmp/orientai-cmu-ct-schema.json
+            /tmp/orientai-cmu-ct-aggregation.json
           retention-days: 30
