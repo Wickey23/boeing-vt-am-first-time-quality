@@ -1,0 +1,59 @@
+name: Audit CMU CT porosity public source files
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ml/audit_cmu_ct_porosity.py'
+      - 'ml/download_cmu_ct.py'
+      - 'ml/prepare_cmu_ct_specimens.py'
+      - '.github/workflows/cmu-ct-data-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch public CMU dataset into temporary workspace
+        run: python ml/download_cmu_ct.py /tmp/orientai-cmu-ct
+      - name: Audit keys and schema without joining pore rows as samples
+        run: |
+          python ml/audit_cmu_ct_porosity.py \
+            --parameters /tmp/orientai-cmu-ct/parameters.csv \
+            --pores /tmp/orientai-cmu-ct/poredf.csv \
+            --report /tmp/orientai-cmu-ct-schema.json
+      - name: Record specimen join eligibility (no unreviewed joins)
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/orientai-cmu-ct-schema.json')
+          x=json.loads(p.read_text())
+          candidates=x['same_named_identity_overlap_candidates']
+          complete=all(not f['row_limit_reached'] for f in x['files'])
+          aligned=bool(candidates) and all(c['all_sampled_ids_joinable'] for c in candidates)
+          result={
+            'status': 'AWAITING_SPECIMEN_PROVENANCE_REVIEW',
+            'join_attempted': False,
+            'build_independent_validation': False,
+            'training_ready': False,
+            'all_sampled_names_align': aligned,
+            'complete_pore_table_inspected': complete,
+            'reason': 'Do not join until full source IDs, physical build IDs and target definitions are reviewed',
+          }
+          Path('/tmp/orientai-cmu-ct-aggregation.json').write_text(json.dumps(result,indent=2)+'\\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cmu-ct-porosity-schema-audit
+          path: |
+            /tmp/orientai-cmu-ct-schema.json
+            /tmp/orientai-cmu-ct-aggregation.json
+          retention-days: 30
