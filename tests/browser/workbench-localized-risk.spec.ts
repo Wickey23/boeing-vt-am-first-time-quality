@@ -4,7 +4,7 @@ import {readFile} from "node:fs/promises";
 test("current workbench binds source STL risk regions to the adjacent 3D viewer",async({page})=>{
  const original=await readFile("public/verification/cube-10mm.stl","utf8");
  const a=Math.PI/4,cos=Math.cos(a),sin=Math.sin(a);
- const tilted=original.replace(/vertex\\s+(-?\\d+(?:\\.\\d+)?)\\s+(-?\\d+(?:\\.\\d+)?)\\s+(-?\\d+(?:\\.\\d+)?)/g,
+ const tilted=original.replace(/vertex\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g,
   (_:string,x:string,y:string,z:string)=>{
    const yv=Number(y),zv=Number(z);
    return "vertex "+x+" "+(yv*cos-zv*sin).toFixed(5)+" "+(yv*sin+zv*cos).toFixed(5);
