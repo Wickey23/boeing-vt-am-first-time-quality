@@ -197,8 +197,8 @@ export default function ProfessionalStudy(){
  const next=!a.file?{title:"Upload STL",detail:"Select the component you want to assess.",action:"Upload part",to:"geometry" as Stage}:
   !isConfirmed?{title:"Confirm dimensions",detail:"Verify units against the source drawing.",action:"Review units",to:"geometry" as Stage}:
   !currentRun?{title:"Screen geometry",detail:"Run local build-orientation and overhang checks.",action:"Run screening",to:"geometry" as Stage}:
-  !ctx.sources.length?{title:"Add engineering context",detail:"Define the part's application and assembly role.",action:"Add context",to:"context" as Stage}:
-  !ctx.reviewed.length?{title:"Review source evidence",detail:"Confirm which document excerpts apply to this part.",action:"Review evidence",to:"context" as Stage}:
+  !(ctx.knowledge?.componentName?.trim()&&ctx.knowledge?.assemblyContext?.trim())?
+   {title:"Describe the part",detail:"Add the component function and its assembly role. Drawings and documents are optional for an initial screen.",action:"Add context",to:"context" as Stage}:
   {title:"Review failure mechanisms",detail:"Inspect screened findings and remaining unknowns.",action:"Review risks",to:"assessment" as Stage};
  const advanceWorkflow=()=>{
   if(!a.file){partFileInput.current?.click();return;}
