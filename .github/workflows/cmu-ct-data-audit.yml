@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - research/cmu-ct-specimen-descriptive-20261114
     paths:
       - 'ml/audit_cmu_ct_porosity.py'
       - 'ml/download_cmu_ct.py'
