@@ -346,14 +346,14 @@ export default function ProfessionalStudy(){
      aria-label="Open pre-build assessment report">Report <FileText size={14}/></button>}
    </div>
    <div className="psStageScroll" ref={stageScroll} role="region" aria-label="Active assessment stage">
-    <GuidedStudyHelp stage={stage} hasPart={Boolean(a.file)}
+    {stage!=="geometry"&&<GuidedStudyHelp stage={stage} hasPart={Boolean(a.file)}
      unitsConfirmed={isConfirmed} geometryScreened={currentRun}
      hasContext={Boolean(ctx.knowledge?.componentName?.trim()&&ctx.knowledge?.assemblyContext?.trim())}
      hasReferences={ctx.sources.length>0} hasReviewedSources={ctx.reviewed.length>0}
      busy={a.busy} onUpload={()=>partFileInput.current?.click()}
      onConfirmUnits={()=>{setStage("geometry");window.requestAnimationFrame(()=>document.getElementById("ps-units-confirmation")?.scrollIntoView({block:"center",behavior:"smooth"}));}}
      onRunGeometry={()=>{setStage("geometry");a.retry();}}
-     onStage={next=>{setStage(next);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}/>
+     onStage={next=>{setStage(next);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}/>}
 
     {stage==="geometry"&&<ProfessionalGeometryStage
      file={a.file} url={url} inspection={inspect.data} inspectionError={inspect.error}
