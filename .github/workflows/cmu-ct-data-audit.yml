@@ -2,7 +2,6 @@ name: Audit CMU CT porosity public source files
 on:
   push:
     branches:
-      - feature/cmu-ct-porosity-source-audit-20261114
       - main
     paths:
       - 'ml/audit_cmu_ct_porosity.py'
@@ -29,13 +28,29 @@ jobs:
             --parameters /tmp/orientai-cmu-ct/parameters.csv \
             --pores /tmp/orientai-cmu-ct/poredf.csv \
             --report /tmp/orientai-cmu-ct-schema.json
-      - name: Verify per-specimen CT aggregation without exporting a model
+      - name: Record specimen join eligibility (no unreviewed joins)
         run: |
-          python ml/prepare_cmu_ct_specimens.py \
-            --parameters /tmp/orientai-cmu-ct/parameters.csv \
-            --pores /tmp/orientai-cmu-ct/poredf.csv \
-            --specimens /tmp/orientai-cmu-ct/specimens.csv \
-            --report /tmp/orientai-cmu-ct-aggregation.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/orientai-cmu-ct-schema.json')
+          x=json.loads(p.read_text())
+          candidates=x['same_named_identity_overlap_candidates']
+          complete=all(not f['row_limit_reached'] for f in x['files'])
+          aligned=bool(candidates) and all(c['all_sampled_ids_joinable'] for c in candidates)
+          eligible=complete and aligned
+          result={
+            'status': 'AWAITING_SPECIMEN_PROVENANCE_REVIEW',
+            'join_attempted': False,
+            'build_independent_validation': False,
+            'training_ready': False,
+            'all_sampled_names_align': aligned,
+            'complete_pore_table_inspected': complete,
+            'reason': 'Do not join until full source IDs, physical build IDs and target definitions are reviewed',
+          }
+          Path('/tmp/orientai-cmu-ct-aggregation.json').write_text(json.dumps(result,indent=2)+'\\n')
+          print(json.dumps(result,indent=2))
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: cmu-ct-porosity-schema-audit
