@@ -10,6 +10,7 @@ import csv
 import hashlib
 import json
 from collections import Counter
+from difflib import get_close_matches
 from pathlib import Path
 
 IDENTITY_TERMS = ("name", "sample", "specimen", "build", "coupon", "part", "scan", "id")
@@ -78,6 +79,12 @@ def audit(paths, output, max_rows=1000000):
                     "left_only_distinct_sampled": len(leftvals - rightvals),
                     "right_only_distinct_sampled": len(rightvals - leftvals),
                     "all_sampled_ids_joinable": len(leftvals - rightvals) == 0 and len(rightvals - leftvals) == 0,
+                    "left_only_exact_ids": sorted(leftvals - rightvals),
+                    "right_only_exact_ids": sorted(rightvals - leftvals),
+                    "possible_name_similarities_unverified": {
+                        name: get_close_matches(name, sorted(rightvals), n=3, cutoff=0.75)
+                        for name in sorted(leftvals - rightvals)
+                    },
                 })
     for result in results:
         del result["_identities"]
