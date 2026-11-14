@@ -28,6 +28,7 @@ def audit_csv(path, max_rows=1000000):
         identity_values = {col: set() for col in columns
                            if any(term in col.casefold() for term in IDENTITY_TERMS)}
         identity_examples = {col: [] for col in identity_values}
+        identity_counts = {col: Counter() for col in identity_values}
         rows = 0
         for row in reader:
             if None in row:
@@ -38,6 +39,7 @@ def audit_csv(path, max_rows=1000000):
                     nonempty[key] += 1
                     if key in identity_values:
                         normalized = str(value).strip()
+                        identity_counts[key][normalized] += 1
                         if len(identity_values[key]) < max_rows:
                             identity_values[key].add(normalized)
                         if len(identity_examples[key]) < 4 and normalized not in identity_examples[key]:
@@ -54,7 +56,8 @@ def audit_csv(path, max_rows=1000000):
             "columns": columns,
             "nonempty_by_column": dict(nonempty),
             "identity_columns": {
-                col: {"distinct_sampled": len(values), "examples": identity_examples[col]}
+                col: {"distinct_sampled": len(values), "examples": identity_examples[col],
+                      "counts_by_id": dict(sorted(identity_counts[col].items()))}
                 for col, values in identity_values.items()
             },
             "_identities": identity_values,
