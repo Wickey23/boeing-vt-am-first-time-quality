@@ -70,3 +70,12 @@ Earlier commits passed numerical tests and builds, but recent UI changes led to 
 - [LPBF defect validation protocol](LPBF-DEFECT-PREDICTION-VALIDATION.md).
 - [NIST acquisition guide](NIST-LPBF-DATA-ACQUISITION.md).
 - [GitHub Actions](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions).
+
+
+## Verified engineering review — 2026-11-16 (PDF export regression and deployment identity)
+
+- **Source review:** Before changes, `main` was `0d20e8641122768d498759bc39b4dbc9169c89c3`. Open PRs #20 (viewer, clean), #18 (workflow redesign, conflicted), #9 (DED specification, clean), and #8 (queue simulation, conflicted) were inspected; this change does not touch their application files. No PR merged or force push performed.
+- **Small isolated test improvement:** [`eaf4e030d4dc`](https://github.com/Wickey23/boeing-vt-am-first-time-quality/commit/eaf4e030d4dc45d18ed3cc61510222371992e79d) extends `tests/browser/document-optional-assessment.spec.ts` to exercise **actual assessment PDF export** after the guided STL → context → risk workflow, assert the downloaded filename ends in `.pdf`, check the PDF magic header `%PDF-`, and require >1000 bytes. Previously this path checked only the presence/enabled state of the export control. It uses the existing public 10-mm verification cube, not Boeing CAD.
+- **CI:** [Engineering run 43946521017](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/43946521017) was **in progress** when this evidence entry was authored; do not call the new test passing until the run finishes. Prior engineering run [43759025504](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/43759025504) for `0d20e8641122` completed successfully.
+- **Production deployment identity (Vercel API):** Production alias `boeing-vt-am-first-time-quality-wickey23s-projects.vercel.app` resolved to deployment `dpl_3istBwPb1wp3NWPQSf8F2FofpVeH`, `READY`, `target=production`, source `main`, commit `0d20e8641122768d498759bc39b4dbc9169c89c3`. This verifies **deployed commit identity**, not a route smoke test, browser execution, PDF generation, or deployment of `eaf4e030`.
+- **Remaining release evidence:** Confirm the new test's CI result, verify that production advances to the tested SHA, smoke-test `/`, `/copilot/workbench`, `/defect-evidence` and mobile layout, and retain a real downloaded report artifact. Public NIST IN718 source units/IDs and independently validated labels remain outstanding; no model was trained and no physical defect probabilities were claimed.
