@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {readFile} from "node:fs/promises";
 
 test("review action advances with described part, without forcing document upload",async({page})=>{
  await page.goto("/copilot/workbench");
@@ -15,4 +16,14 @@ test("review action advances with described part, without forcing document uploa
  await next.getByRole("button",{name:"Review risks"}).click();
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
  await expect(page.getByText("Physical defect prediction remains unvalidated")).toBeVisible();
+ // A green workflow must produce a real, nonempty PDF—not merely an enabled button.
+ const exportPanel=page.locator("details.psDecisionExport");
+ await exportPanel.locator("summary").click();
+ const downloadPromise=page.waitForEvent("download");
+ await exportPanel.getByRole("button",{name:"Export assessment PDF"}).click();
+ const download=await downloadPromise;
+ expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
+ const bytes=await readFile((await download.path())!);
+ expect(bytes.subarray(0,5).toString("ascii")).toBe("%PDF-");
+ expect(bytes.byteLength).toBeGreaterThan(1000);
 });
