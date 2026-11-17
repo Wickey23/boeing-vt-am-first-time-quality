@@ -26,4 +26,7 @@ test("review action advances with described part, without forcing document uploa
  const bytes=await readFile((await download.path())!);
  expect(bytes.subarray(0,5).toString("ascii")).toBe("%PDF-");
  expect(bytes.byteLength).toBeGreaterThan(1000);
+ // Catch incomplete/truncated downloads that still begin with a valid PDF header.
+ // PDF writers may append whitespace after the final EOF marker.
+ expect(bytes.toString("latin1").trimEnd().endsWith("%%EOF")).toBe(true);
 });
