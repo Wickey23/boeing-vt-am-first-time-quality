@@ -16,6 +16,12 @@ test("review action advances with described part, without forcing document uploa
  await next.getByRole("button",{name:"Review risks"}).click();
  await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
  await expect(page.getByText("Physical defect prediction remains unvalidated")).toBeVisible();
+ // Stage navigation must preserve user-entered engineering context, not silently discard it.
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Engineering Context/}).click();
+ await expect(page.getByRole("textbox",{name:"Component function"})).toHaveValue("Test bracket");
+ await expect(page.getByRole("textbox",{name:"Assembly relationships"})).toHaveValue("Bolted to machine frame");
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Failure Assessment/}).click();
+ await expect(page.getByRole("heading",{name:"Engineering evidence and risks"})).toBeVisible();
  // A green workflow must produce a real, nonempty PDF—not merely an enabled button.
  const exportPanel=page.locator("details.psDecisionExport");
  await exportPanel.locator("summary").click();
