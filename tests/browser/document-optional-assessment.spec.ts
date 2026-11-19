@@ -4,6 +4,12 @@ import {readFile} from "node:fs/promises";
 test("review action advances with described part, without forcing document upload",async({page})=>{
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ // An unconfirmed STL must not be exportable as an engineering assessment.
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Failure Assessment/}).click();
+ const unconfirmedExport=page.locator("details.psDecisionExport");
+ await unconfirmedExport.locator("summary").click();
+ await expect(unconfirmedExport.getByRole("button",{name:"Export assessment PDF"})).toBeDisabled();
+ await page.getByRole("navigation",{name:"Assessment stages"}).getByRole("button",{name:/Part Geometry/}).click();
  await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
  const next=page.getByRole("region",{name:"Recommended workflow action"});
  await next.getByRole("button",{name:"Run screening"}).click();
