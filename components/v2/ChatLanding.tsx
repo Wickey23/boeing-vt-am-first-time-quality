@@ -4,6 +4,7 @@ import {useEffect,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
 import {ArrowUp,FileBox,FileUp,Paperclip,ShieldCheck,X} from "lucide-react";
 import {useAnalysis} from "@/components/AnalysisProvider";
+import {ORIENTAI_BENCHMARKS,createOrientaiBenchmarkStl,type BenchmarkPart} from "@/lib/orientai-benchmark-parts";
 
 /** Entry composer: records the first local question and sends the engineer to the
  * existing part-aware study; it never sends attachments to an external AI service. */
@@ -27,6 +28,17 @@ export default function ChatLanding(){
   }
   setPart(file);setError("");
  };
+ const openBenchmark=(id:BenchmarkPart)=>{
+  if(!analysis.ready)return;
+  const partName=id+".stl";
+  const file=new File([createOrientaiBenchmarkStl(id)],partName,{type:"model/stl"});
+  analysis.startUploadedProject();
+  analysis.update("unitScale",1);
+  analysis.upload(file);
+  analysis.setProjectName(id);
+  try{sessionStorage.setItem("orientai-pending-message-v1","Review this synthetic benchmark geometry. Confirm units, compare orientation candidates, then inspect sampled physical layers. This is not a validated print-failure prediction.");}catch{}
+  router.push("/copilot/workbench");
+ };
  const submit=()=>{
   const prompt=message.trim();
   if(!analysis.ready){setError("Workspace is still loading. Please try again.");return;}
@@ -48,6 +60,13 @@ export default function ChatLanding(){
     <p style={{fontSize:14,lineHeight:1.6,color:"var(--oa-muted)",margin:0}}>You do not need to know which analysis to run. Upload a metal 3D-printing STL, confirm its dimensions, tell us what the part does, and review the manufacturing concerns.</p>
     <div style={{display:"flex",flexWrap:"wrap",gap:8,fontSize:12,color:"var(--oa-muted)"}}><span>1. Upload STL</span><span>→</span><span>2. Confirm size</span><span>→</span><span>3. Describe use</span><span>→</span><span>4. Review risks</span></div>
     <button type="button" disabled={!analysis.ready} onClick={()=>fileInput.current?.click()} style={{justifySelf:"start",padding:"12px 18px",border:0,borderRadius:9,fontWeight:700,fontSize:14,background:"var(--oa-strong)",color:"var(--oa-bg)",cursor:"pointer",maxWidth:"100%"}}><FileUp size={16} style={{verticalAlign:"middle",marginRight:7}}/>Upload STL to start guided review</button>
+    <div role="group" aria-label="Synthetic research benchmark parts" style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:8}}>
+      <span style={{fontSize:12,color:"var(--oa-muted)"}}>Test with a synthetic part:</span>
+      {ORIENTAI_BENCHMARKS.map(item=><button key={item.id} type="button" disabled={!analysis.ready}
+       title={item.purpose} onClick={()=>openBenchmark(item.id)}
+       style={{border:"1px solid var(--oa-border)",borderRadius:8,padding:"8px 10px",fontSize:12,background:"var(--oa-card)",color:"inherit",cursor:"pointer"}}>{item.name}</button>)}
+    </div>
+    <small style={{fontSize:12,color:"var(--oa-muted)"}}>Four deterministic STL teaching fixtures (mm), including the three research study parts. Engineer must confirm dimensions. No machine-validated claims.</small>
     {part&&<p role="status" style={{fontSize:13,margin:0}}>Selected {part.name}. Use the arrow below to enter your study.</p>}
    </div>
   <div className="oaComposerArea">
