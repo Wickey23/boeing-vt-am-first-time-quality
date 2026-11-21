@@ -50,7 +50,7 @@ def download(url: str, dest: pathlib.Path) -> tuple[int, str]:
         # preserve that response as an experimental measurement workbook.
         with tmp.open("rb") as check:
             header = check.read(512)
-        if dest.suffix.lower() == ".xlsx" and not header.startswith(b"PK\\x03\\x04"):
+        if dest.suffix.lower() == ".xlsx" and not header.startswith(b"PK\x03\x04"):
             raise ValueError("Invalid XLSX signature; source is not a ZIP-based workbook")
         if dest.suffix.lower() == ".txt":
             preview = header.lstrip().lower()
