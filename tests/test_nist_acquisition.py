@@ -35,7 +35,7 @@ class DownloadSafetyTests(unittest.TestCase):
     def test_accepts_zip_signature_without_claiming_workbook_validation(self):
         with tempfile.TemporaryDirectory() as root:
             dest = pathlib.Path(root) / "measurements.xlsx"
-            payload = b"PK\\x03\\x04" + b"unreviewed source payload"
+            payload = b"PK\x03\x04" + b"unreviewed source payload"
             with patch.object(module.urllib.request, "urlopen", return_value=FakeResponse(payload)):
                 size, digest = module.download("https://data.nist.gov/example", dest)
             self.assertEqual(size, len(payload))
