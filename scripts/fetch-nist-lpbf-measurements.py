@@ -46,6 +46,16 @@ def download(url: str, dest: pathlib.Path) -> tuple[int, str]:
                 hasher.update(chunk)
         if count == 0:
             raise ValueError("Empty source")
+        # A gateway may return an HTML error page with HTTP 200. Do not
+        # preserve that response as an experimental measurement workbook.
+        with tmp.open("rb") as check:
+            header = check.read(512)
+        if dest.suffix.lower() == ".xlsx" and not header.startswith(b"PK\\x03\\x04"):
+            raise ValueError("Invalid XLSX signature; source is not a ZIP-based workbook")
+        if dest.suffix.lower() == ".txt":
+            preview = header.lstrip().lower()
+            if preview.startswith((b"<!doctype html", b"<html", b"<?xml")):
+                raise ValueError("Expected NIST README text but received markup")
         tmp.replace(dest)
         return count, hasher.hexdigest()
     finally:
