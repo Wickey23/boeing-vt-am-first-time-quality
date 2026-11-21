@@ -18,6 +18,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install locked compatible dependencies
         run: npm ci --no-audit --no-fund
+      - name: NIST acquisition safeguards (offline)
+        run: python3 -m unittest discover -s tests -p 'test_nist_acquisition.py' -v
       - name: Numerical engineering regression tests
         run: npm test
       - name: TypeScript verification
