@@ -22,4 +22,3 @@ test('restoring changed settings preserves the part, archives the old run and re
  }),runId);
  expect(archived).toBe(true);
 });
-
