@@ -3,7 +3,7 @@ import {createContext,useContext,useEffect,useRef,useState,useCallback} from 're
 import {type ServiceSetup} from "@/lib/service-load";
 import type {StructuralField} from "@/lib/voxel-structural";
 import type {ThermalField} from "@/lib/voxel-thermal";
-import {DEFAULT_SETTINGS,requestFor,loadWorkspace,saveWorkspace,type Settings,type Analysis,type Snapshot} from '@/lib/analysis-workspace';
+import {DEFAULT_SETTINGS,requestFor,loadWorkspace,saveWorkspace,verifyWorkspace,type Settings,type Analysis,type Snapshot} from '@/lib/analysis-workspace';
 import {createServicePlan,restoreServicePlan,syncServicePlan,activeServiceCase,serviceInputKey,attachServiceResult,MAX_SERVICE_CASES,type ServicePlan} from "@/lib/service-plan";
 import {newJourney,restoreJourney,switchProcess,type Journey,type JourneyStep,type ProcessKind} from "@/lib/engineering-journey";
 import type {DedWallInput} from "@/lib/ded-planning";
@@ -24,7 +24,8 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const validSettings=!!s.settings&&typeof s.settings==='object'&&Number.isFinite(s.settings.x)&&Number.isFinite(s.settings.y)&&Number.isFinite(s.settings.z);
  const validResult=s.result===null||(!!s.result&&typeof s.result==='object'&&typeof s.result.runId==='string'&&Array.isArray(s.result.candidates)&&s.result.candidates.every(c=>c&&typeof c.id==='string'&&c.rotation&&Number.isFinite(c.score))&&s.result.source&&typeof s.result.source.fileHashSha256==='string');
  if(validFile&&validSettings&&validResult){
-  const restored=restoreServicePlan(s.servicePlan,s.result);
+  setError(s.recoveryNotice??'');
+ const restored=restoreServicePlan(s.servicePlan,s.result);
   setProjectName(s.projectName||"Untitled part");setFile(s.file);setSettings({...DEFAULT_SETTINGS,...s.settings});
   const restoredJourney=restoreJourney(s.journey);
   setJourney(restoredJourney.mode==="uploaded"||s.file===null?restoredJourney:{...restoredJourney,mode:"uploaded",process:"PBF_LB_METAL",step:"part"});
@@ -70,7 +71,17 @@ export function AnalysisProvider({children}:{children:React.ReactNode}){
  const attachMeshSensitivity:Context["attachMeshSensitivity"]=(kind,runId,candidateId,data)=>setResult(r=>r?.runId===runId&&(kind!=="structural"||serviceInputKey(activeServiceCase(planRef.current).input)===serviceInputKey(data.input as ServiceSetup))?{...r,meshSensitivity:{...r.meshSensitivity,[kind]:{runId,candidateId,...data}}}:r);
  const clearThermal=()=>setResult(r=>r?{...r,thermal:undefined,meshSensitivity:{...r.meshSensitivity,thermal:undefined}}:r);
  const clearStructural=()=>setResult(r=>r?{...r,structural:undefined,structuralCases:Object.fromEntries(Object.entries(r.structuralCases??{}).filter(([id])=>id!==planRef.current.activeCaseId)),meshSensitivity:{...r.meshSensitivity,structural:undefined}}:r);
- const restoreProject=(snapshot:{journey?:Journey;servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>{const restored=restoreServicePlan(snapshot.servicePlan,snapshot.result);invalidate();setProjectName(snapshot.projectName);setFile(snapshot.file);setJourney(restoreJourney(snapshot.journey));setSettings({...DEFAULT_SETTINGS,...snapshot.settings});setServicePlan(restored);planRef.current=restored;setResult(snapshot.result?syncServicePlan(snapshot.result,restored):null);setSelected(snapshot.selected);setError("");};
+ const restoreProject=async(snapshot:{journey?:Journey;servicePlan?:ServicePlan;projectName:string;file:File;settings:Settings;result:Analysis|null;selected:string|null})=>{
+  invalidate();const seq=generation.current;setBusy(true);
+  try{
+   const verified=await verifyWorkspace({...snapshot,schema:1});
+   if(seq!==generation.current)return;
+   const restored=restoreServicePlan(verified.servicePlan,verified.result);
+   setProjectName(snapshot.projectName);setFile(snapshot.file);setJourney(restoreJourney(snapshot.journey));setSettings({...DEFAULT_SETTINGS,...snapshot.settings});setServicePlan(restored);planRef.current=restored;
+   setResult(verified.result?syncServicePlan(verified.result,restored):null);setSelected(verified.selected);setError(verified.recoveryNotice??'');
+  }catch{if(seq===generation.current)setError('Saved project could not be verified. Select the original STL and run the assessment again.');}
+  finally{if(seq===generation.current)setBusy(false);}
+ };
  const clear=()=>{invalidate();const fresh=createServicePlan();setServicePlan(fresh);planRef.current=fresh;setFile(null);setSettings(DEFAULT_SETTINGS);setProjectName("Untitled part");setJourney(newJourney());};
  return <C.Provider value={{journey,setJourneyStep,setJourneyProcess,setDedInput,startDedExample,startUploadedProject,confirmPart,servicePlan,selectServiceCase,addServiceCase,removeServiceCase,renameServiceCase,setServiceSetup,saving,attachMeshSensitivity,projectName,setProjectName,restoreProject,file,settings,result,selected,busy,progress,error,storageError,ready,upload,update,select:setSelected,retry,cancel,clear,attachThermal,attachStructural,clearThermal,clearStructural}}>{children}</C.Provider>;
 }

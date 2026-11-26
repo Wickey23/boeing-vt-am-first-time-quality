@@ -1,5 +1,7 @@
 # ORIENTAI — Live milestone tracker
 
+**Current execution status:** see [the authoritative completion plan](ORIENTAI-COMPLETION-EXECUTION-PLAN.md). The table below is the October 29 historical inventory, not current implementation status.
+
 **Status:** initial inventory as of 2026-10-29, not a claim of implementation completeness. Update the checked gate evidence and source SHA after every verified change. Full contracts: [MASTER-MILESTONE-ROADMAP.md](MASTER-MILESTONE-ROADMAP.md). HCI checks: [hci/ORIENTAI-HCI-PROTOCOL.md](hci/ORIENTAI-HCI-PROTOCOL.md).
 
 Legend: **Continuous** = repeated throughout development; **Partial** = some code exists but contract isn't met; **Not started / Planned** = feature or release gate not complete; **Next** = current engineering development target; **Blocked by evidence** = external data/model/experimental prerequisites.
