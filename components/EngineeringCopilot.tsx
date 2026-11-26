@@ -289,10 +289,10 @@ export default function EngineeringCopilot(){
   try{
    const field=studyCurrent?serviceStudy:undefined;
    const doc=await createCopilotReviewPDF({
-    projectName:a.projectName,partName:a.file.name,partSha256:partKey,
+    projectName:a.projectName,partName:a.file.name,partSha256:partKey,modelFile:a.file,unitScale:a.settings.unitScale,servicePlan:a.servicePlan,
     process:a.journey.process,unitsConfirmed:verified,createdAt:new Date().toISOString(),
     knowledge,reviewedEvidence:validEvidence,approvedBindings:currentParameterBindings,readiness,
-    study:field?{jobId:field.jobId,
+    study:field?{jobId:field.jobId,partSha256:field.partSha256,
      stressMPa:field.structural?.solver.maxVonMisesMPa,
      displacementMm:field.structural?.solver.maxDisplacementMm,
      temperatureMinC:field.thermal?.min,temperatureMaxC:field.thermal?.max,

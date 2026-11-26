@@ -1,3 +1,6 @@
+import {prepareAssessmentReport} from "./assessment-report-evidence";
+import type {Analysis,Settings} from "./analysis-workspace";
+import type {ServicePlan} from "./service-plan";
 /** ORIENTAI pre-build engineering review.
  * Research / evidence report, not a qualified printability or strength certificate.
  * All numeric values must originate in the current inspected STL or existing worker.
@@ -14,7 +17,7 @@ import type {InspectionFeedback} from "./part-inspection-feedback";
 
 export type CopilotPdfInputs={
  projectName:string;partName:string;partSha256:string;process:string;
- modelFile?:File;
+ modelFile?:File;unitScale:number;analysis?:Analysis;settings?:Settings;servicePlan?:ServicePlan;
  unitsConfirmed:boolean;createdAt:string;knowledge:ProjectKnowledge;
  reviewedEvidence:ReviewedEvidence[];approvedBindings?:ApprovedParameterBinding[];
  prebuild?:PrebuildAssessment;manufacturingFlow?:ManufacturingFlowStep[];
@@ -27,7 +30,7 @@ export type CopilotPdfInputs={
  selectedOrientation?:{id:string;buildHeightMm:number;downFacingAreaMm2:number;
   supportProxyMm3:number;overhangFraction:number;contactAreaMm2:number;
   rotation?:{x:number;y:number;z:number}};
- study?:{jobId:string;stressMPa?:number;displacementMm?:number;
+ study?:{jobId:string;partSha256:string;stressMPa?:number;displacementMm?:number;
   temperatureMinC?:number;temperatureMaxC?:number;
   structuralModel?:string;thermalModel?:string};
 };
@@ -49,9 +52,12 @@ const riskMeaning=(code:string)=>{
  }
 };
 
-export async function createCopilotReviewPDF(input:CopilotPdfInputs){
+export async function createCopilotReviewPDF(source:CopilotPdfInputs){
+ const prepared=await prepareAssessmentReport(source);
+ const {input,manifest,requirements}=prepared;
  const {jsPDF}=await import("jspdf");
  const doc=new jsPDF({unit:"mm",format:"a4",compress:true});
+ doc.setProperties({title:"ORIENTAI engineering assessment",subject:"Report content SHA-256: "+manifest.contentSha256});
  const W=210,M=17,R=W-M,CONTENT=R-M,BOT=273;
  const ink:[number,number,number]=[34,48,60],
   muted:[number,number,number]=[93,107,121],
@@ -171,7 +177,11 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
  section("Study identity and traceability");
  kv("Project",input.projectName);kv("File",input.partName);
  kv("Process",input.process);kv("Units",input.unitsConfirmed?"Engineer-confirmed against intended scale":"NOT CONFIRMED");
- kv("Exported",input.createdAt);kv("Part SHA-256",input.partSha256);
+ kv("Exported",input.createdAt);kv("Part SHA-256",manifest.partSha256);
+ kv("Report content SHA-256",manifest.contentSha256);
+ kv("Source verification","Original STL bytes verified; scale "+input.unitScale+" mm per source unit");
+ kv("Analysis run",manifest.analysisRunId??"No orientation run included");
+ text("The content fingerprint binds this report to its recorded inputs. It is not an authenticity signature or physical validation.",{size:8,color:muted});
  section("Assessment scope");
  text("ORIENTAI screens STL topology and geometric LPBF orientation candidates. Optional service and thermal fields are research calculations made under engineer-entered assumptions. No validated porosity, melt-pool, cracking, fatigue, recoater or residual-stress model is implied.",{size:8.5});
  beginPage();
@@ -207,10 +217,7 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
  if(input.modelFile){
   section("Actual STL geometry views","Projected triangle wireframe of the uploaded model. This is not an engineering drawing or tolerance inspection.");
   try{
-   const bytes=await input.modelFile.arrayBuffer();
-   const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),
-    x=>x.toString(16).padStart(2,"0")).join("");
-   if(digest!==input.partSha256)throw Error("STL hash changed since report initiation");
+   const bytes=prepared.bytes;
    const {drawPartWireframe}=await import("./report-wireframe");
    ensure(71);
    doc.setFillColor(...light);doc.setDrawColor(...border);
@@ -252,6 +259,14 @@ export async function createCopilotReviewPDF(input:CopilotPdfInputs){
  field("Assembly / interfaces",input.knowledge.assemblyContext);
  field("Attachments / fixtures",input.knowledge.attachmentNotes);
  field("Requirements / acceptance",input.knowledge.reviewedRequirements);
+ section("Requirement evidence register","Recorded requirements are not accepted requirements. Numerical comparisons remain unvalidated research calculations.");
+ if(!requirements.length)text("No explicit requirement or numerical service limit was recorded.");
+ for(const r of requirements){
+  text(r.requirement,{size:8.5,bold:true});
+  text("Status: "+r.status+" / Limit: "+(r.limitMm===null?"not supplied":fmt(r.limitMm,4)+" mm")+" / Calculated: "+(r.calculatedMm===null?"not available":fmt(r.calculatedMm,4)+" mm"),{size:8});
+  text("Evidence: "+r.evidence+(r.runId?" Run "+r.runId+"; candidate "+r.candidateId:""),{size:8,color:muted});
+  text("Next action: "+r.nextAction,{size:8,color:muted});
+ }
  section("Source documents and provenance");
  if(!input.knowledge.sources.length)text("No assembly or engineering references were attached. Application and load context remain unknown.",{color:amber});
  else table(["ID / filename","Extraction","Engineer notes"],[85,38,53],

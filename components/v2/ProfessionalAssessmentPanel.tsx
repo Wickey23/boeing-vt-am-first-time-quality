@@ -9,12 +9,12 @@ import type {FeedbackDraft,InspectionFeedback} from "@/lib/part-inspection-feedb
 import ProfessionalFeedbackPanel from "./ProfessionalFeedbackPanel";
 type Tab="findings"|"actions"|"workflow"|"coverage";
 const rank:Record<string,number>={critical:0,high:1,medium:2,information:3};
-export default function ProfessionalAssessmentPanel({assessment,flow,coverage,hasPart,canExport,hasGeometry,exportBusy,feedback,feedbackError,onAddFeedback,onRemoveFeedback,onExport,onGeometryExport,onJsonExport,onNavigate,onInspectOverhangs}:{
+export default function ProfessionalAssessmentPanel({assessment,flow,coverage,hasPart,canExport,hasGeometry,exportBusy,feedback,feedbackError,onAddFeedback,onRemoveFeedback,onExport,onEvidenceJsonExport,onGeometryExport,onJsonExport,onNavigate,onInspectOverhangs}:{
  assessment:PrebuildAssessment;flow:ManufacturingFlowStep[];coverage:FailureCoverage[];
  hasPart:boolean;canExport:boolean;hasGeometry:boolean;exportBusy:boolean;
  feedback:InspectionFeedback[];feedbackError:string;
  onAddFeedback:(draft:FeedbackDraft)=>void;onRemoveFeedback:(id:string)=>void;
- onExport:()=>void;onGeometryExport:()=>void;onJsonExport:()=>void;
+ onExport:()=>void;onEvidenceJsonExport:()=>void;onGeometryExport:()=>void;onJsonExport:()=>void;
  onNavigate:(stage:"geometry"|"context"|"assessment")=>void;
  onInspectOverhangs:()=>void;
 }){
@@ -58,8 +58,9 @@ export default function ProfessionalAssessmentPanel({assessment,flow,coverage,ha
     <button type="button" className="psPrimary" onClick={onExport} disabled={!canExport||exportBusy}>
      <FileText size={14}/> Export assessment PDF</button>
     <div className="psSecondaryExports">
+     <button type="button" className="psSecondary" onClick={onEvidenceJsonExport} disabled={!canExport||exportBusy}>Assessment evidence JSON</button>
      <button type="button" className="psSecondary" onClick={onGeometryExport} disabled={!hasGeometry||exportBusy}>Geometry analysis PDF</button>
-     <button type="button" className="psSecondary" onClick={onJsonExport} disabled={!hasGeometry}>Analysis JSON</button>
+     <button type="button" className="psSecondary" onClick={onJsonExport} disabled={!hasGeometry||exportBusy}>Analysis JSON</button>
     </div>
    </div>
   </details>

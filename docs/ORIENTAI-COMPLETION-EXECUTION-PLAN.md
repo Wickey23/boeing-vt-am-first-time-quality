@@ -161,8 +161,8 @@ Open PRs: #20 viewer (clean), #18 UI (conflicting), #9 DED docs (clean), #8 prod
 | Study identity | Shared byte/configuration/run checks; portable evidence manifest; recovery archive | Verify new browser recovery test and review PR | Application engineer | Current implementation |
 | Geometry and orientation | Existing rules, numerical fixtures and candidate ranking | Independently annotated region cases and tolerance dossier | Geometry engineer | Identity |
 | Guided assessment | Existing upload/context/assessment/export flow | Same-SHA production walkthrough and five unaided participant tasks | UX + release engineer | Browser suite |
-| Reporting | Existing PDF/JSON; portable exports now bind inputs | Integrate evidence identity across remaining report families | Application engineer | Identity |
-| Requirements | Existing context and service cases | Structured CTQ-to-evidence links and revision-aware decisions | Engineering lead | Identity |
+| Reporting | Assessment and geometry PDF/JSON verify original bytes and bind inputs | Review specialized exports and production acceptance | Application engineer | Identity |
+| Requirements | Report register matches current service displacement evidence | Structured CTQ editor and revision-aware acceptance | Engineering lead | Identity |
 | History | Existing saved runs; corrupt/stale active run retained under recovery key | User-facing recovery browser and immutable revision history | Application engineer | Identity |
 | NIST measurement pipeline | Original workbook acquired and parsed; 228 measured rows | Verify experiment, uncertainty and physical-build mapping | Research engineer | Source documentation |
 | CMU pipeline | Descriptive specimen summaries | Verify physical-build and CT sampling metadata | Research engineer | Source documentation |
@@ -201,3 +201,12 @@ R1 remains open until live acceptance and participant evidence exist. R2 require
 - `git diff --check`: passed. Main rechecked and unchanged at `9682f2c` before handoff.
 - GitHub reports successful Vercel deployment status on baseline `9682f2c`. This increment has not been merged or verified on the production alias.
 - Browser testing here is automated local acceptance, not participant research or a production smoke test.
+
+## Report identity and requirement evidence - 2026-11-26
+
+- Assessment PDF and new evidence JSON share a stable content SHA-256. Snapshots freeze before async work. Original STL, units, context, source bindings and selected orientation must match; inconsistent inputs fail before PDF rendering.
+- Geometry PDF and analysis JSON use the portable identity contract and verify original bytes. The geometry PDF action now saves its document; async errors and busy states are handled.
+- Entered requirements stay unassessed. Service displacement comparisons require matching run, candidate and solver inputs. Missing, stale and invalid evidence remain explicit. Model limits do not establish acceptance.
+- Local verification: 213 unit tests, 83 browser tests, 5 NIST tests, typecheck and production build passed. Browser coverage downloads all four artifacts and compares identities. PDF identity and requirement pages were inspected; headings reserve following content space.
+- Main re-fetched unchanged at 9682f2c7b5e2a1ce400f891a2147a1f1908c7923. PR #28 extends the foundation; reporting overlaps PR #8 and copilot overlaps PR #18. Human review required before merging.
+- Production, participant usability and manual accessibility remain unverified. Structured CTQ editing, physical validation and all R1/R2/R3 gates remain open.
