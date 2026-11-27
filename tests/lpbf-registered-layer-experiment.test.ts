@@ -2,6 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
+import {runRegisteredThermalSectionHistory} from "../lib/lpbf-registered-thermal-section-history";
 import {runRegisteredLayerExperiment} from "../lib/lpbf-registered-layer-experiment";
 import {studyRegisteredSpatialRefinement} from "../lib/lpbf-spatial-refinement";
 import {studyRegisteredTimeRefinement} from "../lib/lpbf-time-refinement";
@@ -128,4 +129,32 @@ test("M07 nested XY refinement compares matched cell means on identical integrat
   assert.ok(Number.isFinite(pair.coarseCellMeanRmseC)&&pair.coarseCellMeanRmseC>=0);
   assert.ok(Number.isFinite(pair.maximumCellMeanDifferenceC)&&pair.maximumCellMeanDifferenceC>=pair.coarseCellMeanRmseC-1e-12);
  }
+});
+
+test("M11 registered thermal section history transfers matched cell temperatures with explicit reference and release",async()=>{
+ const input=await setup();
+ const request={x:0,y:0,referenceFrame:1,releaseFrame:2,acknowledgeStressFreeReset:true,
+  material:{youngsModulusMPa:200000,yieldStressMPa:200,thermalExpansionPerK:1e-5,sourceLabel:"Synthetic mechanical data"}};
+ const report=await runRegisteredThermalSectionHistory(input,request);
+ const thermal=await runRegisteredLayerExperiment({...input,captureFrames:true});
+ assert.equal(report.scope,"UNVALIDATED_REGISTERED_ELASTIC_SECTION_HISTORY");
+ assert.equal(report.productionActivationAuthorized,false);
+ assert.equal(report.partSha256,thermal.thermal.partSha256);
+ assert.equal(report.scanSha256,thermal.thermal.sourceSha256);
+ assert.deepEqual(report.column.centerMm,{x:.25,y:.25});
+ assert.deepEqual(report.steps.map(s=>s.frameIndex),[1,2]);
+ assert.deepEqual(report.steps.map(s=>s.section.constraint.kind),["fixed","free"]);
+ assert.ok(report.steps[0].section.fibers.every(f=>Math.abs(f.stressMPa)<1e-9));
+ for(const step of report.steps){
+  for(const f of step.section.fibers){
+   const cell=thermal.thermal.frames![step.frameIndex].cells.find(c=>[c.x,c.y,c.layer].join(",")===f.id)!;
+   assert.equal(f.temperatureC,cell.temperatureC);
+   assert.equal(f.areaMm2,.25);
+  }
+ }
+ const end=report.steps[1].section;
+ assert.ok(Math.abs(end.resultantForceN)<1e-8&&Math.abs(end.resultantMomentAboutCenterNmm)<1e-8);
+ await assert.rejects(runRegisteredThermalSectionHistory(input,{...request,acknowledgeStressFreeReset:false}),/reset assumption/);
+ await assert.rejects(runRegisteredThermalSectionHistory(input,{...request,referenceFrame:0}),/activation/);
+ await assert.rejects(runRegisteredThermalSectionHistory(input,{...request,x:99}),/selection/);
 });
