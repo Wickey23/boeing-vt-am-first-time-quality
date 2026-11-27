@@ -252,3 +252,9 @@
 .psMeshMeasure output{display:block;font-size:15px;font-weight:700;color:#205e99;margin:6px 0}
 .psMeshMeasure button{background:#eaf1f7;color:#28587e;border:1px solid #a8bdcd;border-radius:3px;padding:4px 7px;cursor:pointer}
 .psMeshMeasure small{display:block;margin-top:7px;color:#536b7e;font-size:10px}
+
+.psMeshMeasure label{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:5px;margin:7px 0;color:#35536a}
+.psMeshMeasure select{background:#fff;color:#294c65;border:1px solid #adc1d0;border-radius:3px;padding:4px;font-size:11px;max-width:100%}
+.psMeshMeasure input[type=range]{width:100%;accent-color:#246da7}
+.psMeshMeasure input[type=checkbox]{accent-color:#246da7}
+.psMeshMeasure label output{display:inline;font-size:12px;margin:0}

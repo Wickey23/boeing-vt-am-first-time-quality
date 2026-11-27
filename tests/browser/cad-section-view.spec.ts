@@ -1,0 +1,28 @@
+import {test,expect} from "@playwright/test";
+test("section view supports all build axes and excludes measurement until closed",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/workbench");
+ const ribbon=page.getByRole("region",{name:"CAD analysis commands"});
+ const section=ribbon.getByRole("button",{name:"Section",exact:true});
+ const measure=ribbon.getByRole("button",{name:"Measure",exact:true});
+ await expect(section).toBeDisabled();
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await expect(section).toBeEnabled();
+ await section.click();
+ const panel=page.getByRole("region",{name:"Section view"});
+ await expect(panel).toBeVisible();
+ await expect(measure).toBeDisabled();
+ await expect(panel).toContainText("Visual clipping only");
+ await panel.getByLabel("Section build axis").selectOption("X");
+ await panel.getByLabel("Section plane position").focus();
+ await page.keyboard.press("Home");
+ await expect(panel.getByLabel("Section plane position")).toHaveValue("0");
+ await panel.getByLabel("Reverse retained side").check();
+ await panel.getByRole("button",{name:"Center plane"}).click();
+ await expect(panel.getByLabel("Section plane position")).toHaveValue("50");
+ await panel.getByLabel("Section build axis").selectOption("Y");
+ await panel.getByRole("button",{name:"Close section view"}).click();
+ await expect(panel).toHaveCount(0);
+ await expect(measure).toBeEnabled();
+});
