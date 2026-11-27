@@ -74,3 +74,18 @@ test("CAD graphics uses light chrome and a functional view cube with secondary a
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
  await expect(page.locator(".cadGraphicsViewport canvas")).toBeVisible();
 });
+
+test("advanced studies and research routes share CAD presentation",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/advanced");
+ await expect(page.locator(".cadAdvancedWorkspace")).toBeVisible();
+ await expect(page.locator(".copilotFrame")).toHaveCSS("background-color","rgb(231, 237, 243)");
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
+ await expect(page.getByRole("region",{name:"run workspace"})).toBeVisible();
+ await page.goto("/validation");
+ await expect(page.locator(".cadResearchShell")).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Validation Plan"})).toBeVisible();
+ await page.goto("/simulation/benchmarks");
+ await expect(page.locator(".cadResearchShell")).toBeVisible();
+ await expect(page.getByRole("button",{name:"1D thermal benchmark"})).toBeVisible();
+});
