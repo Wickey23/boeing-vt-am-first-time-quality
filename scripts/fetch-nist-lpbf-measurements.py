@@ -22,6 +22,13 @@ SOURCES = [
         "purpose": "Measured melt-pool geometry; NOT defect/failure labels",
     },
     {
+        "id": "amb2022-03-in718-melt-pool-metadata",
+        "doi": "10.18434/mds2-2718",
+        "url": "https://data.nist.gov/od/ds/mds2-2718/2718_README.txt",
+        "file": "2718_README.txt",
+        "purpose": "Measurement methods, specimen naming and source-use terms for the melt-pool workbook",
+    },
+    {
         "id": "amb2022-01-in718-deflection-metadata",
         "doi": "10.18434/mds2-2711",
         "url": "https://data.nist.gov/od/ds/mds2-2711/2711_README.txt",
