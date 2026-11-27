@@ -9,11 +9,12 @@ function contrast(css:string,background:string){
  const nums=css.match(/[\d.]+/g)?.slice(0,3).map(Number)??[];
  expect(nums).toHaveLength(3);
  const foreground="#"+nums.map(x=>Math.round(x).toString(16).padStart(2,"0")).join("");
- const [a,b]=[luminance(foreground),luminance(background)].sort((x,y)=>y-x);
+ const bg=background.startsWith("#")?background:"#"+(background.match(/[\d.]+/g)?.slice(0,3).map(Number)??[]).map(x=>Math.round(x).toString(16).padStart(2,"0")).join("");
+ const [a,b]=[luminance(foreground),luminance(bg)].sort((x,y)=>y-x);
  return (a+.05)/(b+.05);
 }
 
-test("engineering copilot dark surfaces have readable text and vertically stacked panel headings",async({page})=>{
+test("engineering copilot CAD surfaces have readable text and vertically stacked panel headings",async({page})=>{
  await page.setViewportSize({width:1450,height:950});
  await page.goto("/copilot/advanced");
  await expect(page.locator(".oaModelName")).toContainText("ORIENTAI");
@@ -29,19 +30,21 @@ test("engineering copilot dark surfaces have readable text and vertically stacke
    const a=title.getBoundingClientRect(),b=description.getBoundingClientRect();
    return {display:getComputedStyle(header).display,top:b.top,bottom:a.bottom,
      height:header.getBoundingClientRect().height,
-     headingColor:getComputedStyle(title).color,descriptionColor:getComputedStyle(description).color};
+     headingColor:getComputedStyle(title).color,descriptionColor:getComputedStyle(description).color,
+     background:getComputedStyle(header.closest(".copilotLeft")!).backgroundColor};
   });
   expect(layout.display).toBe("flex");
   expect(layout.top).toBeGreaterThan(layout.bottom);
   expect(layout.height).toBeLessThan(120);
-  expect(contrast(layout.headingColor,"#10283a")).toBeGreaterThanOrEqual(4.5);
-  expect(contrast(layout.descriptionColor,"#10283a")).toBeGreaterThanOrEqual(4.5);
+  expect(contrast(layout.headingColor,layout.background)).toBeGreaterThanOrEqual(4.5);
+  expect(contrast(layout.descriptionColor,layout.background)).toBeGreaterThanOrEqual(4.5);
  }
  await page.getByRole("button",{name:"Open Requirements stage"}).click();
  await page.locator(".copilotConversation > summary").click();
  const message=page.locator(".copilotBubble.assistant p").first();
  await expect(message).toBeVisible();
- expect(contrast(await message.evaluate(el=>getComputedStyle(el).color),"#18384d")).toBeGreaterThanOrEqual(4.5);
+ const bubble=await message.evaluate(el=>({foreground:getComputedStyle(el).color,background:getComputedStyle(el.closest(".copilotBubble")!).backgroundColor}));
+ expect(contrast(bubble.foreground,bubble.background)).toBeGreaterThanOrEqual(4.5);
 });
 test("STL unit mismatch is made obvious without claiming machine infeasibility",async({page})=>{
  await page.goto("/copilot/advanced");
