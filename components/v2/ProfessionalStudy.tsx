@@ -315,8 +315,8 @@ export default function ProfessionalStudy(){
     componentName:k.componentName,assemblyContext:k.assemblyContext,attachmentNotes:k.attachmentNotes,
     requirements:k.reviewedRequirements,documentCount:ctx.sources.length,
     reviewedEvidenceCount:ctx.reviewed.length,
-    hasNumericalServiceStudy:hasStructuralStudy,
-    hasSteadyThermalStudy:hasSteadyThermalStudy,
+    hasNumericalServiceStudy:hasStructuralStudy||Boolean(serviceCurrent&&sandboxService?.structural),
+    hasSteadyThermalStudy:hasSteadyThermalStudy||Boolean(serviceCurrent&&sandboxService?.thermal),
     hasLpbfGeometryCandidates:currentRun
    });
    const approvedBindings=activeParameterBindings(k.parameterBindings,ctx.sources,ctx.reviewed,activeServiceCase(a.servicePlan));
@@ -324,6 +324,11 @@ export default function ProfessionalStudy(){
     projectName:a.projectName,partName:a.file.name,partSha256:partHash,process:a.journey.process,modelFile:a.file,
     unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),knowledge:k,
     reviewedEvidence:ctx.reviewed,approvedBindings,readiness,
+    study:serviceCurrent&&sandboxService?{jobId:sandboxService.jobId,
+     stressMPa:sandboxService.structural?.solver.maxVonMisesMPa,
+     displacementMm:sandboxService.structural?.solver.maxDisplacementMm,
+     temperatureMinC:sandboxService.thermal?.min,temperatureMaxC:sandboxService.thermal?.max,
+     structuralModel:sandboxService.structural?.solver.model,thermalModel:sandboxService.thermal?.solver.model}:undefined,
     coverage,prebuild,manufacturingFlow,feedbackRecords:feedback.records,
     processWindow:a.journey.process==="PBF_LB_METAL"?processAssessment:null,
     geometricConcerns:[...meshFindings.map(f=>({code:f.code,message:f.message,basis:"STL mesh-topology audit",severity:f.level})),
@@ -676,7 +681,7 @@ export default function ProfessionalStudy(){
   </aside>
   {serviceDockMounted&&<aside className="psServiceDock cadAdvancedWorkspace" aria-label="Sandbox simulation setup" hidden={!serviceDockOpen||!cadLayout}>
    <header className="psServiceDockHeader"><strong>Service simulation</strong><button type="button" aria-label="Close simulation setup" onClick={()=>setServiceDockOpen(false)}><X size={17}/></button></header>
-   <div className="psServiceDockScroll copilotMainPanel"><p className="psServiceScope">Shared solver and job ledger. Results use original STL axes; export the study job record here. The existing pre-build report does not include these local contour arrays.</p>
+   <div className="psServiceDockScroll copilotMainPanel"><p className="psServiceScope">Shared solver and job ledger. Results use original STL axes; export the study job record here. Current service numerical summaries and job ID are included in the evidence PDF; full contour arrays are not. Export the job record for approved inputs and execution history.</p>
     <UnifiedServiceStudy verified={isConfirmed&&ctx.knowledge?.partKey===partHash} partSha256={partHash??undefined} sourceIds={[...new Set(currentReviewed.map(x=>x.sourceId))]} reviewedEvidence={currentReviewed} parameterBindings={currentBindings} onResults={next=>{setSandboxService(next);if(!next)setSandboxField("geometry");}} onOpenResults={()=>{setSandboxField("stress");setServiceDockOpen(false);setOrientationDraft(null);setSectionView(null);setMeasureMode(false);setMeshPicks([]);setPlaying(false);setLayer(100);}}/>
    </div>
   </aside>}
