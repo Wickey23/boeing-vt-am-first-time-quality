@@ -77,3 +77,20 @@ Independent source for the experimental definitions: https://www.nist.gov/ambenc
 Run [45940137117](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/45940137117) on af93b4b78dd4c39d9bcc7c84442850dd832580a7 confirmed all five CSVs passed publisher-checksum and schema acceptance. The README remains rejected with the same expected/observed digest discrepancy. Engineering, original NIST benchmark and supplemental benchmark all passed on this exact SHA. The parameter table contains 36 data rows and nine columns; each of the four measurement tables contains 36 data rows and 50 columns: Row, four experimental fields, and 45 numbered micrometer columns. This gives 1,620 potential cells per target, not 1,620 confirmed measurements. Blank/non-numeric entries and repeated measurements must be handled explicitly.
 
 Added a pinned-byte join audit using exact Decimal values of powder thickness, turnaround time, pad width and location; row position is never used to link tables. It checks duplicate/invalid/missing keys, candidate one-to-one matches, target key-set agreement, and positive/zero/negative/blank/nonnumeric measurement cell counts. The audit rechecks all five original file hashes and accepted inventory entries before use. It may run on verified numerical files despite the unresolved README, but does not establish physical track identity or permit training. The full acquisition workflow remains failed if the README is rejected. Synthetic tests cover ambiguous matches and missing values. Actual join audit and regression results are pending.
+
+
+## Executed 2025 candidate join audit and published specimen design
+
+Run [45940824876](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/45940824876) on 20e495213686419f901fbd8dd01354d0ab25b535 passed offline safeguards and the candidate join audit. Overall acquisition remains failed solely because of the README mismatch; all five numerical tables were accepted. Engineering and the previous two research workflows passed on the same SHA. All four targets and parameter tables have the same 12 condition/location keys, each appearing three times. There are 36 unique parameter sample IDs but no one-to-one candidate matches using the four shared fields.
+
+| Target | Positive numerical cells | Nonnumeric cells | Potential cells |
+|---|---:|---:|---:|
+| Depth | 1620 | 0 | 1620 |
+| Width | 1352 | 268 | 1620 |
+| Overlap depth | 1584 | 36 | 1620 |
+| Overlap width | 1309 | 311 | 1620 |
+| Total | 5865 | 615 | 6480 |
+
+The official [AMB2025-06/07 challenge description v3](https://www.nist.gov/system/files/documents/2025/12/18/AMB2024-06%20and%2007%20challenge%20descriptions_v3.pdf), section 2.6 and Table 8 (page 11), resolves why the keys repeat: four physical conditions, three plates per condition, three section locations per plate. Conditions are 80/160/0 µm powder at 0.75 ms and bare plate at 5 ms turnaround. Section locations are 0.460 and 2.545 mm on the 5 mm pad and 0.556 mm on the 1 mm pad. Cross-section location uncertainty is ±0.075 mm. These are not 36 independent builds, nor is the shared bare-plate condition counted twice.
+
+The extended audit checks each parameter sample ID, date, plate index, section index and condition against Table 8. For each target it checks the exact expected three-row condition layout and whether Row labels literally identify those specimens with matching keys; no positional mapping is inferred. Condition-level descriptive summaries use equal weight for each row with positive measurements, record positive-cell coverage and ranges of row means, and remain explicitly unpaired and not uncertainty-calibrated. The README remains unverified and specimen-level joining and physical validation remain unauthorized. Fresh CI results are pending.
