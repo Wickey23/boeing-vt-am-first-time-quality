@@ -65,3 +65,7 @@
  .psCadLayout .psViewerToolbar{order:-1;flex:0 0 auto;border-bottom:1px solid #46596b}
  .psCadLayout .psReferenceViewerHeader{flex:0 0 auto}
 }
+
+/* Narrow properties panel must never conceal evidence qualification. */
+.psRoot.psReferenceRoot.psCadLayout .psDecisionFinding>summary{flex-wrap:wrap}
+.psRoot.psReferenceRoot.psCadLayout .psDecisionFinding .psFindingState{display:block!important;margin-left:auto;white-space:normal}
