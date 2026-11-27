@@ -34,7 +34,7 @@ export type PartialLayerResult={
  validationStatus:"UNVALIDATED_GRID_RESEARCH";
  partSha256:string;sourceSha256:string;
  grid:{cellCount:number;layers:number;pitchMm:number;layerHeightMm:number};
- chronology:{commands:number;elapsedSeconds:number;timeSteps:number;maxTimeStepSeconds:number};
+ chronology:{commands:number;elapsedSeconds:number;timeSteps:number;maxTimeStepSeconds:number;actualMaxTimeStepSeconds?:number;commandStepCounts?:number[]};
  energy:{commandedJ:number;absorbedJ:number;plateExchangeJ:number;convectionExchangeJ:number;storedJ:number;relativeImbalance:number};
  layers:Array<{layer:number;timeSeconds:number;activeCells:number;consolidatedCells:number;maximumTemperatureC:number}>;
  finalCells:PartialLayerCell[];
@@ -47,10 +47,12 @@ function assertRange(v:number,lo:number,hi:number,label:string){
  if(!Number.isFinite(v)||v<lo||v>hi)throw Error("Invalid "+label+".");
 }
 function harmonic(a:number,b:number){return 2*a*b/(a+b);}
-export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean;timeStepScale?:number}):PartialLayerResult{
+export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean;timeStepScale?:number;absoluteTimeStepCeilingSeconds?:number}):PartialLayerResult{
  const {cells,scan,pitchMm:p,layerHeightMm:d,originMm:o}=input;
  const timeStepScale=options?.timeStepScale??1;
  assertRange(timeStepScale,.125,1,"research time-step scale");
+ const absoluteCeiling=options?.absoluteTimeStepCeilingSeconds;
+ if(absoluteCeiling!==undefined)assertRange(absoluteCeiling,1e-7,1,"absolute research time-step ceiling");
  if(scan.version!==PHYSICAL_SCAN_VERSION||!Array.isArray(scan.commands)||!scan.commands.length||scan.commands.length>3000)
   throw Error("A nonempty, bounded physical scan chronology is required.");
  if(!/^[a-f0-9]{64}$/.test(input.partSha256)||!/^[a-f0-9]{64}$/.test(input.sourceSha256))
@@ -99,6 +101,8 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
  const motionDt=(p/3)/5000; // tightened below using each commanded speed
  if(!(stableDt>0&&Number.isFinite(stableDt)&&motionDt>0))
   throw Error("Unstable research discretization.");
+ const stepLimit=(speed:number)=>Math.min(absoluteCeiling??Infinity,timeStepScale*Math.min(stableDt,speed>0?p/(3*speed):stableDt));
+ const commandStepCounts:number[]=[];let actualMaxTimeStepSeconds=0;
  let commanded=0,absorbed=0,plate=0,conv=0,steps=0,elapsed=0,previousLayer=-1;
  let expectedNext=0,totalSteps=0;
  const tolerance=1e-6;
@@ -122,7 +126,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   const duration=c.t1Seconds-c.t0Seconds;
   const speed=Math.hypot(c.x1Mm-c.x0Mm,c.y1Mm-c.y0Mm)/duration;
   if(speed>5000+1e-6)throw Error("Excessive scan speed.");
-  const dtLimit=timeStepScale*Math.min(stableDt,speed>0?p/(3*speed):stableDt);
+  const dtLimit=stepLimit(speed);
   totalSteps+=Math.ceil(duration/dtLimit);
   commanded+=c.powerW*duration;
   if(totalSteps>120000)throw Error("Partial-layer model exceeds 120,000 integration steps.");
@@ -149,8 +153,9 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   }
   const duration=command.t1Seconds-command.t0Seconds;
   const speed=Math.hypot(command.x1Mm-command.x0Mm,command.y1Mm-command.y0Mm)/duration;
-  const substeps=Math.ceil(duration/(timeStepScale*Math.min(stableDt,speed>0?p/(3*speed):stableDt)));
+  const substeps=Math.ceil(duration/stepLimit(speed));
   const dt=duration/substeps;
+  commandStepCounts.push(substeps);actualMaxTimeStepSeconds=Math.max(actualMaxTimeStepSeconds,dt);
   for(let s=0;s<substeps;s++){
    const f=(s+.5)/substeps,x=command.x0Mm+f*(command.x1Mm-command.x0Mm);
    const y=command.y0Mm+f*(command.y1Mm-command.y0Mm);
@@ -226,7 +231,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   partSha256:input.partSha256,sourceSha256:input.sourceSha256,
   grid:{cellCount:cells.length,layers:nLayers,pitchMm:p,layerHeightMm:d},
   chronology:{commands:scan.commands.length,elapsedSeconds:elapsed,timeSteps:steps,
-   maxTimeStepSeconds:stableDt*timeStepScale},
+   maxTimeStepSeconds:Math.min(stableDt*timeStepScale,absoluteCeiling??Infinity),actualMaxTimeStepSeconds,commandStepCounts},
   energy:{commandedJ:commanded,absorbedJ:absorbed,plateExchangeJ:plate,
    convectionExchangeJ:conv,storedJ:stored,relativeImbalance:imbalance},
   layers:snapshots,
