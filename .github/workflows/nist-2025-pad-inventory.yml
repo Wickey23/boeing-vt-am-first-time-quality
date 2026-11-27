@@ -1,0 +1,28 @@
+name: NIST 2025 IN718 pad source inventory
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-nist-2025-pads.py'
+      - 'tests/test_nist_2025_pads.py'
+      - '.github/workflows/nist-2025-pad-inventory.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify offline safeguards
+        run: python3 -m unittest discover -s tests -p 'test_nist_2025_pads.py' -v
+      - name: Acquire and verify publisher-checksummed measurements
+        run: python3 scripts/audit-nist-2025-pads.py --source-dir data/nist-lpbf/amb2025-pads --output data/nist-lpbf/amb2025-pad-inventory.json
+      - name: Retain inventory only
+        uses: actions/upload-artifact@v4
+        with:
+          name: nist-2025-pad-inventory
+          path: data/nist-lpbf/amb2025-pad-inventory.json
+          retention-days: 7
