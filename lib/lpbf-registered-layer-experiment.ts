@@ -8,11 +8,12 @@ import {parsePhysicalScanCsv} from "./lpbf-physical-schedule";
 import {runPartialLayerResearch,type PartialLayerInputs,type Cell3} from "./lpbf-partial-layer";
 import type {PhaseEnthalpyInput} from "./lpbf-phase-enthalpy";
 import type {ConductivityTable} from "./lpbf-conductivity-table";
+import type {RadiationInput} from "./lpbf-radiation-boundary";
 export type ResearchThermalConditions=Pick<PartialLayerInputs,
  "powerCouplingFraction"|"beamRadiusMm"|"densityKgM3"|"specificHeatJKgK"|"powderConductivityWmK"|"solidConductivityWmK"|"convectionWm2K"|"ambientTemperatureC"|"plateTemperatureC">;
 export async function runRegisteredLayerExperiment(args:{
  stl:ArrayBuffer;csv:ArrayBuffer;expectedPartSha256:string;sliceOptions:SliceOptions;
- conditions:ResearchThermalConditions;acknowledgeUnvalidatedResearch:boolean;sourceName?:string;captureFrames?:boolean;timeStepScale?:number;absoluteTimeStepCeilingSeconds?:number;phaseEnthalpy?:PhaseEnthalpyInput;conductivityTable?:ConductivityTable;
+ conditions:ResearchThermalConditions;acknowledgeUnvalidatedResearch:boolean;sourceName?:string;captureFrames?:boolean;timeStepScale?:number;absoluteTimeStepCeilingSeconds?:number;phaseEnthalpy?:PhaseEnthalpyInput;conductivityTable?:ConductivityTable;radiation?:RadiationInput;
 }){
  if(!args.acknowledgeUnvalidatedResearch)throw Error("Explicit unvalidated research acknowledgment required.");
  // Snapshot inputs before any asynchronous hashing/processing.
@@ -20,6 +21,7 @@ export async function runRegisteredLayerExperiment(args:{
  const options={...args.sliceOptions,rotationDeg:args.sliceOptions.rotationDeg?{...args.sliceOptions.rotationDeg}:undefined,
   translationMm:args.sliceOptions.translationMm?{...args.sliceOptions.translationMm}:undefined};
  const conditions={...args.conditions};
+ const radiation=args.radiation?{...args.radiation}:undefined;
  const phaseEnthalpy=args.phaseEnthalpy?{...args.phaseEnthalpy}:undefined;
  const conductivityTable=args.conductivityTable?{...args.conductivityTable,points:args.conductivityTable.points.map(p=>({...p}))}:undefined;
  const slice=await slicePhysicalStl(stl,options);
@@ -40,7 +42,7 @@ export async function runRegisteredLayerExperiment(args:{
  const thermal=runPartialLayerResearch({...conditions,
   pitchMm:slice.grid.xyPitchMm,layerHeightMm:slice.grid.layerThicknessMm,
   originMm:{...slice.grid.originMm},cells,partSha256:slice.partSha256,
-  sourceSha256:registration.sourceSha256,scan:plan},undefined,{captureFrames:args.captureFrames??false,timeStepScale:args.timeStepScale,absoluteTimeStepCeilingSeconds:args.absoluteTimeStepCeilingSeconds,phaseEnthalpy,conductivityTable});
+  sourceSha256:registration.sourceSha256,scan:plan},undefined,{captureFrames:args.captureFrames??false,timeStepScale:args.timeStepScale,absoluteTimeStepCeilingSeconds:args.absoluteTimeStepCeilingSeconds,phaseEnthalpy,conductivityTable,radiation});
  return {scope:"OFFLINE_UNVALIDATED_INTEGRATION_EXPERIMENT" as const,
   productionActivationAuthorized:false as const,geometry:slice,registration,conditions,thermal,
   limitations:["Uniform full-sampled cells only; four-ray occupancy and midpoint area checks do not prove cell-level fidelity.",
