@@ -9,6 +9,7 @@
  * Effective mass and specific heat remain constant across transitions.
  */
 import {PHYSICAL_SCAN_VERSION,type PhysicalScanPlan} from "./lpbf-physical-schedule";
+import {createPhaseEnthalpyModel,type PhaseEnthalpyInput} from "./lpbf-phase-enthalpy";
 
 export const PARTIAL_LAYER_VERSION="lpbf-partial-layer-fv-research-0.1";
 export type Cell3=[number,number,number];
@@ -27,6 +28,8 @@ export type PartialLayerInputs={
 export type PartialLayerCell={
  x:number;y:number;layer:number;state:"powder"|"consolidated";
  temperatureC:number;peakTemperatureC:number;
+ /** Equilibrium enthalpy estimate, not observed melt fraction. */
+ liquidFraction?:number;peakLiquidFraction?:number;
 };
 export type PartialLayerFrame={commandIndex:number;layer:number;timeSeconds:number;cells:PartialLayerCell[]};
 export type PartialLayerResult={
@@ -40,6 +43,7 @@ export type PartialLayerResult={
  finalCells:PartialLayerCell[];
  /** Optional bounded command-end frames; inactive cells are omitted. */
  frames?:PartialLayerFrame[];
+ phaseClosure?:{model:"UNVALIDATED_EQUILIBRIUM_ENTHALPY";parameters:PhaseEnthalpyInput;productionActivationAuthorized:false};
  limitations:string[];
 };
 const DIRECTIONS:Cell3[]=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
@@ -47,7 +51,7 @@ function assertRange(v:number,lo:number,hi:number,label:string){
  if(!Number.isFinite(v)||v<lo||v>hi)throw Error("Invalid "+label+".");
 }
 function harmonic(a:number,b:number){return 2*a*b/(a+b);}
-export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean;timeStepScale?:number;absoluteTimeStepCeilingSeconds?:number}):PartialLayerResult{
+export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean;timeStepScale?:number;absoluteTimeStepCeilingSeconds?:number;phaseEnthalpy?:PhaseEnthalpyInput}):PartialLayerResult{
  const {cells,scan,pitchMm:p,layerHeightMm:d,originMm:o}=input;
  const timeStepScale=options?.timeStepScale??1;
  assertRange(timeStepScale,.125,1,"research time-step scale");
@@ -91,13 +95,17 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
  const active=new Uint8Array(cells.length),solid=new Uint8Array(cells.length);
  const enthalpy=new Float64Array(cells.length),peak=new Float64Array(cells.length).fill(input.ambientTemperatureC);
  const mass=input.densityKgM3*(p/1000)**2*(d/1000);
+ const phase=options?.phaseEnthalpy?createPhaseEnthalpyModel(options.phaseEnthalpy):null;
+ if(phase&&phase.parameters.solidSpecificHeatJKgK!==input.specificHeatJKgK)throw Error("Phase solid heat capacity must match the research input.");
+ if(phase&&input.ambientTemperatureC>=phase.parameters.solidusC)throw Error("Phase experiment requires initially solid-temperature feedstock.");
  const cp=input.specificHeatJKgK,capacity=mass*cp;
+ const initialH=phase?.enthalpyJKg(input.ambientTemperatureC)??0;
  const xyArea=p*d*1e-6,zArea=p*p*1e-6;
  const hxy=p/1000,hz=d/1000;
  const kMax=input.solidConductivityWmK;
  const maximalG=4*kMax*xyArea/hxy+2*kMax*zArea/hz+
   2*kMax*zArea/(hz/2)+input.convectionWm2K*(4*xyArea+2*zArea);
- const stableDt=.15*capacity/maximalG;
+ const stableDt=.15*mass*(phase?.minimumHeatCapacityJKgK??cp)/maximalG;
  const motionDt=(p/3)/5000; // tightened below using each commanded speed
  if(!(stableDt>0&&Number.isFinite(stableDt)&&motionDt>0))
   throw Error("Unstable research discretization.");
@@ -145,7 +153,8 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
  if(options?.captureFrames&&cells.length*scan.commands.length>100_000)
   throw Error("Frame capture exceeds 100,000 cell-command records; reduce the research study.");
  const conductivity=(i:number)=>solid[i]?input.solidConductivityWmK:input.powderConductivityWmK;
- const temp=(i:number)=>input.ambientTemperatureC+enthalpy[i]/capacity;
+ const temp=(i:number)=>phase?phase.state(initialH+enthalpy[i]/mass).temperatureC:input.ambientTemperatureC+enthalpy[i]/capacity;
+ const phaseFields=(i:number)=>phase?{liquidFraction:phase.state(initialH+enthalpy[i]/mass).liquidFraction,peakLiquidFraction:phase.state(phase.enthalpyJKg(peak[i])).liquidFraction}:{};
  for(const [commandIndex,command] of scan.commands.entries()){
   if(command.layer!==previousLayer){
    previousLayer=command.layer;
@@ -216,7 +225,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   snapshots.push({layer:command.layer,timeSeconds:elapsed,activeCells:activeCount,
    consolidatedCells:consolidated,maximumTemperatureC:maxTemp});
   if(options?.captureFrames)frames.push({commandIndex,layer:command.layer,timeSeconds:elapsed,
-   cells:cells.flatMap((c,i)=>active[i]?[{x:c[0],y:c[1],layer:c[2],state:solid[i]?"consolidated" as const:"powder" as const,temperatureC:temp(i),peakTemperatureC:peak[i]}]:[])});
+   cells:cells.flatMap((c,i)=>active[i]?[{x:c[0],y:c[1],layer:c[2],state:solid[i]?"consolidated" as const:"powder" as const,temperatureC:temp(i),peakTemperatureC:peak[i],...phaseFields(i)}]:[])});
   onProgress?.(commandIndex+1,scan.commands.length);
  }
  const stored=enthalpy.reduce((a,b)=>a+b,0);
@@ -236,12 +245,13 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
    convectionExchangeJ:conv,storedJ:stored,relativeImbalance:imbalance},
   layers:snapshots,
   ...(options?.captureFrames?{frames}:{}),
+  ...(phase?{phaseClosure:{model:"UNVALIDATED_EQUILIBRIUM_ENTHALPY" as const,parameters:phase.parameters,productionActivationAuthorized:false as const}}:{}),
   finalCells:cells.map((c,i)=>({x:c[0],y:c[1],layer:c[2],
-   state:solid[i]?"consolidated":"powder",temperatureC:temp(i),peakTemperatureC:peak[i]})),
+   state:solid[i]?"consolidated":"powder",temperatureC:temp(i),peakTemperatureC:peak[i],...phaseFields(i)})),
   limitations:[
    "RESEARCH ONLY. This model uses an engineer-supplied, layer-aligned uniform grid, not an STL-accurate slicer or verified machine data.",
    "Each layer's powder footprint appears instantaneously at its first command. Laser-illuminated cells are labeled consolidated heuristically; no melting/solidification kinetics, consolidation threshold or melt-pool fluid flow are modeled.",
-   "Powder and consolidated thermal conductivities differ; mass, density and heat capacity are held constant to preserve a simple cell energy balance. Powder packing, shrinkage and latent heat are absent.",
+   phase?"Research equilibrium enthalpy includes latent heat and separate constant sensible heat capacities. Beam-marked consolidation and conductivity remain heuristic, independent of liquid fraction. No phase kinetics, packing or shrinkage.":"Powder and consolidated thermal conductivities differ; mass, density and heat capacity are held constant to preserve a simple cell energy balance. Powder packing, shrinkage and latent heat are absent.",
    "The Gaussian source is integrated over coarse cells and normalized within the represented footprint. Beam shape, absorption, powder-bed physics and local temperatures are not experimentally validated.",
    "Top/side faces use a simplified convection boundary rather than resolved powder-bed coupling; the plate is an ideal fixed-temperature reservoir. No radiation or mechanical coupling.",
    "Numerical energy conservation is not convergence, experimental accuracy, melt-pool validation or evidence of defect/first-time-quality prediction."
