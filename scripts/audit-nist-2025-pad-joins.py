@@ -10,6 +10,8 @@ import hashlib
 import io
 import json
 import pathlib
+import re
+import statistics
 
 PARAM="SampleIParameters.csv"
 TARGETS={"depth":"depths.csv","width":"widths.csv",
@@ -90,6 +92,79 @@ def audit(params,tables):
         for t in report["targets"].values())
     return report
 
+# NIST AMB2025-06/07 challenge descriptions v3, section 2.6, table 8.
+# This is an independent protocol reference, not a substitute for the
+# checksum-rejected dataset README.
+PROTOCOL_URL="https://www.nist.gov/system/files/documents/2025/12/18/AMB2024-06%20and%2007%20challenge%20descriptions_v3.pdf"
+D=Decimal
+CONDITIONS=((D("80"),D("0.75")),(D("160"),D("0.75")),
+            (D("0"),D("0.75")),(D("0"),D("5")))
+SECTIONS={1:(D("5"),D("0.460")),2:(D("5"),D("2.545")),3:(D("1"),D("0.556"))}
+EXPECTED_KEYS={(*condition,*section) for condition in CONDITIONS for section in SECTIONS.values()}
+
+def protocol_audit(params,tables):
+    p,invalid=index(params)
+    sample_ids={r["Sample ID"].strip() for r in params}
+    plate_sections=collections.defaultdict(set)
+    matched=0
+    for r in params:
+        m=re.fullmatch(r"(20241010|20241015)_AMB_T([1-9]|1[0-2])2_P([123])",r["Sample ID"].strip())
+        if not m:
+            continue
+        day,plate,section=m.group(1),int(m.group(2)),int(m.group(3))
+        # Date and plate identity checked against published Table 8.
+        expected_day="20241010" if plate in (1,4,7,10,11,12) else "20241015"
+        if day!=expected_day or key(r)!=(*CONDITIONS[(plate-1)//3],*SECTIONS[section]):
+            continue
+        matched+=1
+        plate_sections[plate].add(section)
+    protocol_complete=(matched==len(params)==36 and len(sample_ids)==36 and
+                       len(plate_sections)==12 and all(v=={1,2,3} for v in plate_sections.values()))
+    condition_layout=(not invalid and set(p)==EXPECTED_KEYS and all(len(v)==3 for v in p.values()))
+    outputs={}
+    for name,rows in tables.items():
+        m,bad=index(rows)
+        layout=condition_layout and not bad and set(m)==EXPECTED_KEYS and all(len(v)==3 for v in m.values())
+        ids=collections.Counter(r["Row"].strip() for r in rows)
+        literal_matches=sum(r["Row"].strip() in sample_ids for r in rows)
+        exact_identity=(protocol_complete and layout and literal_matches==len(rows) and
+                        len(ids)==len(rows) and all(
+                            r["Row"].strip() in {v["Sample ID"].strip() for v in p[k]}
+                            for k,rs in m.items() for r in rs))
+        summary=[]
+        if layout:
+            for k,rs in sorted(m.items()):
+                means=[]
+                valid_counts=[]
+                for r in rs:
+                    vals=[decimal(r[col]) for col in MEAS_HEADER[5:]]
+                    valid=[float(v) for v in vals if v is not None and v>0]
+                    valid_counts.append(len(valid))
+                    if valid:
+                        means.append(statistics.mean(valid))
+                # Equal row weight. No claim that Row is a physical plate identifier;
+                # no confidence intervals or cross-target pairing.
+                summary.append({"powder_um":str(k[0]),"turnaround_ms":str(k[1]),
+                                "pad_width_mm":str(k[2]),"location_mm":str(k[3]),
+                                "rows":len(rs),"rows_with_positive_values":len(means),
+                                "positive_cells":sum(valid_counts),"potential_cells":45*len(rs),
+                                "row_balanced_positive_mean_um":statistics.mean(means) if means else None,
+                                "row_mean_range_um":[min(means),max(means)] if means else None})
+        outputs[name]={"condition_layout_matches":layout,"distinct_row_labels":len(ids),
+                       "literal_sample_id_matches":literal_matches,
+                       "literal_sample_identity_complete":exact_identity,
+                       "condition_summaries":summary}
+    return {"protocol_reference":PROTOCOL_URL,"parameter_sample_ids_match_published_table":matched,
+            "parameter_plate_section_design_verified":protocol_complete,
+            "matched_parameter_plate_groups":len(plate_sections),
+            "parameter_condition_layout_matches":condition_layout,
+            "target_protocol_audit":outputs,
+            "specimen_join_authorized":False,"physical_validation":False,
+            "notes":["Condition summaries are descriptive only and use positive numeric cells.",
+                     "Row means are weighted equally, without assuming track or plate identities.",
+                     "No uncertainty interval, paired target join or validation claim.",
+                     "README discrepancy remains an independent blocker."]}
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--source-dir",type=pathlib.Path,required=True)
@@ -118,7 +193,7 @@ def main():
                      "Candidate match is not a reviewed physical specimen relationship.",
                      "Blank, zero, negative and nonnumeric cells remain distinct; no imputation.",
                      "Numbered columns not yet established as physical track identities."],
-            **audit(params,tables)}
+            **audit(params,tables),"published_protocol_audit":protocol_audit(params,tables)}
     a.output.parent.mkdir(parents=True,exist_ok=True)
     a.output.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n",encoding="utf-8")
     print(json.dumps(result,indent=2,allow_nan=False))
