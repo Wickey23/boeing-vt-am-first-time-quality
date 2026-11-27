@@ -10,6 +10,7 @@
 import {STLLoader} from "three/examples/jsm/loaders/STLLoader.js";
 import {Euler,Vector3} from "three";
 import {auditSTL,type MeshAudit} from "./stl-mesh-audit";
+import {sectionAreaCheck,type SectionTriangle} from "./lpbf-section-area-check";
 
 export const PHYSICAL_SLICER_VERSION="orientai-stl-physical-raster-v0.1";
 export type Vec3={x:number;y:number;z:number};
@@ -18,6 +19,7 @@ export type PhysicalSliceLayer={
  layer:number;bottomZMm:number;topZMm:number;sampleZMm:number;
  areaMm2:number;estimatedVolumeMm3:number;partialCells:number;
  cells:PhysicalSliceCell[];
+ sectionCheck?:{referenceAreaMm2:number|null;absoluteDifferenceMm2:number|null;relativeDifference:number|null;reason:string|null};
 };
 export type PhysicalSliceResult={
  version:typeof PHYSICAL_SLICER_VERSION;
@@ -99,9 +101,11 @@ export async function slicePhysicalStl(stl:ArrayBuffer,opts:SliceOptions):Promis
   return {x:v.x,y:v.y,z:v.z};
  };
  const tris:Tri[]=[];
+ const sectionTriangles:SectionTriangle[]=[];
  let min={x:Infinity,y:Infinity,z:Infinity},max={x:-Infinity,y:-Infinity,z:-Infinity},signedVolume=0;
  for(let i=0;i<pos.count;i+=3){
   const a=map(i),b=map(i+1),c=map(i+2);
+  sectionTriangles.push({a,b,c});
   for(const v of [a,b,c])for(const k of ["x","y","z"] as const){min[k]=Math.min(min[k],v[k]);max[k]=Math.max(max[k],v[k]);}
   const ax=a.x-pivot.x,bx=b.x-pivot.x,cx=c.x-pivot.x;
   const ay=a.y-pivot.y,by=b.y-pivot.y,cy=c.y-pivot.y;
@@ -142,10 +146,14 @@ export async function slicePhysicalStl(stl:ArrayBuffer,opts:SliceOptions):Promis
    if(count)layerMaps[layer].set(iy*columns+ix,count/4);
   }
  }
+ const checkAvailable=audit.disconnectedShells===1&&numLayers*sectionTriangles.length<=2_000_000;
  const layers:PhysicalSliceLayer[]=layerMaps.map((m,i)=>{
   const cells:PhysicalSliceCell[]=[...m].map(([index,coverage])=>({x:index%columns,y:Math.floor(index/columns),coverage}));
   const area=cells.reduce((sum,c)=>sum+c.coverage*p*p,0);
+  const ref=checkAvailable?sectionAreaCheck(sectionTriangles,layerBounds[i].sampleZMm,min):{areaMm2:null,reason:"Multiple shells or section work limit exceeded"};
+  const difference=ref.areaMm2===null?null:Math.abs(area-ref.areaMm2);
   return {layer:i,...layerBounds[i],areaMm2:area,
+   sectionCheck:{referenceAreaMm2:ref.areaMm2,absoluteDifferenceMm2:difference,relativeDifference:difference===null||ref.areaMm2===null?null:difference/ref.areaMm2,reason:ref.reason},
    estimatedVolumeMm3:area*(layerBounds[i].topZMm-layerBounds[i].bottomZMm),
    partialCells:cells.filter(c=>c.coverage!==1).length,cells};
  });
@@ -159,6 +167,11 @@ export async function slicePhysicalStl(stl:ArrayBuffer,opts:SliceOptions):Promis
   "Partial cell fractions and feature scales below the XY pitch or physical layer height are uncertain. Thin walls, disconnected regions, self-intersections and sharp slopes require independent inspection.",
   "Neither this geometry raster nor imported user CSV supplies a verified native machine scan path, print thermophysics, porosity, melt behavior, certification or first-time quality."
  ];
+ const missingChecks=layers.filter(l=>l.sectionCheck?.referenceAreaMm2==null).length;
+ const discrepantChecks=layers.filter(l=>(l.sectionCheck?.relativeDifference??0)>.08).length;
+ diagnostics.push("Directed midpoint-section area comparison is an independent geometric diagnostic, not a guaranteed error bound or a thermal activation approval.");
+ if(missingChecks)diagnostics.unshift(missingChecks+" layer section-area comparisons unavailable; do not infer geometry fidelity.");
+ if(discrepantChecks)diagnostics.unshift(discrepantChecks+" layer area discrepancies exceed the 8% research review threshold; refine and inspect geometry before downstream use.");
  if(audit.disconnectedShells>1)diagnostics.unshift("Multiple disconnected STL shells: confirm intentional part connectivity before any numerical simulation.");
  if(relative>0.08)diagnostics.unshift("Raster-volume deviation exceeds 8% of signed STL mesh volume. Do not use this resolution for physical analysis; refine grid and inspect thin features.");
  if(boundary)diagnostics.unshift(boundary+" boundary layer-cells have sampled, nonbinary occupancy; they cannot be treated as full-density cubes by the existing partial-layer solver.");
