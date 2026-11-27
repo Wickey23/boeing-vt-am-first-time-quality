@@ -44,3 +44,10 @@ python -m unittest discover -s tests -p 'test_nist*.py' -v
 ```
 
 The workbook hash is the prior audit's recorded digest, not a newly fetched publisher checksum. The raw files were not accessible in the current execution environment; the real reconciliation remains outstanding and new CI must complete. The README was reviewed as rendered text, not as a locally hashed original. The gate is intentionally not a model-training approval. No model or production change has been deployed.
+
+
+## Pinned workbook identifier reconciliation
+
+Research run [45926763440](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/45926763440) downloaded all three sources, verified the workbook digest, and stopped at count reconciliation. Diagnostic run [45935493715](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/45935493715) showed exactly 228 rows: AMB2022-718-SH1-BP1=42, AMB2022-718-SH1-BP2=94, AMB2022-718-SH1-BP3=92. The problem was full source identifiers rather than missing measurements. The measurement README SHA-256 acquired by CI was 8fa24c82e087a43ea453f9dbab7e56acfccb421a4b5afa620992142967a45274.
+
+The parser now maps only those three exact full identifiers to the documented canonical plate IDs, retaining the original value in source_sample_id and raw_cells. Unrecognized IDs are not mapped by suffix. Expected counts and provenance gates are unchanged. The updated parser is subject to fresh CI and real-source benchmark execution; no numerical performance or independent physical-validation claim is made here. Work is isolated in PR #29 to avoid collisions with the CTQ editor currently being implemented on PR #28.
