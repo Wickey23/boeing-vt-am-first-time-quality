@@ -34,10 +34,15 @@ test("CAD mode leaves mobile study controls accessible",async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","true"));
  await page.goto("/copilot/workbench");
- await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeVisible();
+ const viewport=page.locator(".psReferenceViewport");
+ await expect(viewport).toBeVisible();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await expect(page.getByRole("region",{name:"CAD analysis commands"})).toBeVisible();
+ await page.getByRole("button",{name:"Study properties",exact:true}).click();
  await expect(page.getByRole("navigation",{name:"Assessment stages"})).toBeVisible();
- await expect(page.getByRole("button",{name:"CAD workspace layout"})).toBeHidden();
- await expect(page.getByRole("region",{name:"CAD analysis commands"})).toBeHidden();
+ await page.getByRole("button",{name:"Close properties"}).click();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await expect(viewport).toBeVisible();
 });
 
 test("study manager, study tree and document tabs navigate the same engineering workspace",async({page})=>{
@@ -88,4 +93,21 @@ test("advanced studies and research routes share CAD presentation",async({page})
  await page.goto("/simulation/benchmarks");
  await expect(page.locator(".cadResearchShell")).toBeVisible();
  await expect(page.getByRole("button",{name:"1D thermal benchmark"})).toBeVisible();
+});
+
+test("tablet desktop-mode sandbox keeps the imported part visible without scrolling through a wizard",async({page})=>{
+ await page.setViewportSize({width:980,height:1150});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const viewport=page.locator(".psReferenceViewport");
+ await expect(viewport.locator("canvas")).toBeVisible();
+ const bounds=await viewport.boundingBox();
+ expect(bounds!.y).toBeLessThan(200);
+ expect(bounds!.height).toBeGreaterThan(500);
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await page.getByRole("region",{name:"CAD analysis commands"}).getByRole("button",{name:"Engineering Context",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
+ await page.getByRole("button",{name:"Close properties"}).click();
+ await expect(viewport.locator("canvas")).toBeVisible();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
 });
