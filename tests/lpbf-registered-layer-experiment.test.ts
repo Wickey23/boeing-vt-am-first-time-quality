@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {runRegisteredLayerExperiment} from "../lib/lpbf-registered-layer-experiment";
+import {prepareLayerTemperatureView} from "../lib/lpbf-layer-temperature-view";
 import {PHYSICAL_SCAN_HEADER} from "../lib/lpbf-physical-schedule";
 const bytes=(s:string)=>new TextEncoder().encode(s).buffer as ArrayBuffer;
 async function setup(){
@@ -60,4 +61,22 @@ test("M06 thermal frames reflect actual command-end fields and omit inactive lay
   assert.ok(frames[i].cells.every(c=>Number.isFinite(c.temperatureC)&&c.peakTemperatureC>=c.temperatureC));
   assert.equal(Math.max(...frames[i].cells.map(c=>c.temperatureC)),withFrames.thermal.layers[i].maximumTemperatureC);
  }
+});
+
+test("M06 temperature view preserves layer registration and a fixed scale across time",async()=>{
+ const input=await setup();
+ const result=await runRegisteredLayerExperiment({...input,captureFrames:true});
+ const view=prepareLayerTemperatureView(result.thermal,result.geometry);
+ assert.equal(view.frameCount,3);
+ assert.equal(view.layerCount,2);
+ const inactive=view.layerFrame(0,1),active=view.layerFrame(2,1);
+ assert.equal(inactive.active,false);
+ assert.ok(inactive.values.every(v=>v===null));
+ assert.equal(active.active,true);
+ assert.equal(active.sampleZMm,.75);
+ assert.ok(active.values.every(v=>typeof v==="number"&&Number.isFinite(v)));
+ assert.deepEqual(inactive.colorRangeC,active.colorRangeC);
+ assert.throws(()=>view.layerFrame(3,0),/Invalid captured frame/);
+ const altered={...result.geometry,partSha256:"0".repeat(64)};
+ assert.throws(()=>prepareLayerTemperatureView(result.thermal,altered),/do not match/);
 });
