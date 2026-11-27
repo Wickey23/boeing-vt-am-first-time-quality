@@ -40,3 +40,28 @@
 @media(max-width:1100px){
  .psCadModeToggle{display:none!important}
 }
+
+/* Match the existing high-specificity header rule on mobile. */
+@media(max-width:1100px){
+ .psRoot.psReferenceRoot .psViewerHeaderActions>button.psCadModeToggle{display:none!important}
+}
+/* Document tabs sit below the graphics and property panels, not inside either. */
+.psCadDocumentTabs{display:none}
+@media(min-width:1101px){
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout{
+  grid-template-rows:44px minmax(0,1fr) 34px
+ }
+ .psCadLayout .psCadDocumentTabs{display:flex;grid-column:1/-1;grid-row:3;align-items:stretch;
+  background:#202a34;border-top:1px solid #536476;overflow-x:auto;min-width:0}
+ .psCadDocumentTabs button,.psCadDocumentTabs a{display:flex;align-items:center;gap:6px;white-space:nowrap;
+  border:0;border-right:1px solid #465767;border-top:2px solid transparent;background:transparent;
+  color:#bdcbd8;padding:5px 13px;font-size:11px;text-decoration:none;cursor:pointer}
+ .psCadDocumentTabs button[aria-current=page]{background:#35495b;color:#f2f6fa;border-top-color:#93c3e7}
+ .psCadDocumentTabs :is(button,a):hover{background:#364656;color:white}
+ .psCadDocumentTabs :is(button,a):focus-visible{outline:2px solid #b8d7ed;outline-offset:-3px}
+ .psCadLayout .psPaneResizeHandle{bottom:34px}
+ .psCadLayout .psReferenceViewerCard{display:flex;flex-direction:column;min-height:0;height:100%}
+ /* A CAD ribbon belongs above the canvas, including the existing view controls. */
+ .psCadLayout .psViewerToolbar{order:-1;flex:0 0 auto;border-bottom:1px solid #46596b}
+ .psCadLayout .psReferenceViewerHeader{flex:0 0 auto}
+}
