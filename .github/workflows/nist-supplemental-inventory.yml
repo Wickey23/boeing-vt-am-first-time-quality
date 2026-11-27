@@ -1,0 +1,25 @@
+name: NIST supplemental source inventory (research only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-nist-supplemental-source.py'
+      - '.github/workflows/nist-supplemental-inventory.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Acquire original workbook and inspect schema
+        run: python3 scripts/audit-nist-supplemental-source.py --output data/nist-lpbf/supplemental-inventory.json
+      - name: Preserve schema and provenance evidence only
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplemental-source-inventory
+          path: data/nist-lpbf/supplemental-inventory.json
+          retention-days: 7
