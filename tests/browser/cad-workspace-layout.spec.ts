@@ -53,3 +53,24 @@ test("study manager, study tree and document tabs navigate the same engineering 
  await page.getByRole("group",{name:"Study tree"}).getByRole("button",{name:"Risk assessment"}).click();
  await expect(tabs.getByRole("button",{name:"Failure Assessment"})).toHaveAttribute("aria-current","page");
 });
+
+test("CAD graphics uses light chrome and a functional view cube with secondary assistant",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/workbench");
+ const viewport=page.locator(".psReferenceViewport");
+ await expect(viewport).toHaveCSS("background-color","rgb(231, 237, 243)");
+ const cube=page.getByRole("group",{name:"Model view cube"});
+ await expect(cube).toBeVisible();
+ await cube.getByRole("button",{name:"Cube top view"}).click();
+ await expect(cube.getByRole("button",{name:"Cube top view"})).toHaveAttribute("aria-pressed","true");
+ await expect(page.getByRole("toolbar",{name:"3D model navigation"}).getByRole("button",{name:"Top view",exact:true})).toHaveAttribute("aria-pressed","true");
+ const assistant=page.getByRole("button",{name:"Engineering assistant",exact:true});
+ await expect(assistant).toHaveAttribute("aria-expanded","false");
+ await expect(page.getByRole("textbox",{name:"Ask ORIENTAI"})).toBeHidden();
+ await assistant.click();
+ await expect(page.getByRole("textbox",{name:"Ask ORIENTAI"})).toBeVisible();
+ await assistant.click();
+ await expect(page.getByRole("textbox",{name:"Ask ORIENTAI"})).toBeHidden();
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.locator(".cadGraphicsViewport canvas")).toBeVisible();
+});
