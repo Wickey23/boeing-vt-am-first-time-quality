@@ -24,3 +24,10 @@ python -m unittest discover -s tests -p 'test_nist*.py' -v
 ## Acceptance evidence and limitations
 
 Synthetic unit tests cover condition holdout, separation of plates, held-out target leakage, missing inputs, constant energy, inadequate group counts and abstention. Synthetic tests establish behavior only. The original workbook is not available in the current execution session, so real metrics have not been computed. Do not claim training performance, calibrated uncertainty, independent experimental validation or defect accuracy. Before independent validation, obtain compatible independent specimen/build evidence, freeze a separate holdout and engineer-approved error thresholds, and document target-specific measurement uncertainty. Keep all experimental outputs out of the public repository pending data-use review.
+
+
+## Network-enabled execution route
+
+The separate research-only workflow `.github/workflows/nist-experimental-benchmark.yml` runs on relevant pull requests (and supports manual dispatch when available on the default branch). It attempts acquisition on a GitHub-hosted runner, requires both the measurement workbook and matching README, then executes pinned-source reconciliation and the frozen benchmark. It does not require secrets or deploy application changes. A failed download or source mismatch fails this research job explicitly, independently of the application engineering workflow.
+
+The workflow retains the source acquisition manifest and aggregate benchmark summary for seven days. Original bytes, specimen/section identities, row-level observations and fold-level errors are not uploaded as artifacts or committed. Aggregate results still carry the source and method limitations. Do not treat workflow creation or a successful software check as a physical-model acceptance result. Record the actual run SHA, status, coverage and errors only after the research job finishes. The current session's direct NIST download failed at DNS resolution; the new workflow is an attempted alternative, not a confirmed successful acquisition.
