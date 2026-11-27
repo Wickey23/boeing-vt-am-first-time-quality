@@ -20,9 +20,11 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_nist_2025_pads.py' -v
       - name: Acquire and verify publisher-checksummed measurements
         run: python3 scripts/audit-nist-2025-pads.py --source-dir data/nist-lpbf/amb2025-pads --output data/nist-lpbf/amb2025-pad-inventory.json
-      - name: Retain inventory only
+      - name: Retain inventory and rejected-source diagnostics only
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: nist-2025-pad-inventory
           path: data/nist-lpbf/amb2025-pad-inventory.json
+          if-no-files-found: warn
           retention-days: 7
