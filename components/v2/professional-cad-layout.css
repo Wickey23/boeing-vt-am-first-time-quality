@@ -1,0 +1,42 @@
+/* Optional CAD workspace. Keep existing analysis components and legacy layout intact.
+   No CAD authoring tools are implied: these controls navigate analysis stages. */
+.psCadRibbon{display:none}
+.psCadModeToggle{display:inline-flex!important;align-items:center;justify-content:center;
+ gap:5px;padding:4px 7px!important;width:auto!important;min-width:52px!important;
+ font-size:11px!important;white-space:nowrap;border:1px solid #53697d!important;
+ color:#dbe7f1!important;background:#273644!important;border-radius:4px!important}
+.psCadModeToggle[aria-pressed=true]{background:#365a78!important;border-color:#8bb7d9!important}
+.psCadRibbon button:focus-visible,.psCadModeToggle:focus-visible{outline:2px solid #b8d7ed;outline-offset:2px}
+@media(min-width:1101px){
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout{
+  grid-template-columns:minmax(0,var(--ps-viewer-width,58%)) minmax(0,1fr)!important;
+  grid-template-rows:44px minmax(0,1fr);gap:0
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon{
+  display:flex;grid-column:1/-1;grid-row:1;align-items:center;gap:5px;
+  padding:5px 10px;border-bottom:1px solid #46596b;background:#25313c;
+  min-width:0;overflow-x:auto;white-space:nowrap
+ }
+ .psCadRibbon .psCadGroup{display:flex;align-items:center;gap:4px;padding:0 8px;border-right:1px solid #4d6071}
+ .psCadRibbon button{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;
+  min-height:32px;border:1px solid transparent;background:transparent;color:#e1e9ef;
+  font-size:11px;font-weight:600;border-radius:3px;cursor:pointer}
+ .psCadRibbon button:hover:not(:disabled){background:#34495b;border-color:#5b748a}
+ .psCadRibbon button[aria-pressed=true]{background:#395970;border-color:#8eafca}
+ .psCadRibbon button:disabled{opacity:.45;cursor:not-allowed}
+ .psCadRibbon .psCadStudyName{margin-left:auto;min-width:70px;max-width:25%;overflow:hidden;
+  text-overflow:ellipsis;font-size:11px;color:#bbcad6}
+ .psCadLayout .psWorkingColumn{grid-column:2;grid-row:2;border-right:0!important;border-left:1px solid #46596b}
+ .psCadLayout .psViewerColumn{grid-column:1;grid-row:2;padding:0!important;min-width:0;min-height:0}
+ .psCadLayout .psReferenceViewerCard{border:0;border-radius:0;padding:8px!important;margin:0!important}
+ .psCadLayout .psViewerFrame.psReferenceViewport{border-radius:0;min-height:0}
+ .psCadLayout .psWorkspaceHeader{padding:0 8px!important}
+ .psCadLayout .psStageScroll{padding:12px!important}
+ .psCadLayout .psPaneResizeHandle{left:calc(var(--ps-viewer-width,58%) - 6px);right:auto!important;top:44px!important}
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout.psStudyHidden{grid-template-columns:minmax(0,1fr)!important}
+ .psCadLayout.psStudyHidden .psViewerColumn{grid-column:1/-1}
+ .psCadLayout.psViewerExpanded .psViewerColumn{grid-column:auto;grid-row:auto}
+}
+@media(max-width:1100px){
+ .psCadModeToggle{display:none!important}
+}
