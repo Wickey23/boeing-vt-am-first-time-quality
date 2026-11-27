@@ -57,5 +57,32 @@ class PadInventoryTests(unittest.TestCase):
             self.assertEqual((root/"data.csv").read_bytes(),b"previous original")
             self.assertFalse((root/"data.csv.staging").exists())
 
+    def test_verified_cross_section_legacy_encoding_preserves_source_bytes(self):
+        raw="sample,Depth (µm)\na,12\n".encode("cp1252")
+        side=hashlib.sha256(raw).hexdigest().encode()
+        def fetch(url,dest):
+            dest.write_bytes(side if url.endswith(".sha256") else raw)
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d)
+            name="Cross_Sections/Tracks_Results/depths.csv"
+            result=pads.acquire(name,root,fetch,bases=("first/",))
+            self.assertTrue(result["publisher_checksum_matched"])
+            self.assertTrue(result["accepted"])
+            self.assertEqual(result["inventory"]["decoded_encoding"],"cp1252")
+            self.assertEqual(result["inventory"]["first_row_header_candidates"],["sample","Depth (µm)"])
+            self.assertEqual((root/name).read_bytes(),raw)
+
+    def test_checksum_verified_but_invalid_schema_is_not_accepted(self):
+        raw=b"sample,depth\na,\x00\n"
+        side=hashlib.sha256(raw).hexdigest().encode()
+        def fetch(url,dest):
+            dest.write_bytes(side if url.endswith(".sha256") else raw)
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d)
+            result=pads.acquire("data.csv",root,fetch,bases=("first/",))
+            self.assertTrue(result["publisher_checksum_matched"])
+            self.assertFalse(result["accepted"])
+            self.assertFalse((root/"data.csv").exists())
+
 if __name__=="__main__":
     unittest.main()
