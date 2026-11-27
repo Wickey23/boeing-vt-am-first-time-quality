@@ -30,8 +30,12 @@ def check_bytes(raw, sidecar):
         raise ValueError("Source does not match publisher SHA-256")
     return digest
 
-def inspect_csv(raw):
-    data=raw.decode("utf-8-sig")
+def inspect_csv(raw, encoding="utf-8-sig"):
+    # Cross-section exports contain a single-byte micro sign (0xb5).
+    # Decode only after verifying untouched original bytes; no lossy replacement.
+    data=raw.decode(encoding, errors="strict")
+    if "\x00" in data or any(ord(c)<32 and c not in "\t\r\n" for c in data):
+        raise ValueError("Unexpected control characters in measurement CSV")
     if data.lstrip().startswith("<"):
         raise ValueError("Markup instead of measurement CSV")
     rows=[r for r in csv.reader(io.StringIO(data),strict=True)
@@ -40,7 +44,7 @@ def inspect_csv(raw):
         raise ValueError("CSV lacks expected tabular structure")
     headers=rows[0]
     # No column mapping or automatic numeric conversion in this inventory.
-    return {"first_row_header_candidates":headers,
+    return {"decoded_encoding":encoding,"first_row_header_candidates":headers,
             "nonempty_rows_after_first":len(rows)-1,
             "row_width_counts":dict(collections.Counter(str(len(r)) for r in rows[1:])),
             "blank_first_row_cells":sum(not h.strip() for h in headers),
@@ -62,12 +66,14 @@ def main():
                            "No raw measurement rows are published."]}
     for name in FILES:
         result["files"][name]=acquire(name,a.source_dir,fetch.download)
-    result["complete"]=all(e["publisher_checksum_matched"] for e in result["files"].values())
+    result["measurement_inventory_complete"]=all(e.get("accepted",False) for n,e in result["files"].items() if n.endswith(".csv"))
+    result["readme_verified"]=result["files"]["4103_ReadMe.txt"].get("accepted",False)
+    result["complete"]=result["measurement_inventory_complete"] and result["readme_verified"]
     a.output.parent.mkdir(parents=True,exist_ok=True)
     a.output.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n",encoding="utf-8")
     print(json.dumps(result,indent=2,allow_nan=False))
     if not result["complete"]:
-        raise SystemExit("One or more original sources could not be checksum-verified; see inventory")
+        raise SystemExit("One or more original sources could not be accepted; see inventory for checksum and schema outcomes")
 
 def acquire(name,root,download,bases=BASES):
     dest=root/name
@@ -89,10 +95,11 @@ def acquire(name,root,download,bases=BASES):
             raw=staging.read_bytes()
             attempt.update(bytes=len(raw),observed_sha256=hashlib.sha256(raw).hexdigest())
             digest=check_bytes(raw,sidecar)
+            attempt["publisher_checksum_matched"]=True
             entry={"url":attempt["url"],"sha256":digest,"bytes":len(raw),
-                   "publisher_checksum_matched":True,"attempts":attempts}
+                   "publisher_checksum_matched":True,"accepted":True,"attempts":attempts}
             if name.endswith(".csv"):
-                entry["inventory"]=inspect_csv(raw)
+                entry["inventory"]=inspect_csv(raw, encoding="cp1252" if name.startswith("Cross_Sections/Tracks_Results/") else "utf-8-sig")
             else:
                 readme=raw.decode("utf-8-sig")
                 if readme.lstrip().startswith("<") or not readme.strip():
@@ -106,7 +113,8 @@ def acquire(name,root,download,bases=BASES):
         finally:
             staging.unlink(missing_ok=True)
             side.unlink(missing_ok=True)
-    return {"publisher_checksum_matched":False,"attempts":attempts}
+    return {"publisher_checksum_matched":any(x.get("publisher_checksum_matched",False) for x in attempts),
+            "accepted":False,"attempts":attempts}
 
 if __name__=="__main__":
     main()
