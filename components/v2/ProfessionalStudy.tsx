@@ -473,7 +473,7 @@ export default function ProfessionalStudy(){
     />}
    </div>
    <div className={"psAssistant"+(cadLayout&&!cadAssistantOpen&&!showThread?" psCadAssistantCollapsed":"")}>
-    {cadLayout&&<button type="button" className="psCadAssistantToggle" aria-expanded={cadAssistantOpen||showThread} onClick={()=>{setCadAssistantOpen(v=>!v);if(showThread)setShowThread(false);}}><MessageSquare size={15}/> Engineering assistant <ChevronDown size={14}/></button>}
+    {cadLayout&&<button type="button" className="psCadAssistantToggle" aria-expanded={cadAssistantOpen||showThread} onClick={()=>{setCadAssistantOpen(!(cadAssistantOpen||showThread));if(showThread)setShowThread(false);}}><MessageSquare size={15}/> Engineering assistant <ChevronDown size={14}/></button>}
     <div className="psAssistantContent">
     {showThread&&thread.length>0&&<div className="psThread" role="log" aria-label="Engineering assistant messages">
      <div className="psThreadHeader"><strong><MessageSquare size={15}/> Engineering conversation</strong><button type="button" onClick={()=>setShowThread(false)} aria-label="Collapse conversation"><X size={15}/></button></div>
