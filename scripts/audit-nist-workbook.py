@@ -18,6 +18,24 @@ FIELDS = {"C": ("position_mm", 1), "E": ("speed_mm_s", 1), "F": ("power_w", 1),
           "I": ("measured_width_mm", .001), "J": ("overlap_depth_mm", .001),
           "K": ("overlap_width_mm", .001)}
 
+# Weaver et al. (2024), Fig. 1 and Fig. 3, DOI 10.1007/s40192-024-00355-5.
+# These are bare-plate experiments, NOT independent powder-bed builds.
+PLATE_PROTOCOLS = {
+    "BP1": ("single_track", "full_cross_section_width"),
+    "BP2": ("x_pad", "remelted_pad_partial_width"),
+    "BP3": ("y_pad", "remelted_pad_partial_width"),
+}
+
+def measurement_protocol(sample_id):
+    experiment, width_definition = PLATE_PROTOCOLS.get(sample_id, (None, None))
+    return {
+        "bare_plate_id": sample_id if experiment else None,
+        "experiment_type": experiment,
+        "width_definition": width_definition,
+        "powder_present": False if experiment else None,
+        "protocol_doi": "10.1007/s40192-024-00355-5" if experiment else None,
+    }
+
 def normalize(cells, row, digest):
     if any(not cells.get(c) for c in ("A", "B", "D")):
         raise ValueError(f"Missing measurement identity at row {row}")
@@ -26,6 +44,7 @@ def normalize(cells, row, digest):
               "part_id": cells["B"], "case_line_id": cells["D"],
               "build_id": None, "machine": None, "defect_label": None,
               "material": "IN718", "raw_cells": cells}
+    record.update(measurement_protocol(record["sample_id"]))
     for column, (field, factor) in FIELDS.items():
         value = cells.get(column)
         if value in (None, "", "N/A"):
@@ -67,7 +86,7 @@ def audit(path):
     return {"schema": "orientai.nist-measurements.v1", "source_sha256": digest,
             "source_file": path.name, "measurement_count": len(measurements),
             "sample_counts": dict(collections.Counter(r['sample_id'] for r in measurements)),
-            "training_ready": False, "blockers": ["Physical build independence is not verified from sample names", "Measurement uncertainty and experimental procedure need source review", "No independently assigned defect labels"],
+            "training_ready": False, "blockers": ["Bare-plate identity is not an independent powder-bed build ID", "Single-track and pad widths have different measurement definitions; do not pool as one target", "Group repeated sections and tracks by physical specimen; uncertainty budgets require target-specific review", "No independently assigned defect labels"],
             "measurements": measurements}
 
 if __name__ == '__main__':
