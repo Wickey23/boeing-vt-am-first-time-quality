@@ -244,3 +244,11 @@
  .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCompactPropertiesToggle{min-width:33px;font-size:0}
  .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCadModeToggle{min-width:34px;font-size:10px}
 }
+
+.psRoot.psReferenceRoot .psMeshMeasure{position:absolute;left:10px;top:10px;z-index:9;width:min(270px,65%);max-height:85%;overflow:auto;background:#ffffffed;color:#26465f;border:1px solid #98b1c7;box-shadow:0 2px 9px #344e6326;border-radius:3px;padding:9px;font-size:11px;line-height:1.5}
+.psMeshMeasure header{display:flex!important;align-items:center;justify-content:space-between;background:transparent!important;color:#26465f!important;border:0!important;height:auto!important;min-height:0!important;padding:0!important}
+.psMeshMeasure p{margin:6px 0}
+.psMeshMeasure>div{padding:5px 0;border-top:1px solid #ccd9e3}
+.psMeshMeasure output{display:block;font-size:15px;font-weight:700;color:#205e99;margin:6px 0}
+.psMeshMeasure button{background:#eaf1f7;color:#28587e;border:1px solid #a8bdcd;border-radius:3px;padding:4px 7px;cursor:pointer}
+.psMeshMeasure small{display:block;margin-top:7px;color:#536b7e;font-size:10px}
