@@ -1,0 +1,62 @@
+name: NIST experimental source and benchmark (research only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/fetch-nist-lpbf-measurements.py'
+      - 'scripts/audit-nist-workbook.py'
+      - 'scripts/reconcile-nist-source.py'
+      - 'scripts/benchmark-nist-melt-pool.py'
+      - '.github/workflows/nist-experimental-benchmark.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-source-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Acquire public NIST sources (no secrets)
+        run: python3 scripts/fetch-nist-lpbf-measurements.py --output data/nist-lpbf
+      - name: Require original measurement sources
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          root = pathlib.Path("data/nist-lpbf")
+          manifest = json.loads((root / "source-manifest.json").read_text())
+          required = {"amb2022-03-in718-melt-pool-cross-section", "amb2022-03-in718-melt-pool-metadata"}
+          acquired = {x["id"] for x in manifest["sources"] if x["status"] == "downloaded-unreviewed"}
+          if not required <= acquired:
+              raise SystemExit("NIST source acquisition blocked: " + ", ".join(sorted(required-acquired)))
+          PY
+      - name: Reconcile pinned workbook and README
+        run: python3 scripts/reconcile-nist-source.py --source-dir data/nist-lpbf --output data/nist-lpbf/reconciliation.json
+      - name: Run frozen exploratory benchmark
+        run: python3 scripts/benchmark-nist-melt-pool.py --source-dir data/nist-lpbf --output data/nist-lpbf/exploratory-benchmark.json
+      - name: Write aggregate-only research summary
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          root = pathlib.Path("data/nist-lpbf")
+          result = json.loads((root/"exploratory-benchmark.json").read_text())
+          summary = {k:v for k,v in result.items() if k != "experiments"}
+          source = summary["source_reconciliation"]
+          for plate in source["plate_summary"].values():
+              plate.pop("section_ids", None)
+          summary["experiments"] = [{k:v for k,v in x.items() if k != "folds"} for x in result["experiments"]]
+          output = root/"aggregate-benchmark-summary.json"
+          output.write_text(json.dumps(summary, indent=2, allow_nan=False)+"\n")
+          print(output.read_text())
+          PY
+      - name: Preserve aggregate research evidence and acquisition manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nist-research-evidence
+          path: |
+            data/nist-lpbf/source-manifest.json
+            data/nist-lpbf/aggregate-benchmark-summary.json
+          if-no-files-found: warn
+          retention-days: 7
