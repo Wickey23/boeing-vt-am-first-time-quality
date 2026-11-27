@@ -37,7 +37,7 @@ import "./professional-reference.css";
 import "./professional-enterprise.css";
 import "./professional-workspace-layout.css";
 import "./professional-cad-layout.css";
-import {appendMeasurement,distanceMm,type MeshPick} from "@/lib/cad-mesh-measurement";
+import {appendMeasurement,distanceMm,type MeshPick,type MeshSnapMode} from "@/lib/cad-mesh-measurement";
 import type {SectionView} from "@/lib/cad-section-plane";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
@@ -100,6 +100,7 @@ export default function ProfessionalStudy(){
  const [sectionView,setSectionView]=useState<SectionView|null>(null);
  useEffect(()=>{setSectionView(null);},[a.file,a.settings.unitScale]);
  const [meshPicks,setMeshPicks]=useState<MeshPick[]>([]);
+ const [snapMode,setSnapMode]=useState<MeshSnapMode>("surface");
  useEffect(()=>{setMeasureMode(false);setMeshPicks([]);},[a.file,a.settings.unitScale]);
  const [showSupports,setShowSupports]=useState(false);
  const [highlightTriangles,setHighlightTriangles]=useState<number[]>([]);
@@ -560,7 +561,7 @@ export default function ProfessionalStudy(){
       <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10} cadStyle={cadLayout}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
-       buildFraction={layer/100} sectionView={activeSection??undefined} highlightTriangles={highlightTriangles} meshPicks={activePicks} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
+       buildFraction={layer/100} sectionView={activeSection??undefined} highlightTriangles={highlightTriangles} meshPicks={activePicks} snapMode={snapMode} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
      </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small>{cadLayout&&<button type="button" className="psCadEmptyImport" onClick={()=>partFileInput.current?.click()}><FileUp size={16}/> Import part</button>}</div>}
      {activeSection&&<section className="psMeshMeasure" aria-label="Section view">
       <header><strong>Section view</strong><button type="button" aria-label="Close section view" onClick={()=>setSectionView(null)}><X size={15}/></button></header>
@@ -572,11 +573,12 @@ export default function ProfessionalStudy(){
      </section>}
      {cadLayout&&measureMode&&canMeasure&&<section className="psMeshMeasure" aria-label="Mesh measurement">
       <header><strong>Measure mesh</strong><button type="button" aria-label="Close measurement" onClick={()=>{setMeasureMode(false);setMeshPicks([]);}}><X size={15}/></button></header>
+      <label>Pick mode <select aria-label="Measurement snap mode" value={snapMode} onChange={e=>{setSnapMode(e.target.value as MeshSnapMode);setMeshPicks([]);}}><option value="surface">Surface point</option><option value="vertex">Nearest mesh vertex</option><option value="edge">Nearest mesh edge</option></select></label>
       <p>{activePicks.length===0?"Click a point on the STL surface.":activePicks.length===1?"Click a second surface point.":"Click again to start a new measurement."}</p>
-      {activePicks.map((pick,i)=><div key={i}><b>Point {i+1} · Triangle {pick.triangle}</b><div>X {pick.point.x.toFixed(3)} · Y {pick.point.y.toFixed(3)} · Z {pick.point.z.toFixed(3)} mm</div><div>Triangle area {pick.areaMm2.toFixed(3)} mm²</div></div>)}
+      {activePicks.map((pick,i)=><div key={i}><b>Point {i+1} · Triangle {pick.triangle}</b><div>X {pick.point.x.toFixed(3)} · Y {pick.point.y.toFixed(3)} · Z {pick.point.z.toFixed(3)} mm</div><div>Triangle area {pick.areaMm2.toFixed(3)} mm²</div>{pick.mode&&pick.mode!=="surface"&&<div>Snap correction {(pick.snapDistanceMm??0).toFixed(3)} mm</div>}</div>)}
       {activePicks.length===2&&<output aria-label="Point distance">Distance: {distanceMm(activePicks[0].point,activePicks[1].point).toFixed(3)} mm</output>}
       <button type="button" onClick={()=>setMeshPicks([])} disabled={!activePicks.length}>Clear points</button>
-      <small>Approximate surface picks in original STL coordinates. Not vertex snapping, CAD feature dimensions, or metrology.</small>
+      <small>Original STL coordinates. Vertex/edge modes snap to the clicked triangle, including triangulation diagonals; not inferred CAD features or certified metrology.</small>
      </section>}
      {cadLayout&&<div className="psCadViewCube" role="group" aria-label="Model view cube">
       <button type="button" className="psCubeTop" aria-label="Cube top view" aria-pressed={cameraView==="top"} onClick={()=>setCameraView("top")}>TOP</button>
