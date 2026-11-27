@@ -1,4 +1,6 @@
 import {ImageResponse} from "next/og";
+// Use the portable edge renderer; the Node OG loader cannot resolve Windows file URLs.
+export const runtime="edge";
 export const size={width:64,height:64};
 export const contentType="image/png";
 export default function Icon(){

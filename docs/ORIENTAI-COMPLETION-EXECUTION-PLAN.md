@@ -1,4 +1,6 @@
 # ORIENTAI â€” Completion execution plan
+**Authoritative execution backlog:** this document owns current priorities and release evidence. The master roadmap defines technical contracts; the older milestone tracker is historical.
+
 **Baseline:** 2026-11-14. **Owner:** VT ISE senior-design team. **Product:** LPBF pre-build engineering assessment; IN718 first experimental prediction scope.
 
 This is an execution/acceptance tracker, **not** a claim that all systems are implemented or scientifically validated. Verify each gate at the current SHA. No Boeing-controlled drawings or data in this public repository. Team code requires PR review when overlaps are present; never force-push or merge a conflicted PR.
@@ -144,3 +146,67 @@ Earlier commits passed numerical tests and builds, but recent UI changes led to 
 - Vercel deployment `dpl_Fe1i4ZhoY7cstJw6DgL7GqhRAekz` is READY at the same SHA. Deployment alias API explicitly lists both `boeing-vt-am-first-time-quality.vercel.app` and `boeing-vt-am-first-time-quality-wickey23s-projects.vercel.app`. This closes the alias identity evidence gap from November 22.
 - Live acceptance remains open: an external read of the public alias returned inaccessible, not an application HTTP status. No interactive upload, report bytes or PDF hash captured. Do not infer outage or successful operation from this result. Use an authorized browser session with a synthetic fixture to capture the full workflow and PDF evidence; do not change deployment protection.
 - Research gate unchanged: acquisition signature checks are not workbook or label validation. Inspect original public NIST files and verify specimen/build IDs, units and measured targets before training. No proprietary CAD or model training used in this review.
+
+
+## Implementation baseline — 2026-11-25
+
+Source main: `9682f2c7b5e2a1ce400f891a2147a1f1908c7923` (November 23). Local branch: `feature/study-evidence-foundation`. Fresh checkout clean and initially 0 ahead / 0 behind. Latest 15 commits and active branches inspected. Recent engineering CI passed at that SHA; live deployment was not reverified in this implementation session.
+
+Open PRs: #20 viewer (clean), #18 UI (conflicting), #9 DED docs (clean), #8 production flow (conflicting), as reported during audit. No reviews returned. PR #8 overlaps provider, workspace and portable-transfer files. Its exact diff was reviewed; this branch adds independent identity checks without taking or reverting its flow implementation. Human review is required before merging shared-state changes.
+
+### Capability inventory and ordered backlog
+
+| Work package | Current evidence | Next acceptance action | Owner role | Dependency |
+|---|---|---|---|---|
+| Study identity | Shared byte/configuration/run checks; portable evidence manifest; recovery archive | Verify new browser recovery test and review PR | Application engineer | Current implementation |
+| Geometry and orientation | Existing rules, numerical fixtures and candidate ranking | Independently annotated region cases and tolerance dossier | Geometry engineer | Identity |
+| Guided assessment | Existing upload/context/assessment/export flow | Same-SHA production walkthrough and five unaided participant tasks | UX + release engineer | Browser suite |
+| Reporting | Assessment and geometry PDF/JSON verify original bytes and bind inputs | Review specialized exports and production acceptance | Application engineer | Identity |
+| Requirements | Report register matches current service displacement evidence | Structured CTQ editor and revision-aware acceptance | Engineering lead | Identity |
+| History | Existing saved runs; corrupt/stale active run retained under recovery key | User-facing recovery browser and immutable revision history | Application engineer | Identity |
+| NIST measurement pipeline | Original workbook acquired and parsed; 228 measured rows | Verify experiment, uncertainty and physical-build mapping | Research engineer | Source documentation |
+| CMU pipeline | Descriptive specimen summaries | Verify physical-build and CT sampling metadata | Research engineer | Source documentation |
+| Thermal/structural | Research solvers and numerical tests exist | Reference/refinement dossier, then independent measurement comparison | Simulation engineer | Approved inputs |
+| Defect prediction | No validated defect model | Independent labels, frozen build splits and measured baseline | Research engineer | Data gates |
+| AI guidance | Existing grounded context/tool paths | Adversarial provenance and complete tool-to-report study | Application engineer | Consistent study model |
+| Inspection feedback | Partial evidence infrastructure | Exact revision/build linkage and protected holdout handling | Research + application | Verified build metadata |
+| Shared operations | Browser-local storage and workers | Organization-approved storage/compute, tenant isolation, recovery | Platform owner | Infrastructure decision |
+| Advanced CAD/DED/machine export | Separate research/optional tracks | Process-specific requirements and independent acceptance | Engineering lead | Core R1 + authorized machine context |
+
+### Changes in this implementation
+
+- `study-identity` checks part bytes, configuration, unique finite candidate rotations, and attached result run/candidate references.
+- Portable V1 projects gain an optional evidence manifest with stable input SHA-256, part identity, chosen orientation, process, unit confirmation and explicit unvalidated status. Legacy V1 imports remain supported. Manifest mismatches fail closed.
+- Active workspace loading verifies original bytes and settings. Stale results are copied to a recovery key before clearing current results; geometry/settings remain available with an actionable alert.
+- Icon rendering uses the Edge runtime to avoid the Windows Node OG URL-loader failure observed during production build.
+- NIST audit preserves source rows/raw values, converts explicitly declared micrometers to millimeters, retains missing values as null, and does not invent build IDs or defect labels.
+
+### NIST source evidence
+
+Workbook SHA-256: `2cfaac96aaca3dabb77b7029f842cdcc7e75c5a2cf3577d0734823246364a931`; 25,811 bytes. Deflection README SHA-256: `6da6531af5871cdc0c000352a5373a9d7eb7c2aed7c6b843d6d376c538d36dc6`; 7,111 bytes. Workbook `Sheet1` contains 228 nonempty measurement rows: BP1=42, BP2=94, BP3=92. Sample identifiers are NOT verified independent build identifiers. Source DOI: https://doi.org/10.18434/mds2-2718.
+
+Run `python scripts/fetch-nist-lpbf-measurements.py --output data/nist-lpbf`, then `python scripts/audit-nist-workbook.py data/nist-lpbf/AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx --output data/nist-lpbf/measurements.json`. Original and derived experimental files are locally retained and ignored by Git pending redistribution review.
+
+R1 remains open until live acceptance and participant evidence exist. R2 requires independent experimental validation. R3 requires approved shared infrastructure. None is declared complete by this implementation.
+
+
+### Local verification of this increment
+
+- `npm test`: 206 passed.
+- `npm run typecheck`: passed.
+- `npm run build`: passed after the portable icon-renderer fix; existing CSS compatibility warnings remain.
+- `npm run test:e2e -- --workers=2`: 82 passed against the production build, including stale workspace recovery and historical revision restoration.
+- `python -m unittest discover -s tests -p 'test_nist*.py'`: 5 passed.
+- Original NIST workbook audit: completed, 228 normalized rows; training remains disabled.
+- `git diff --check`: passed. Main rechecked and unchanged at `9682f2c` before handoff.
+- GitHub reports successful Vercel deployment status on baseline `9682f2c`. This increment has not been merged or verified on the production alias.
+- Browser testing here is automated local acceptance, not participant research or a production smoke test.
+
+## Report identity and requirement evidence - 2026-11-26
+
+- Assessment PDF and new evidence JSON share a stable content SHA-256. Snapshots freeze before async work. Original STL, units, context, source bindings and selected orientation must match; inconsistent inputs fail before PDF rendering.
+- Geometry PDF and analysis JSON use the portable identity contract and verify original bytes. The geometry PDF action now saves its document; async errors and busy states are handled.
+- Entered requirements stay unassessed. Service displacement comparisons require matching run, candidate and solver inputs. Missing, stale and invalid evidence remain explicit. Model limits do not establish acceptance.
+- Local verification: 213 unit tests, 83 browser tests, 5 NIST tests, typecheck and production build passed. Browser coverage downloads all four artifacts and compares identities. PDF identity and requirement pages were inspected; headings reserve following content space.
+- Main re-fetched unchanged at 9682f2c7b5e2a1ce400f891a2147a1f1908c7923. PR #28 extends the foundation; reporting overlaps PR #8 and copilot overlaps PR #18. Human review required before merging.
+- Production, participant usability and manual accessibility remain unverified. Structured CTQ editing, physical validation and all R1/R2/R3 gates remain open.

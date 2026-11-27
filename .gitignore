@@ -10,3 +10,9 @@ out
 
 *.tsbuildinfo
 tmp/
+
+# Original experimental downloads and local acceptance artifacts
+data/nist-lpbf/
+test-results/
+playwright-report/
+__pycache__/

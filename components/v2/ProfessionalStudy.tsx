@@ -15,7 +15,8 @@ import {failureCoverage,coverageSummary} from "@/lib/failure-coverage";
 import {evaluatePrebuild} from "@/lib/prebuild-assessment";
 import {manufacturingProcessFlow} from "@/lib/manufacturing-process-flow";
 import {assessLpbfProcessWindow,emptyProcessQualityInput,PROCESS_PARAMETERS,type ProcessQualityInput} from "@/lib/lpbf-process-quality";
-import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
+import {downloadAssessmentEvidence} from "@/lib/assessment-report-evidence";
+import {createCopilotReviewPDF,type CopilotPdfInputs} from "@/lib/copilot-review-pdf";
 import {reportPDF,downloadJSON} from "@/lib/engineering-report";
 import {assessEngineeringReadiness} from "@/lib/engineering-readiness";
 import {findEvidence,localCopilotReply} from "@/lib/copilot-context";
@@ -298,7 +299,7 @@ export default function ProfessionalStudy(){
   }
   setThread(t=>([...t,{role:"user" as const,text:q},{role:"assistant" as const,text:response}]).slice(-24));
  };
- const exportEvidence=async()=>{
+ const exportEvidence=async(format:"pdf"|"json"="pdf")=>{
   if(!a.file||!partHash||!ctx.knowledge){setError("Confirm the part identity before exporting.");return;}
   setExportBusy(true);setError("");
   try{
@@ -313,9 +314,9 @@ export default function ProfessionalStudy(){
     hasLpbfGeometryCandidates:currentRun
    });
    const approvedBindings=activeParameterBindings(k.parameterBindings,ctx.sources,ctx.reviewed,activeServiceCase(a.servicePlan));
-   const pdf=await createCopilotReviewPDF({
+   const reportInput:CopilotPdfInputs={
     projectName:a.projectName,partName:a.file.name,partSha256:partHash,process:a.journey.process,modelFile:a.file,
-    unitsConfirmed:isConfirmed,createdAt:new Date().toISOString(),knowledge:k,
+    unitsConfirmed:isConfirmed,unitScale:a.settings.unitScale,analysis:currentRun?a.result??undefined:undefined,settings:a.settings,servicePlan:a.servicePlan,createdAt:new Date().toISOString(),knowledge:k,
     reviewedEvidence:ctx.reviewed,approvedBindings,readiness,
     coverage,prebuild,manufacturingFlow,feedbackRecords:feedback.records,
     processWindow:a.journey.process==="PBF_LB_METAL"?processAssessment:null,
@@ -336,16 +337,24 @@ export default function ProfessionalStudy(){
      supportProxyMm3:selected.supportProxyMm3,overhangFraction:selected.overhangFraction,
      contactAreaMm2:selected.contactAreaMm2,rotation:selected.rotation
     }:undefined
-   });
-   pdf.save("orientai-engineering-evidence-"+partHash.slice(0,8)+".pdf");
+   };
+   if(format==="json")await downloadAssessmentEvidence(reportInput);
+   else (await createCopilotReviewPDF(reportInput)).save("orientai-engineering-evidence-"+partHash.slice(0,8)+".pdf");
   }catch(e){setError(e instanceof Error?e.message:"Unable to export engineering evidence.");}
   finally{setExportBusy(false);}
  };
  const exportGeometry=async()=>{
   if(!currentRun||!a.result)return;
   setExportBusy(true);setError("");
-  try{await reportPDF(a.result,a.selected,a.file);}
+  try{(await reportPDF(a.result,a.selected,a.file,{settings:a.settings,journey:a.journey})).save("orientai-geometry-"+a.result.runId+".pdf");}
   catch(e){setError(e instanceof Error?e.message:"Unable to export geometry report.");}
+  finally{setExportBusy(false);}
+ };
+ const exportJson=async()=>{
+  if(!currentRun||!a.result)return;
+  setExportBusy(true);setError("");
+  try{await downloadJSON(a.result,a.selected,a.file,{settings:a.settings,journey:a.journey});}
+  catch(e){setError(e instanceof Error?e.message:"Unable to export analysis JSON.");}
   finally{setExportBusy(false);}
  };
  const projectName=a.file?.name??"No model uploaded";
@@ -493,8 +502,8 @@ export default function ProfessionalStudy(){
      hasGeometry={currentRun} exportBusy={exportBusy}
      feedback={feedback.records} feedbackError={feedback.error}
      onAddFeedback={feedback.add} onRemoveFeedback={feedback.remove}
-     onExport={()=>void exportEvidence()} onGeometryExport={()=>void exportGeometry()}
-     onJsonExport={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}}
+     onExport={()=>void exportEvidence()} onEvidenceJsonExport={()=>void exportEvidence("json")} onGeometryExport={()=>void exportGeometry()}
+     onJsonExport={()=>void exportJson()}
      onNavigate={nextStage=>{setStage(nextStage);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}
      onInspectOverhangs={()=>{setOrientationDraft(null);setShowOverhangs(true);setShowSupports(false);setCameraView("iso");setViewerExpanded(false);}}
     />}
