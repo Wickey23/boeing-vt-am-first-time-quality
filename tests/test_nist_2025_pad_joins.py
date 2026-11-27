@@ -35,5 +35,50 @@ class PadJoinTests(unittest.TestCase):
         self.assertRaises(ValueError,joins.read_table,b"x,y\n1,2","utf-8",("a","b"))
         self.assertRaises(ValueError,joins.read_table,b"a,b\n1","utf-8",("a","b"))
 
+    def protocol_fixture(self):
+        params=[]
+        rows=[]
+        for plate in range(1,13):
+            day="20241010" if plate in (1,4,7,10,11,12) else "20241015"
+            for section in (1,2,3):
+                sample=f"{day}_AMB_T{plate}2_P{section}"
+                key=[str(x) for x in (*joins.CONDITIONS[(plate-1)//3],*joins.SECTIONS[section])]
+                params.append(dict(zip(joins.PARAM_HEADER,[sample,"200","70","800","0.1",*key])))
+                rows.append(dict(zip(joins.MEAS_HEADER,[sample,*key,*(["10"]*45)])))
+        return params,rows
+
+    def test_protocol_confirms_plates_without_approving_specimen_join(self):
+        params,rows=self.protocol_fixture()
+        result=joins.protocol_audit(params,{"depth":list(reversed(rows))})
+        self.assertTrue(result["parameter_plate_section_design_verified"])
+        self.assertEqual(result["matched_parameter_plate_groups"],12)
+        self.assertTrue(result["target_protocol_audit"]["depth"]["literal_sample_identity_complete"])
+        self.assertFalse(result["specimen_join_authorized"])
+        self.assertEqual(len(result["target_protocol_audit"]["depth"]["condition_summaries"]),12)
+
+    def test_condition_summary_does_not_assume_row_identity_or_cell_independence(self):
+        params,rows=self.protocol_fixture()
+        for i,r in enumerate(rows):
+            r["Row"]=str(i)
+        # Same condition: one row mean 100 based on a single cell,
+        # two row means 10 based on 45 cells. Equal row weight gives 40.
+        rows[0]["1 (µm)"]="100"
+        for c in joins.MEAS_HEADER[6:]:
+            rows[0][c]="NA"
+        result=joins.protocol_audit(params,{"depth":rows})
+        target=result["target_protocol_audit"]["depth"]
+        self.assertFalse(target["literal_sample_identity_complete"])
+        s=next(x for x in target["condition_summaries"] if x["powder_um"]=="80" and x["location_mm"]=="0.460")
+        self.assertEqual(s["positive_cells"],91)
+        self.assertEqual(s["row_balanced_positive_mean_um"],40)
+        self.assertEqual(s["row_mean_range_um"],[10,100])
+
+    def test_wrong_condition_layout_withholds_summary(self):
+        params,rows=self.protocol_fixture()
+        rows[0]["Location (mm)"]="99"
+        result=joins.protocol_audit(params,{"depth":rows})
+        self.assertFalse(result["target_protocol_audit"]["depth"]["condition_layout_matches"])
+        self.assertEqual(result["target_protocol_audit"]["depth"]["condition_summaries"],[])
+
 if __name__=="__main__":
     unittest.main()
