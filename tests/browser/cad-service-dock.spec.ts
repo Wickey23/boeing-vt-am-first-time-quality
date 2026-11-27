@@ -25,3 +25,36 @@ test("sandbox opens the existing approved solver without leaving the model",asyn
  await simulate.click();
  await expect(dock.getByLabel("X force (N)")).toHaveValue("12");
 });
+
+test("sandbox executes approved cube service study, switches contours and invalidates stale fields",async({page})=>{
+ test.setTimeout(120000);
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ const ribbon=page.getByRole("region",{name:"CAD analysis commands"});
+ await ribbon.getByRole("button",{name:"Simulate",exact:true}).click();
+ const dock=page.getByRole("complementary",{name:"Sandbox simulation setup"});
+ await dock.getByLabel("X force (N)").fill("12");
+ await dock.getByLabel("Structural resolution (6–12)").fill("6");
+ await dock.getByLabel("Thermal resolution (6–24)").fill("6");
+ await dock.getByRole("checkbox",{name:/I have reviewed the geometry/}).check();
+ await dock.getByRole("button",{name:"Run All Applicable Analyses"}).click();
+ await expect(dock.getByText("All three result fields computed.")).toBeVisible({timeout:90000});
+ await dock.getByRole("button",{name:"Inspect stress, displacement and temperature in 3D"}).click();
+ await expect(dock).toBeHidden();
+ const fields=page.getByRole("group",{name:"Sandbox service result fields"});
+ await expect(fields.getByRole("button",{name:"Stress",exact:true})).toHaveAttribute("aria-pressed","true");
+ await expect(page.getByText("Service result · original part axes")).toBeVisible();
+ await fields.getByRole("button",{name:"Displacement",exact:true}).click();
+ await expect(fields.getByRole("button",{name:"Displacement",exact:true})).toHaveAttribute("aria-pressed","true");
+ await fields.getByRole("button",{name:"Steady temperature",exact:true}).click();
+ await expect(fields.getByRole("button",{name:"Steady temperature",exact:true})).toHaveAttribute("aria-pressed","true");
+ await ribbon.getByRole("button",{name:"Simulate",exact:true}).click();
+ const record=page.waitForEvent("download");
+ await dock.getByRole("button",{name:"Export current study job record"}).click();
+ expect((await record).suggestedFilename()).toMatch(/^orientai-service-study-.*\.json$/);
+ await dock.getByLabel("X force (N)").fill("15");
+ await expect(fields).toHaveCount(0);
+ await expect(dock.getByRole("button",{name:"Run All Applicable Analyses"})).toBeDisabled();
+});
