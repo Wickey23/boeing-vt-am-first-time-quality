@@ -35,10 +35,11 @@ test("M05 rejects wrong Z, missing layers, outside and boundary paths",async()=>
  assert.equal(boundary.thermalActivationAuthorized,false);
 });
 test("M05 checks the entire segment, not only endpoints or bounding box",async()=>{
- const slice=await cube();
- // Deliberately remove an interior cell from a test-only layer to exercise traversal.
+ const b=await readFile("public/verification/cube-10mm.stl");
+ const slice=await slicePhysicalStl(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength) as ArrayBuffer,{unitScaleToMm:1,xyPitchMm:1,layerThicknessMm:1});
+ // Remove an interior cell in the test only; both endpoints remain in occupied cells.
  slice.layers[0].cells=slice.layers[0].cells.filter(c=>!(c.x===1&&c.y===0));
- const result=await registerPhysicalScan(bytes(PHYSICAL_SCAN_HEADER+"\n0,0.5,0,1,0.25,0.25,0.75,0.25,10"),slice,slice.partSha256);
+ const result=await registerPhysicalScan(bytes(PHYSICAL_SCAN_HEADER+"\n0,-4,0,1,-4.5,-4.5,-2.5,-4.5,10"),slice,slice.partSha256);
  assert.equal(result.records[0].coverage,"empty-or-outside");
  assert.equal(result.thermalActivationAuthorized,false);
 });
