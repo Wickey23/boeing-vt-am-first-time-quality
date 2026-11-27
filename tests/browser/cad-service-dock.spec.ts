@@ -1,0 +1,27 @@
+import {test,expect} from "@playwright/test";
+test("sandbox opens the existing approved solver without leaving the model",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/workbench");
+ const simulate=page.getByRole("region",{name:"CAD analysis commands"}).getByRole("button",{name:"Simulate",exact:true});
+ await expect(simulate).toBeDisabled();
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await simulate.click();
+ const dock=page.getByRole("complementary",{name:"Sandbox simulation setup"});
+ await expect(dock).toBeVisible();
+ await expect(page.locator(".psReferenceViewport")).toBeVisible();
+ await expect(page).toHaveURL(/\/copilot\/workbench$/);
+ const run=dock.getByRole("button",{name:"Run All Applicable Analyses"});
+ await expect(run).toBeDisabled();
+ await dock.getByRole("button",{name:"Close simulation setup"}).click();
+ await expect(dock).toBeHidden();
+ await page.getByRole("button",{name:"Confirm units & dimensions"}).click();
+ await simulate.click();
+ await expect(dock.getByLabel("Analysis fixed face")).toBeVisible();
+ await expect(run).toBeDisabled();
+ await dock.getByLabel("X force (N)").fill("12");
+ await dock.getByRole("checkbox",{name:/I have reviewed the geometry/}).check();
+ await expect(run).toBeEnabled();
+ await dock.getByRole("button",{name:"Close simulation setup"}).click();
+ await simulate.click();
+ await expect(dock.getByLabel("X force (N)")).toHaveValue("12");
+});
