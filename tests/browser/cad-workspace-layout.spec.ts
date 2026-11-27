@@ -39,3 +39,17 @@ test("CAD mode leaves mobile study controls accessible",async({page})=>{
  await expect(page.getByRole("button",{name:"CAD workspace layout"})).toBeHidden();
  await expect(page.getByRole("region",{name:"CAD analysis commands"})).toBeHidden();
 });
+
+test("study manager, study tree and document tabs navigate the same engineering workspace",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/");
+ await expect(page.getByRole("heading",{name:"Engineering studies"})).toBeVisible();
+ await page.getByRole("group",{name:"Study tree"}).getByRole("button",{name:"Context & process"}).click();
+ await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
+ const tabs=page.getByRole("navigation",{name:"Study document tabs"});
+ await expect(tabs.getByRole("button",{name:"Engineering Context"})).toHaveAttribute("aria-current","page");
+ await tabs.getByRole("button",{name:"Part Geometry"}).click();
+ await expect(tabs.getByRole("button",{name:"Part Geometry"})).toHaveAttribute("aria-current","page");
+ await page.getByRole("group",{name:"Study tree"}).getByRole("button",{name:"Risk assessment"}).click();
+ await expect(tabs.getByRole("button",{name:"Failure Assessment"})).toHaveAttribute("aria-current","page");
+});
