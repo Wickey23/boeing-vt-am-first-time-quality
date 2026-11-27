@@ -40,3 +40,24 @@ test("M06 never rounds partial-height layers into a uniform thermal grid",async(
  const input=await setup();
  await assert.rejects(runRegisteredLayerExperiment({...input,sliceOptions:{...input.sliceOptions,layerThicknessMm:.6}}),/Partial-height layer/);
 });
+
+test("M06 thermal frames reflect actual command-end fields and omit inactive layers",async()=>{
+ const input=await setup();
+ const withFrames=await runRegisteredLayerExperiment({...input,captureFrames:true});
+ const plain=await runRegisteredLayerExperiment(input);
+ const frames=withFrames.thermal.frames!;
+ assert.equal(frames.length,3);
+ assert.equal(plain.thermal.frames,undefined);
+ assert.deepEqual(withFrames.thermal.finalCells,plain.thermal.finalCells);
+ assert.deepEqual(withFrames.thermal.energy,plain.thermal.energy);
+ assert.deepEqual(frames.map(f=>f.commandIndex),[0,1,2]);
+ assert.deepEqual(frames.map(f=>f.cells.length),[4,8,8]);
+ assert.ok(frames[0].cells.every(c=>c.layer===0));
+ assert.ok(Math.abs(frames[0].timeSeconds-.01)<1e-9);
+ assert.ok(Math.abs(frames[2].timeSeconds-.03)<1e-9);
+ assert.deepEqual(frames[2].cells,withFrames.thermal.finalCells);
+ for(let i=0;i<frames.length;i++){
+  assert.ok(frames[i].cells.every(c=>Number.isFinite(c.temperatureC)&&c.peakTemperatureC>=c.temperatureC));
+  assert.equal(Math.max(...frames[i].cells.map(c=>c.temperatureC)),withFrames.thermal.layers[i].maximumTemperatureC);
+ }
+});
