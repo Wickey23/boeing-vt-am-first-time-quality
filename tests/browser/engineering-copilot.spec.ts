@@ -3,7 +3,7 @@ test("the copilot connects STL, assembly documents, citations and real geometry 
  const pageErrors:string[]=[];page.on("pageerror",error=>pageErrors.push(error.message));
  const remoteCalls:string[]=[];page.on("request",r=>{if(r.url().includes("/api/engineering-copilot")&&r.method()==="POST")remoteCalls.push(r.url());});
  await page.goto("/");
- await expect(page.getByRole("heading",{name:"What are we working on today?"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Engineering studies"})).toBeVisible();
  await page.getByRole("link",{name:"Current study"}).click();
  await page.goto("/copilot/advanced");
  await expect(page.getByLabel("Upload target STL")).toBeVisible();
