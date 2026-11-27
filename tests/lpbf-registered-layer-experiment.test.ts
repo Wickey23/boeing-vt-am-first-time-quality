@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {runRegisteredLayerExperiment} from "../lib/lpbf-registered-layer-experiment";
+import {studyRegisteredTimeRefinement} from "../lib/lpbf-time-refinement";
 import {prepareLayerTemperatureView} from "../lib/lpbf-layer-temperature-view";
 import {PHYSICAL_SCAN_HEADER} from "../lib/lpbf-physical-schedule";
 const bytes=(s:string)=>new TextEncoder().encode(s).buffer as ArrayBuffer;
@@ -79,4 +80,28 @@ test("M06 temperature view preserves layer registration and a fixed scale across
  assert.throws(()=>view.layerFrame(3,0),/Invalid captured frame/);
  const altered={...result.geometry,partSha256:"0".repeat(64)};
  assert.throws(()=>prepareLayerTemperatureView(result.thermal,altered),/do not match/);
+});
+
+test("M07 fixed time refinements preserve commanded energy and report numerical differences without a validation claim",async()=>{
+ const input=await setup();
+ const report=await studyRegisteredTimeRefinement(input);
+ assert.equal(report.scope,"UNVALIDATED_TIME_REFINEMENT_DIAGNOSTIC");
+ assert.equal(report.productionActivationAuthorized,false);
+ assert.deepEqual(report.runs.map(r=>r.scale),[1,.5,.25]);
+ assert.ok(report.runs[0].timeSteps<report.runs[1].timeSteps);
+ assert.ok(report.runs[1].timeSteps<report.runs[2].timeSteps);
+ for(const r of report.runs){
+  assert.ok(Math.abs(r.energy.commandedJ-.002)<1e-10);
+  assert.ok(Math.abs(r.energy.absorbedJ-.001)<1e-10);
+  assert.ok(r.energy.relativeImbalance<1e-9);
+  assert.ok(Number.isFinite(r.maximumPeakC));
+ }
+ for(const pair of [report.coarseToMedium,report.mediumToFine]){
+  assert.ok(Number.isFinite(pair.maxFinalDifferenceC)&&pair.maxFinalDifferenceC>=0);
+  assert.ok(Number.isFinite(pair.finalRmseC)&&pair.finalRmseC>=0);
+  assert.ok(Number.isFinite(pair.maxPeakDifferenceC));
+  assert.ok(Number.isFinite(pair.maxCommandEndDifferenceC));
+  assert.ok(Number.isInteger(pair.stateChanges));
+ }
+ await assert.rejects(runRegisteredLayerExperiment({...input,timeStepScale:2}),/research time-step scale/);
 });
