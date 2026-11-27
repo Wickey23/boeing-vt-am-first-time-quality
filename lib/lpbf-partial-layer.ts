@@ -28,6 +28,7 @@ export type PartialLayerCell={
  x:number;y:number;layer:number;state:"powder"|"consolidated";
  temperatureC:number;peakTemperatureC:number;
 };
+export type PartialLayerFrame={commandIndex:number;layer:number;timeSeconds:number;cells:PartialLayerCell[]};
 export type PartialLayerResult={
  engine:typeof PARTIAL_LAYER_VERSION;
  validationStatus:"UNVALIDATED_GRID_RESEARCH";
@@ -37,6 +38,8 @@ export type PartialLayerResult={
  energy:{commandedJ:number;absorbedJ:number;plateExchangeJ:number;convectionExchangeJ:number;storedJ:number;relativeImbalance:number};
  layers:Array<{layer:number;timeSeconds:number;activeCells:number;consolidatedCells:number;maximumTemperatureC:number}>;
  finalCells:PartialLayerCell[];
+ /** Optional bounded command-end frames; inactive cells are omitted. */
+ frames?:PartialLayerFrame[];
  limitations:string[];
 };
 const DIRECTIONS:Cell3[]=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
@@ -44,7 +47,7 @@ function assertRange(v:number,lo:number,hi:number,label:string){
  if(!Number.isFinite(v)||v<lo||v>hi)throw Error("Invalid "+label+".");
 }
 function harmonic(a:number,b:number){return 2*a*b/(a+b);}
-export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void):PartialLayerResult{
+export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean}):PartialLayerResult{
  const {cells,scan,pitchMm:p,layerHeightMm:d,originMm:o}=input;
  if(scan.version!==PHYSICAL_SCAN_VERSION||!Array.isArray(scan.commands)||!scan.commands.length||scan.commands.length>3000)
   throw Error("A nonempty, bounded physical scan chronology is required.");
@@ -132,6 +135,9 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
  }
  if(seen.size!==cells.length)throw Error("Disconnected grid component: unsupported layer physics.");
  const snapshots:PartialLayerResult["layers"]=[];
+ const frames:PartialLayerFrame[]=[];
+ if(options?.captureFrames&&cells.length*scan.commands.length>100_000)
+  throw Error("Frame capture exceeds 100,000 cell-command records; reduce the research study.");
  const conductivity=(i:number)=>solid[i]?input.solidConductivityWmK:input.powderConductivityWmK;
  const temp=(i:number)=>input.ambientTemperatureC+enthalpy[i]/capacity;
  for(const [commandIndex,command] of scan.commands.entries()){
@@ -202,6 +208,8 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   for(let i=0;i<cells.length;i++)if(active[i])maxTemp=Math.max(maxTemp,temp(i));
   snapshots.push({layer:command.layer,timeSeconds:elapsed,activeCells:activeCount,
    consolidatedCells:consolidated,maximumTemperatureC:maxTemp});
+  if(options?.captureFrames)frames.push({commandIndex,layer:command.layer,timeSeconds:elapsed,
+   cells:cells.flatMap((c,i)=>active[i]?[{x:c[0],y:c[1],layer:c[2],state:solid[i]?"consolidated" as const:"powder" as const,temperatureC:temp(i),peakTemperatureC:peak[i]}]:[])});
   onProgress?.(commandIndex+1,scan.commands.length);
  }
  const stored=enthalpy.reduce((a,b)=>a+b,0);
@@ -220,6 +228,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   energy:{commandedJ:commanded,absorbedJ:absorbed,plateExchangeJ:plate,
    convectionExchangeJ:conv,storedJ:stored,relativeImbalance:imbalance},
   layers:snapshots,
+  ...(options?.captureFrames?{frames}:{}),
   finalCells:cells.map((c,i)=>({x:c[0],y:c[1],layer:c[2],
    state:solid[i]?"consolidated":"powder",temperatureC:temp(i),peakTemperatureC:peak[i]})),
   limitations:[
