@@ -169,7 +169,7 @@ export default function ProfessionalStudy(){
  },[a.file]);
  useEffect(()=>{const requested=new URLSearchParams(window.location.search).get("stage");setStage(requested==="assessment"||requested==="context"?requested:"geometry");setLayer(100);setPlaying(false);setThread([]);},[a.file]);
  useEffect(()=>{try{const pending=sessionStorage.getItem("orientai-pending-message-v1");if(pending){setDraft(pending);setShowThread(true);sessionStorage.removeItem("orientai-pending-message-v1");}}catch{}},[]);
- useEffect(()=>{const open=(e:Event)=>{const requested=(e as CustomEvent<string>).detail;if(requested==="geometry"||requested==="context"||requested==="assessment"){setStage(requested);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}};window.addEventListener("orientai-open-stage",open);return()=>window.removeEventListener("orientai-open-stage",open);},[]);
+ useEffect(()=>{const open=(e:Event)=>{const requested=(e as CustomEvent<string>).detail;if(requested==="geometry"||requested==="context"||requested==="assessment"){setStage(requested);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}};window.addEventListener("orientai-open-stage",open);return()=>window.removeEventListener("orientai-open-stage",open);},[]);
  useEffect(()=>{
   if(!playing)return;
   const id=setInterval(()=>setLayer(n=>Math.min(100,n+1)),95);
@@ -596,6 +596,14 @@ export default function ProfessionalStudy(){
     </details>
    </div>
   </aside>
+  {cadLayout&&<nav className="psCadDocumentTabs" aria-label="Study document tabs">
+   {stageEntries.map(({id,label,Icon})=><button type="button" key={id} aria-current={stage===id?"page":undefined}
+    onClick={()=>{setStage(id);setStudyHidden(false);setViewerExpanded(false);}}>
+    <Icon size={14}/>{label}</button>)}
+   <Link href="/copilot/advanced"><SlidersHorizontal size={14}/>Advanced studies</Link>
+   <Link href="/validation"><ShieldCheck size={14}/>Validation</Link>
+   <Link href="/how-it-works"><Info size={14}/>Technical guide</Link>
+  </nav>}
   <input ref={partFileInput} type="file" accept=".stl" className="psHiddenInput" aria-label="Select STL part" onChange={e=>attach(e.target.files?.[0])}/>
  </div>;
 }
