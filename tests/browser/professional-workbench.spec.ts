@@ -89,6 +89,7 @@ test("fit-screen mode uses the desktop viewport for engineering work instead of 
 
 
 test("reference geometry layout uses two card rows, recommendation and persistent right CAD panel",async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","false"));
  await page.setViewportSize({width:1672,height:941});
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
@@ -170,6 +171,7 @@ test("desktop navigation collapses into accessible icon rail and persists after 
 });
 
 test("study pane can be hidden and restored while CAD pane keeps its controls",async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","false"));
  await page.setViewportSize({width:1707,height:855});
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
@@ -242,6 +244,7 @@ test("workbench answers failure questions with actual screening status and missi
 });
 
 test("geometry action and first-row mesh values fit without duplicate preview and vertical scrolling",async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","false"));
  await page.setViewportSize({width:1728,height:950});
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
