@@ -54,6 +54,7 @@ export default function ProfessionalStudy(){
  const [studyHidden,setStudyHidden]=useState(false);
  const [viewerPercent,setViewerPercent]=useState(42);
  const [cadLayout,setCadLayout]=useState(true);
+ const [cadAssistantOpen,setCadAssistantOpen]=useState(false);
  const [cadViewerPercent,setCadViewerPercent]=useState(58);
  const activeViewerPercent=cadLayout?cadViewerPercent:viewerPercent;
  const setActiveViewerPercent=cadLayout?setCadViewerPercent:setViewerPercent;
@@ -471,7 +472,9 @@ export default function ProfessionalStudy(){
      onInspectOverhangs={()=>{setShowOverhangs(true);setShowSupports(false);setCameraView("iso");setViewerExpanded(false);}}
     />}
    </div>
-   <div className="psAssistant">
+   <div className={"psAssistant"+(cadLayout&&!cadAssistantOpen&&!showThread?" psCadAssistantCollapsed":"")}>
+    {cadLayout&&<button type="button" className="psCadAssistantToggle" aria-expanded={cadAssistantOpen||showThread} onClick={()=>{setCadAssistantOpen(v=>!v);if(showThread)setShowThread(false);}}><MessageSquare size={15}/> Engineering assistant <ChevronDown size={14}/></button>}
+    <div className="psAssistantContent">
     {showThread&&thread.length>0&&<div className="psThread" role="log" aria-label="Engineering assistant messages">
      <div className="psThreadHeader"><strong><MessageSquare size={15}/> Engineering conversation</strong><button type="button" onClick={()=>setShowThread(false)} aria-label="Collapse conversation"><X size={15}/></button></div>
      <div className="psThreadItems">{thread.map((m,i)=><p key={i} className={m.role==="user"?"psHumanMessage":"psAssistantMessage"}><strong>{m.role==="user"?"You":"ORIENTAI · Local guide"}</strong>{m.text}</p>)}</div>
@@ -491,6 +494,7 @@ export default function ProfessionalStudy(){
     </div>
     {error&&<p role="alert" className="psError">{error}</p>}
     <small>Engineering decision support only · No print-quality certification · Numerical studies require engineer-approved inputs</small>
+    </div>
    </div>
   </div>
   {!studyHidden&&!viewerExpanded&&<div className="psPaneResizeHandle" role="separator"
@@ -533,11 +537,17 @@ export default function ProfessionalStudy(){
     </header>
     <div className="psViewerFrame psReferenceViewport">
      {a.file?<ViewerErrorBoundary fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
-      <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10}
+      <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10} cadStyle={cadLayout}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
        buildFraction={layer/100} highlightTriangles={highlightTriangles}/>
-     </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small></div>}
+     </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small>{cadLayout&&<button type="button" className="psCadEmptyImport" onClick={()=>partFileInput.current?.click()}><FileUp size={16}/> Import part</button>}</div>}
+     {cadLayout&&<div className="psCadViewCube" role="group" aria-label="Model view cube">
+      <button type="button" className="psCubeTop" aria-label="Cube top view" aria-pressed={cameraView==="top"} onClick={()=>setCameraView("top")}>TOP</button>
+      <button type="button" className="psCubeFront" aria-label="Cube front view" aria-pressed={cameraView==="front"} onClick={()=>setCameraView("front")}>FRONT</button>
+      <button type="button" className="psCubeSide" aria-label="Cube side view" aria-pressed={cameraView==="side"} onClick={()=>setCameraView("side")}>SIDE</button>
+      <button type="button" className="psCubeIso" aria-label="Cube isometric view" aria-pressed={cameraView==="iso"} onClick={()=>setCameraView("iso")}><Box size={13}/> ISO</button>
+     </div>}
      <div className="psBuildAxis" aria-hidden="true"><b>+Z</b><span className="psAxisX">X</span><span className="psAxisY">Y</span></div>
      {showBuildDirection&&<div className="psBuildDirectionLabel" role="status">Build axis ↑ · visualization</div>}
      {highlightTriangles.length>0&&<div role="status" style={{position:"absolute",left:12,bottom:12,padding:"6px 10px",fontSize:12,borderRadius:6,background:"#152c3b",color:"#ecf6ff",pointerEvents:"none"}}>
