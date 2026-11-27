@@ -10,6 +10,7 @@
 import {STLLoader} from "three/examples/jsm/loaders/STLLoader.js";
 import {Euler,Vector3} from "three";
 import {auditSTL,type MeshAudit} from "./stl-mesh-audit";
+import {sectionAreaCheck,type SectionTriangle} from "./lpbf-section-area-check";
 
 export const PHYSICAL_SLICER_VERSION="orientai-stl-physical-raster-v0.1";
 export type Vec3={x:number;y:number;z:number};
@@ -18,6 +19,7 @@ export type PhysicalSliceLayer={
  layer:number;bottomZMm:number;topZMm:number;sampleZMm:number;
  areaMm2:number;estimatedVolumeMm3:number;partialCells:number;
  cells:PhysicalSliceCell[];
+ sectionCheck?:{referenceAreaMm2:number|null;absoluteDifferenceMm2:number|null;relativeDifference:number|null;reason:string|null};
 };
 export type PhysicalSliceResult={
  version:typeof PHYSICAL_SLICER_VERSION;
@@ -99,9 +101,11 @@ export async function slicePhysicalStl(stl:ArrayBuffer,opts:SliceOptions):Promis
   return {x:v.x,y:v.y,z:v.z};
  };
  const tris:Tri[]=[];
+ const sectionTriangles:SectionTriangle[]=[];
  let min={x:Infinity,y:Infinity,z:Infinity},max={x:-Infinity,y:-Infinity,z:-Infinity},signedVolume=0;
  for(let i=0;i<pos.count;i+=3){
   const a=map(i),b=map(i+1),c=map(i+2);
+  sectionTriangles.push({a,b,c});
   for(const v of [a,b,c])for(const k of ["x","y","z"] as const){min[k]=Math.min(min[k],v[k]);max[k]=Math.max(max[k],v[k]);}
   const ax=a.x-pivot.x,bx=b.x-pivot.x,cx=c.x-pivot.x;
   const ay=a.y-pivot.y,by=b.y-pivot.y,cy=c.y-pivot.y;
@@ -123,6 +127,11 @@ export async function slicePhysicalStl(stl:ArrayBuffer,opts:SliceOptions):Promis
  // Every XY ray sees all physical layers; refuse high-cost meshes before processing.
  if(columns*rows*4*pos.count/3>20000000)
   throw Error("Physical slice exceeds 20 million triangle/ray tests. Simplify the STL or increase XY pitch.");
+ // A final partial layer has its own physical midpoint inside the actual part bounds.
+ const layerBounds=Array.from({length:numLayers},(_,i)=>{
+  const bottomZMm=min.z+i*d,topZMm=Math.min(max.z,bottomZMm+d);
+  return {bottomZMm,topZMm,sampleZMm:bottomZMm+(topZMm-bottomZMm)/2};
+ });
  const layerMaps=Array.from({length:numLayers},()=>new Map<number,number>());
  for(let iy=0;iy<rows;iy++)for(let ix=0;ix<columns;ix++){
   const rays:number[][]=[];
@@ -132,18 +141,20 @@ export async function slicePhysicalStl(stl:ArrayBuffer,opts:SliceOptions):Promis
   }
   if(rays.every(r=>r.length===0))continue;
   for(let layer=0;layer<numLayers;layer++){
-   const z=min.z+(layer+.5)*d;
-   if(z>=max.z)break;
+   const z=layerBounds[layer].sampleZMm;
    const count=rays.reduce((n,cross)=>n+(insideAt(cross,z)?1:0),0);
    if(count)layerMaps[layer].set(iy*columns+ix,count/4);
   }
  }
+ const checkAvailable=audit.disconnectedShells===1&&numLayers*sectionTriangles.length<=2_000_000;
  const layers:PhysicalSliceLayer[]=layerMaps.map((m,i)=>{
   const cells:PhysicalSliceCell[]=[...m].map(([index,coverage])=>({x:index%columns,y:Math.floor(index/columns),coverage}));
   const area=cells.reduce((sum,c)=>sum+c.coverage*p*p,0);
-  return {layer:i,bottomZMm:min.z+i*d,topZMm:Math.min(max.z,min.z+(i+1)*d),
-   sampleZMm:min.z+(i+.5)*d,areaMm2:area,
-   estimatedVolumeMm3:area*Math.max(0,Math.min(d,max.z-(min.z+i*d))),
+  const ref=checkAvailable?sectionAreaCheck(sectionTriangles,layerBounds[i].sampleZMm,min):{areaMm2:null,reason:"Multiple shells or section work limit exceeded"};
+  const difference=ref.areaMm2===null?null:Math.abs(area-ref.areaMm2);
+  return {layer:i,...layerBounds[i],areaMm2:area,
+   sectionCheck:{referenceAreaMm2:ref.areaMm2,absoluteDifferenceMm2:difference,relativeDifference:difference===null||ref.areaMm2===null?null:difference/ref.areaMm2,reason:ref.reason},
+   estimatedVolumeMm3:area*(layerBounds[i].topZMm-layerBounds[i].bottomZMm),
    partialCells:cells.filter(c=>c.coverage!==1).length,cells};
  });
  const sampled=layers.reduce((sum,l)=>sum+l.estimatedVolumeMm3,0);
@@ -152,9 +163,15 @@ export async function slicePhysicalStl(stl:ArrayBuffer,opts:SliceOptions):Promis
  const boundary=layers.reduce((n,l)=>n+l.partialCells,0);
  const diagnostics=[
   "Physical Z layers are sampled at each layer midpoint on the uploaded, rotated STL; 4 sub-XY rays estimate occupied area. Not exact polygon slicing or anti-aliased thermal voxels.",
+  "The final partial-height slab uses its own midpoint and actual remaining thickness. The nominal half-cell diagonal is a spacing indicator, NOT a guaranteed geometry or volume error bound.",
   "Partial cell fractions and feature scales below the XY pitch or physical layer height are uncertain. Thin walls, disconnected regions, self-intersections and sharp slopes require independent inspection.",
   "Neither this geometry raster nor imported user CSV supplies a verified native machine scan path, print thermophysics, porosity, melt behavior, certification or first-time quality."
  ];
+ const missingChecks=layers.filter(l=>l.sectionCheck?.referenceAreaMm2==null).length;
+ const discrepantChecks=layers.filter(l=>(l.sectionCheck?.relativeDifference??0)>.08).length;
+ diagnostics.push("Directed midpoint-section area comparison is an independent geometric diagnostic, not a guaranteed error bound or a thermal activation approval.");
+ if(missingChecks)diagnostics.unshift(missingChecks+" layer section-area comparisons unavailable; do not infer geometry fidelity.");
+ if(discrepantChecks)diagnostics.unshift(discrepantChecks+" layer area discrepancies exceed the 8% research review threshold; refine and inspect geometry before downstream use.");
  if(audit.disconnectedShells>1)diagnostics.unshift("Multiple disconnected STL shells: confirm intentional part connectivity before any numerical simulation.");
  if(relative>0.08)diagnostics.unshift("Raster-volume deviation exceeds 8% of signed STL mesh volume. Do not use this resolution for physical analysis; refine grid and inspect thin features.");
  if(boundary)diagnostics.unshift(boundary+" boundary layer-cells have sampled, nonbinary occupancy; they cannot be treated as full-density cubes by the existing partial-layer solver.");

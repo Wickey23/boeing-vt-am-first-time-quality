@@ -83,3 +83,37 @@ test("M04 fails closed on open STL, oversized grid and invalid units",async()=>{
  await assert.rejects(slicePhysicalStl(cube,{unitScaleToMm:1,xyPitchMm:.04,layerThicknessMm:.01}),/exceeds/);
  await assert.rejects(slicePhysicalStl(cube,{unitScaleToMm:1,xyPitchMm:1,layerThicknessMm:1,translationMm:{x:Infinity,y:0,z:0}}),/Invalid build placement/);
 });
+
+test("M04 final partial layer is sampled within its real bounds and does not lose a thin top slab",async()=>{
+ const input=await fixture("cube-10mm");
+ // Ten nominal 0.99 mm layers plus a 0.1 mm final slab.
+ const result=await slicePhysicalStl(input,{unitScaleToMm:1,xyPitchMm:1,layerThicknessMm:.99});
+ assert.equal(result.grid.physicalLayers,11);
+ const last=result.layers.at(-1)!;
+ assert.ok(Math.abs(last.bottomZMm-4.9)<1e-8);
+ assert.ok(Math.abs(last.topZMm-5)<1e-8);
+ assert.ok(Math.abs(last.sampleZMm-4.95)<1e-8);
+ assert.ok(last.sampleZMm>last.bottomZMm&&last.sampleZMm<last.topZMm);
+ assert.equal(last.areaMm2,100);
+ assert.ok(Math.abs(last.estimatedVolumeMm3-10)<1e-7);
+ assert.ok(Math.abs(result.geometry.sampledVolumeMm3-1000)<1e-7);
+ assert.ok(result.layers.every(l=>l.cells.length===100));
+ assert.match(result.diagnostics.join(" "),/NOT a guaranteed geometry or volume error bound/);
+});
+
+test("M04 independent section-area check detects a raster that entirely misses a small solid",async()=>{
+ const cube=await fixture("cube-10mm");
+ const fine=await slicePhysicalStl(cube,{unitScaleToMm:1,xyPitchMm:1,layerThicknessMm:1});
+ for(const l of fine.layers){
+  assert.ok(l.sectionCheck);
+  assert.ok(Math.abs(l.sectionCheck.referenceAreaMm2!-100)<1e-8);
+  assert.ok(l.sectionCheck.relativeDifference!<1e-9);
+ }
+ const coarse=await slicePhysicalStl(cube,{unitScaleToMm:.1,xyPitchMm:2,layerThicknessMm:1});
+ assert.equal(coarse.layers.length,1);
+ assert.equal(coarse.layers[0].areaMm2,0);
+ assert.ok(Math.abs(coarse.layers[0].sectionCheck!.referenceAreaMm2!-1)<1e-8);
+ assert.equal(coarse.layers[0].sectionCheck!.relativeDifference,1);
+ assert.match(coarse.diagnostics.join(" "),/layer area discrepancies exceed/);
+ assert.equal(coarse.status,"SAMPLED_GEOMETRY_REVIEW_REQUIRED");
+});

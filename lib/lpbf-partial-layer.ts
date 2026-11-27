@@ -9,6 +9,10 @@
  * Effective mass and specific heat remain constant across transitions.
  */
 import {PHYSICAL_SCAN_VERSION,type PhysicalScanPlan} from "./lpbf-physical-schedule";
+import {createPhaseEnthalpyModel,type PhaseEnthalpyInput} from "./lpbf-phase-enthalpy";
+import {createConductivityTable,type ConductivityTable} from "./lpbf-conductivity-table";
+import {createRadiationBoundary,type RadiationInput} from "./lpbf-radiation-boundary";
+import {createExternalThermalBoundary,type ExternalThermalBoundaryInput} from "./lpbf-external-thermal-boundary";
 
 export const PARTIAL_LAYER_VERSION="lpbf-partial-layer-fv-research-0.1";
 export type Cell3=[number,number,number];
@@ -27,16 +31,25 @@ export type PartialLayerInputs={
 export type PartialLayerCell={
  x:number;y:number;layer:number;state:"powder"|"consolidated";
  temperatureC:number;peakTemperatureC:number;
+ /** Equilibrium enthalpy estimate, not observed melt fraction. */
+ liquidFraction?:number;peakLiquidFraction?:number;
 };
+export type PartialLayerFrame={commandIndex:number;layer:number;timeSeconds:number;cells:PartialLayerCell[]};
 export type PartialLayerResult={
  engine:typeof PARTIAL_LAYER_VERSION;
  validationStatus:"UNVALIDATED_GRID_RESEARCH";
  partSha256:string;sourceSha256:string;
  grid:{cellCount:number;layers:number;pitchMm:number;layerHeightMm:number};
- chronology:{commands:number;elapsedSeconds:number;timeSteps:number;maxTimeStepSeconds:number};
- energy:{commandedJ:number;absorbedJ:number;plateExchangeJ:number;convectionExchangeJ:number;storedJ:number;relativeImbalance:number};
+ chronology:{commands:number;elapsedSeconds:number;timeSteps:number;maxTimeStepSeconds:number;actualMaxTimeStepSeconds?:number;commandStepCounts?:number[]};
+ energy:{commandedJ:number;absorbedJ:number;plateExchangeJ:number;convectionExchangeJ:number;radiationExchangeJ?:number;powderExchangeJ?:number;storedJ:number;relativeImbalance:number};
  layers:Array<{layer:number;timeSeconds:number;activeCells:number;consolidatedCells:number;maximumTemperatureC:number}>;
  finalCells:PartialLayerCell[];
+ /** Optional bounded command-end frames; inactive cells are omitted. */
+ frames?:PartialLayerFrame[];
+ externalBoundary?:{model:"UNVALIDATED_EXTERNAL_RESISTANCE";parameters:ExternalThermalBoundaryInput;productionActivationAuthorized:false};
+ radiationBoundary?:{model:"UNVALIDATED_TOP_FACE_GRAY_RADIATION";parameters:RadiationInput;productionActivationAuthorized:false};
+ conductivityClosure?:{model:"UNVALIDATED_TABULATED_EFFECTIVE_CONDUCTIVITY";parameters:ConductivityTable;productionActivationAuthorized:false};
+ phaseClosure?:{model:"UNVALIDATED_EQUILIBRIUM_ENTHALPY";parameters:PhaseEnthalpyInput;productionActivationAuthorized:false};
  limitations:string[];
 };
 const DIRECTIONS:Cell3[]=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
@@ -44,8 +57,12 @@ function assertRange(v:number,lo:number,hi:number,label:string){
  if(!Number.isFinite(v)||v<lo||v>hi)throw Error("Invalid "+label+".");
 }
 function harmonic(a:number,b:number){return 2*a*b/(a+b);}
-export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void):PartialLayerResult{
+export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean;timeStepScale?:number;absoluteTimeStepCeilingSeconds?:number;phaseEnthalpy?:PhaseEnthalpyInput;conductivityTable?:ConductivityTable;radiation?:RadiationInput;externalBoundary?:ExternalThermalBoundaryInput}):PartialLayerResult{
  const {cells,scan,pitchMm:p,layerHeightMm:d,originMm:o}=input;
+ const timeStepScale=options?.timeStepScale??1;
+ assertRange(timeStepScale,.125,1,"research time-step scale");
+ const absoluteCeiling=options?.absoluteTimeStepCeilingSeconds;
+ if(absoluteCeiling!==undefined)assertRange(absoluteCeiling,1e-7,1,"absolute research time-step ceiling");
  if(scan.version!==PHYSICAL_SCAN_VERSION||!Array.isArray(scan.commands)||!scan.commands.length||scan.commands.length>3000)
   throw Error("A nonempty, bounded physical scan chronology is required.");
  if(!/^[a-f0-9]{64}$/.test(input.partSha256)||!/^[a-f0-9]{64}$/.test(input.sourceSha256))
@@ -84,17 +101,33 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
  const active=new Uint8Array(cells.length),solid=new Uint8Array(cells.length);
  const enthalpy=new Float64Array(cells.length),peak=new Float64Array(cells.length).fill(input.ambientTemperatureC);
  const mass=input.densityKgM3*(p/1000)**2*(d/1000);
+ const phase=options?.phaseEnthalpy?createPhaseEnthalpyModel(options.phaseEnthalpy):null;
+ if(phase&&phase.parameters.solidSpecificHeatJKgK!==input.specificHeatJKgK)throw Error("Phase solid heat capacity must match the research input.");
+ if(phase&&input.ambientTemperatureC>=phase.parameters.solidusC)throw Error("Phase experiment requires initially solid-temperature feedstock.");
  const cp=input.specificHeatJKgK,capacity=mass*cp;
+ const initialH=phase?.enthalpyJKg(input.ambientTemperatureC)??0;
  const xyArea=p*d*1e-6,zArea=p*p*1e-6;
  const hxy=p/1000,hz=d/1000;
- const kMax=input.solidConductivityWmK;
+ const table=options?.conductivityTable?createConductivityTable(options.conductivityTable):null;
+ if(table){
+  table.at(input.ambientTemperatureC,false);table.at(input.plateTemperatureC,true);
+  if(Math.abs(table.at(input.ambientTemperatureC,false)-input.powderConductivityWmK)>1e-9||Math.abs(table.at(input.ambientTemperatureC,true)-input.solidConductivityWmK)>1e-9)
+   throw Error("Conductivity table must match nominal ambient research values.");
+ }
+ const radiation=options?.radiation?createRadiationBoundary(options.radiation):null;
+ if(radiation){radiation.assertTemperature(input.ambientTemperatureC);radiation.assertTemperature(input.plateTemperatureC);}
+ const external=options?.externalBoundary?createExternalThermalBoundary(options.externalBoundary):null;
+ const kMax=table?.maximumWmK??input.solidConductivityWmK;
  const maximalG=4*kMax*xyArea/hxy+2*kMax*zArea/hz+
-  2*kMax*zArea/(hz/2)+input.convectionWm2K*(4*xyArea+2*zArea);
- const stableDt=.15*capacity/maximalG;
+  2*kMax*zArea/(hz/2)+input.convectionWm2K*(4*xyArea+2*zArea)+(radiation?.maximumLinearizedWm2K??0)*zArea+
+  (external?4*xyArea*external.powderCoefficient(kMax,hxy/2)+zArea*external.powderCoefficient(kMax,hz/2):0);
+ const stableDt=.15*mass*(phase?.minimumHeatCapacityJKgK??cp)/maximalG;
  const motionDt=(p/3)/5000; // tightened below using each commanded speed
  if(!(stableDt>0&&Number.isFinite(stableDt)&&motionDt>0))
   throw Error("Unstable research discretization.");
- let commanded=0,absorbed=0,plate=0,conv=0,steps=0,elapsed=0,previousLayer=-1;
+ const stepLimit=(speed:number)=>Math.min(absoluteCeiling??Infinity,timeStepScale*Math.min(stableDt,speed>0?p/(3*speed):stableDt));
+ const commandStepCounts:number[]=[];let actualMaxTimeStepSeconds=0;
+ let commanded=0,absorbed=0,plate=0,conv=0,rad=0,powder=0,steps=0,elapsed=0,previousLayer=-1;
  let expectedNext=0,totalSteps=0;
  const tolerance=1e-6;
  for(const [i,c] of scan.commands.entries()){
@@ -117,7 +150,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   const duration=c.t1Seconds-c.t0Seconds;
   const speed=Math.hypot(c.x1Mm-c.x0Mm,c.y1Mm-c.y0Mm)/duration;
   if(speed>5000+1e-6)throw Error("Excessive scan speed.");
-  const dtLimit=Math.min(stableDt,speed>0?p/(3*speed):stableDt);
+  const dtLimit=stepLimit(speed);
   totalSteps+=Math.ceil(duration/dtLimit);
   commanded+=c.powerW*duration;
   if(totalSteps>120000)throw Error("Partial-layer model exceeds 120,000 integration steps.");
@@ -132,8 +165,12 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
  }
  if(seen.size!==cells.length)throw Error("Disconnected grid component: unsupported layer physics.");
  const snapshots:PartialLayerResult["layers"]=[];
- const conductivity=(i:number)=>solid[i]?input.solidConductivityWmK:input.powderConductivityWmK;
- const temp=(i:number)=>input.ambientTemperatureC+enthalpy[i]/capacity;
+ const frames:PartialLayerFrame[]=[];
+ if(options?.captureFrames&&cells.length*scan.commands.length>100_000)
+  throw Error("Frame capture exceeds 100,000 cell-command records; reduce the research study.");
+ const temp=(i:number)=>phase?phase.state(initialH+enthalpy[i]/mass).temperatureC:input.ambientTemperatureC+enthalpy[i]/capacity;
+ const conductivity=(i:number)=>table?table.at(temp(i),Boolean(solid[i])):solid[i]?input.solidConductivityWmK:input.powderConductivityWmK;
+ const phaseFields=(i:number)=>phase?{liquidFraction:phase.state(initialH+enthalpy[i]/mass).liquidFraction,peakLiquidFraction:phase.state(phase.enthalpyJKg(peak[i])).liquidFraction}:{};
  for(const [commandIndex,command] of scan.commands.entries()){
   if(command.layer!==previousLayer){
    previousLayer=command.layer;
@@ -141,8 +178,9 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   }
   const duration=command.t1Seconds-command.t0Seconds;
   const speed=Math.hypot(command.x1Mm-command.x0Mm,command.y1Mm-command.y0Mm)/duration;
-  const substeps=Math.ceil(duration/Math.min(stableDt,speed>0?p/(3*speed):stableDt));
+  const substeps=Math.ceil(duration/stepLimit(speed));
   const dt=duration/substeps;
+  commandStepCounts.push(substeps);actualMaxTimeStepSeconds=Math.max(actualMaxTimeStepSeconds,dt);
   for(let s=0;s<substeps;s++){
    const f=(s+.5)/substeps,x=command.x0Mm+f*(command.x1Mm-command.x0Mm);
    const y=command.y0Mm+f*(command.y1Mm-command.y0Mm);
@@ -176,12 +214,23 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
      }else{
       // Air-facing boundaries, including surfaces above not-yet-deposited layers.
       // Powder-bed side exchange is approximated as convection.
-      const loss=input.convectionWm2K*area*(Ti-input.ambientTemperatureC)*dt;
-      changes[i]-=loss;conv+=loss;
+      if(external&&face!==4){
+       // Lower faces on the build plate are handled once by the substrate term.
+       if(!(face===5&&cells[i][2]===0)){
+        const q=external.powderCoefficient(ki,spacing/2)*area*(Ti-external.parameters.powderReservoirTemperatureC)*dt;
+        changes[i]-=q;powder+=q;
+       }
+      }else{
+       const loss=input.convectionWm2K*area*(Ti-input.ambientTemperatureC)*dt;
+       changes[i]-=loss;conv+=loss;
+      }
+      // Only upward-facing surfaces without active material immediately above.
+      if(radiation&&face===4){const q=radiation.fluxWm2(Ti)*area*dt;changes[i]-=q;rad+=q;}
      }
     }
     if(cells[i][2]===0){
-     const loss=2*ki*zArea/hz*(Ti-input.plateTemperatureC)*dt;
+     const coefficient=external?external.substrateCoefficient(ki,hz/2):2*ki/hz;
+     const loss=coefficient*zArea*(Ti-input.plateTemperatureC)*dt;
      changes[i]-=loss;plate+=loss;
     }
    }
@@ -193,7 +242,10 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
    for(let i=0;i<cells.length;i++)if(active[i]){
     enthalpy[i]+=changes[i];
     if(!Number.isFinite(enthalpy[i]))throw Error("Nonfinite cell energy; results withheld.");
-    peak[i]=Math.max(peak[i],temp(i));
+    const updatedTemperature=temp(i);
+    if(radiation)radiation.assertTemperature(updatedTemperature);
+    if(table)table.at(updatedTemperature,Boolean(solid[i])); // reject out-of-range final updates too
+    peak[i]=Math.max(peak[i],updatedTemperature);
    }
    steps++;elapsed+=dt;
   }
@@ -202,11 +254,13 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   for(let i=0;i<cells.length;i++)if(active[i])maxTemp=Math.max(maxTemp,temp(i));
   snapshots.push({layer:command.layer,timeSeconds:elapsed,activeCells:activeCount,
    consolidatedCells:consolidated,maximumTemperatureC:maxTemp});
+  if(options?.captureFrames)frames.push({commandIndex,layer:command.layer,timeSeconds:elapsed,
+   cells:cells.flatMap((c,i)=>active[i]?[{x:c[0],y:c[1],layer:c[2],state:solid[i]?"consolidated" as const:"powder" as const,temperatureC:temp(i),peakTemperatureC:peak[i],...phaseFields(i)}]:[])});
   onProgress?.(commandIndex+1,scan.commands.length);
  }
  const stored=enthalpy.reduce((a,b)=>a+b,0);
- const imbalance=Math.abs(absorbed-plate-conv-stored)/
-  Math.max(1,Math.abs(absorbed)+Math.abs(plate)+Math.abs(conv));
+ const imbalance=Math.abs(absorbed-plate-conv-rad-powder-stored)/
+  Math.max(1,Math.abs(absorbed)+Math.abs(plate)+Math.abs(conv)+Math.abs(rad)+Math.abs(powder));
  if(!Number.isFinite(imbalance)||imbalance>1e-6)
   throw Error("Partial-layer energy conservation failed.");
  if(Math.abs(absorbed-commanded*input.powerCouplingFraction)>1e-8*Math.max(1,absorbed))
@@ -216,18 +270,25 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   partSha256:input.partSha256,sourceSha256:input.sourceSha256,
   grid:{cellCount:cells.length,layers:nLayers,pitchMm:p,layerHeightMm:d},
   chronology:{commands:scan.commands.length,elapsedSeconds:elapsed,timeSteps:steps,
-   maxTimeStepSeconds:stableDt},
+   maxTimeStepSeconds:Math.min(stableDt*timeStepScale,absoluteCeiling??Infinity),actualMaxTimeStepSeconds,commandStepCounts},
   energy:{commandedJ:commanded,absorbedJ:absorbed,plateExchangeJ:plate,
-   convectionExchangeJ:conv,storedJ:stored,relativeImbalance:imbalance},
+   convectionExchangeJ:conv,...(radiation?{radiationExchangeJ:rad}:{}),...(external?{powderExchangeJ:powder}:{}),storedJ:stored,relativeImbalance:imbalance},
   layers:snapshots,
+  ...(options?.captureFrames?{frames}:{}),
+  ...(external?{externalBoundary:{model:"UNVALIDATED_EXTERNAL_RESISTANCE" as const,parameters:external.parameters,productionActivationAuthorized:false as const}}:{}),
+  ...(radiation?{radiationBoundary:{model:"UNVALIDATED_TOP_FACE_GRAY_RADIATION" as const,parameters:radiation.parameters,productionActivationAuthorized:false as const}}:{}),
+  ...(table?{conductivityClosure:{model:"UNVALIDATED_TABULATED_EFFECTIVE_CONDUCTIVITY" as const,parameters:table.parameters,productionActivationAuthorized:false as const}}:{}),
+  ...(phase?{phaseClosure:{model:"UNVALIDATED_EQUILIBRIUM_ENTHALPY" as const,parameters:phase.parameters,productionActivationAuthorized:false as const}}:{}),
   finalCells:cells.map((c,i)=>({x:c[0],y:c[1],layer:c[2],
-   state:solid[i]?"consolidated":"powder",temperatureC:temp(i),peakTemperatureC:peak[i]})),
+   state:solid[i]?"consolidated":"powder",temperatureC:temp(i),peakTemperatureC:peak[i],...phaseFields(i)})),
   limitations:[
    "RESEARCH ONLY. This model uses an engineer-supplied, layer-aligned uniform grid, not an STL-accurate slicer or verified machine data.",
    "Each layer's powder footprint appears instantaneously at its first command. Laser-illuminated cells are labeled consolidated heuristically; no melting/solidification kinetics, consolidation threshold or melt-pool fluid flow are modeled.",
-   "Powder and consolidated thermal conductivities differ; mass, density and heat capacity are held constant to preserve a simple cell energy balance. Powder packing, shrinkage and latent heat are absent.",
+   phase?"Research equilibrium enthalpy includes latent heat and separate constant sensible heat capacities. Beam-marked consolidation and conductivity remain heuristic, independent of liquid fraction. No phase kinetics, packing or shrinkage.":"Powder and consolidated thermal conductivities differ; mass, density and heat capacity are held constant to preserve a simple cell energy balance. Powder packing, shrinkage and latent heat are absent.",
+   ...(table?["Effective conductivity is interpolated from explicit supplied data; no extrapolation. The exposed branch follows heuristic beam exposure, not physical densification or equilibrium liquid fraction. Source labels are supplied by the researcher, not independently authenticated."]:[]),
    "The Gaussian source is integrated over coarse cells and normalized within the represented footprint. Beam shape, absorption, powder-bed physics and local temperatures are not experimentally validated.",
-   "Top/side faces use a simplified convection boundary rather than resolved powder-bed coupling; the plate is an ideal fixed-temperature reservoir. No radiation or mechanical coupling.",
+   ...(external?["External resistance option replaces side/unsupported-bottom convection with equivalent conduction to an imposed powder reservoir; bottom plate contact has series substrate/contact resistance. Upward exposed faces retain convection/radiation. Neither reservoir is spatially resolved; no transient substrate or powder temperature prediction."]:[]),
+   radiation?"Optional upward-face gray radiation assumes direct view to an imposed isothermal environment; it does not resolve shadowing, powder radiation, view factors or the chamber. Convection and plate exchange remain simplified. No mechanical coupling.":"Top/side faces use a simplified convection boundary rather than resolved powder-bed coupling; the plate is an ideal fixed-temperature reservoir. No radiation or mechanical coupling.",
    "Numerical energy conservation is not convergence, experimental accuracy, melt-pool validation or evidence of defect/first-time-quality prediction."
   ]
  };
