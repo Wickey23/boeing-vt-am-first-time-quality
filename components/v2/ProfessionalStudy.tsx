@@ -39,6 +39,9 @@ import "./professional-workspace-layout.css";
 import "./professional-cad-layout.css";
 import {appendMeasurement,distanceMm,type MeshPick,type MeshSnapMode} from "@/lib/cad-mesh-measurement";
 import type {SectionView} from "@/lib/cad-section-plane";
+import UnifiedServiceStudy,{type ServiceStudyResults} from "@/components/UnifiedServiceStudy";
+import "../copilot.css";
+import "./cad-advanced-workspace.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
@@ -91,6 +94,10 @@ export default function ProfessionalStudy(){
  const [cameraView,setCameraView]=useState("iso");
  const [previewYaw,setPreviewYaw]=useState(0);
  const [orientationDraft,setOrientationDraft]=useState<{x:number;y:number;z:number}|null>(null);
+ const [serviceDockOpen,setServiceDockOpen]=useState(false);
+ const [serviceDockMounted,setServiceDockMounted]=useState(false);
+ const [sandboxService,setSandboxService]=useState<ServiceStudyResults|null>(null);
+ const [sandboxField,setSandboxField]=useState<"geometry"|"stress"|"displacement"|"thermal">("geometry");
  useEffect(()=>{setOrientationDraft(null);},[a.file,a.settings.unitScale,a.selected,cadLayout]);
  const [viewerReset,setViewerReset]=useState(0);
  const [showBuildDirection,setShowBuildDirection]=useState(false);
@@ -350,12 +357,16 @@ export default function ProfessionalStudy(){
  };
  const projectName=a.file?.name??"No model uploaded";
  const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
- const canOrient=Boolean(cadLayout&&a.file&&!rendererFailed);
+ const serviceCurrent=Boolean(sandboxService&&partHash===sandboxService.partSha256&&sandboxService.unitScale===a.settings.unitScale&&sandboxService.process===a.journey.process&&isConfirmed);
+ const resultField=serviceCurrent&&cadLayout&&!rendererFailed?(sandboxField==="stress"?sandboxService?.structural?.stress:sandboxField==="displacement"?sandboxService?.structural?.displacement:sandboxField==="thermal"?sandboxService?.thermal:undefined):undefined;
+ const currentReviewed=ctx.knowledge?.partKey===partHash?ctx.reviewed:[];
+ const currentBindings=activeParameterBindings(ctx.knowledge?.partKey===partHash?ctx.knowledge.parameterBindings:[],ctx.sources,currentReviewed,activeServiceCase(a.servicePlan));
+ const canOrient=Boolean(cadLayout&&a.file&&!rendererFailed&&!resultField);
  const activeOrientation=canOrient?orientationDraft:null;
- const displayedRotation=activeOrientation??modelRotation;
- const canSection=Boolean(cadLayout&&a.file&&!rendererFailed&&!activeOrientation);
+ const displayedRotation=resultField?{x:0,y:0,z:0}:activeOrientation??modelRotation;
+ const canSection=Boolean(cadLayout&&a.file&&!rendererFailed&&!activeOrientation&&!resultField);
  const activeSection=canSection?sectionView:undefined;
- const canMeasure=Boolean(cadLayout&&a.file&&isConfirmed&&layer===100&&!showSupports&&!rendererFailed&&!activeSection&&!activeOrientation);
+ const canMeasure=Boolean(cadLayout&&a.file&&isConfirmed&&layer===100&&!showSupports&&!rendererFailed&&!activeSection&&!activeOrientation&&!resultField);
  useEffect(()=>{if(!canSection)setSectionView(null);},[canSection]);
  useEffect(()=>{if(!canOrient)setOrientationDraft(null);},[canOrient]);
  const activePicks=canMeasure&&measureMode?meshPicks:[];
@@ -370,6 +381,7 @@ export default function ProfessionalStudy(){
    <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
     aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
     <Icon size={17}/>{label}</button>)}</div>
+   <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={serviceDockOpen} onClick={()=>{setServiceDockMounted(true);setServiceDockOpen(v=>!v);setViewerExpanded(false);setCompactPropertiesOpen(false);}}><SlidersHorizontal size={17}/>Simulate</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canOrient} aria-pressed={Boolean(activeOrientation)} title="Preview arbitrary rotation without changing the selected analysis candidate" onClick={()=>{setOrientationDraft(v=>v?null:{...modelRotation});setSectionView(null);setMeasureMode(false);setMeshPicks([]);setHighlightTriangles([]);setPlaying(false);setLayer(100);setShowSupports(false);}}><RotateCcw size={17}/>Orient</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canSection} aria-pressed={Boolean(activeSection)} title="Clip the displayed mesh along a build axis" onClick={()=>{setSectionView(v=>v?null:{axis:"Z",percent:50,reverse:false});setMeasureMode(false);setMeshPicks([]);setPlaying(false);setLayer(100);setShowSupports(false);}}><Layers size={17}/>Section</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canMeasure} title={rendererFailed?"3D rendering is unavailable; retry 3D to measure": "Confirm units, show full geometry and turn off supports before measuring"} aria-pressed={measureMode} onClick={()=>{setMeasureMode(v=>!v);setMeshPicks([]);}}><Ruler size={17}/>Measure</button></div>
@@ -481,7 +493,7 @@ export default function ProfessionalStudy(){
       envelopeMm={riskEnvelope} overhangThresholdDeg={riskAngle}
       onEnvelopeChange={(axis,value)=>setRiskEnvelope(prev=>({...prev,[axis]:value}))}
       onAngleChange={setRiskAngle}
-      onFocus={triangles=>{setOrientationDraft(null);setHighlightTriangles(triangles);if(triangles.length){setShowSupports(false);setShowOverhangs(false);setCameraView("iso");setLayer(100);}}}/>
+      onFocus={triangles=>{setSandboxField("geometry");setOrientationDraft(null);setHighlightTriangles(triangles);if(triangles.length){setShowSupports(false);setShowOverhangs(false);setCameraView("iso");setLayer(100);}}}/>
      {highlightTriangles.length>0&&<div role="status" style={{fontSize:12,padding:"10px 12px",borderRadius:7,marginTop:10,border:"1px solid currentColor"}}>
       Highlighting {highlightTriangles.length.toLocaleString()} source-STL triangles in the adjacent 3D viewer. This marks geometric regions requiring review, not measured defects.
       <button type="button" style={{marginLeft:12,padding:"5px 9px"}} onClick={()=>setHighlightTriangles([])}>Clear highlighted region</button>
@@ -496,7 +508,7 @@ export default function ProfessionalStudy(){
      onExport={()=>void exportEvidence()} onGeometryExport={()=>void exportGeometry()}
      onJsonExport={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}}
      onNavigate={nextStage=>{setStage(nextStage);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}
-     onInspectOverhangs={()=>{setOrientationDraft(null);setShowOverhangs(true);setShowSupports(false);setCameraView("iso");setViewerExpanded(false);}}
+     onInspectOverhangs={()=>{setSandboxField("geometry");setOrientationDraft(null);setShowOverhangs(true);setShowSupports(false);setCameraView("iso");setViewerExpanded(false);}}
     />}
    </div>
    <div className={"psAssistant"+(cadLayout&&!cadAssistantOpen&&!showThread?" psCadAssistantCollapsed":"")}>
@@ -567,9 +579,14 @@ export default function ProfessionalStudy(){
      {a.file?<ViewerErrorBoundary onRendererFailure={setRendererFailed} fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
       <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={displayedRotation} fitPadding={1.10} cadStyle={cadLayout}
        cameraView={cameraView} onCameraViewChange={setCameraView}
-       overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
-       buildFraction={layer/100} sectionView={activeSection??undefined} highlightTriangles={activeOrientation?undefined:highlightTriangles} meshPicks={activePicks} snapMode={snapMode} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
+       overhangDeg={a.settings.overhangDeg} showOverhangs={!resultField&&showOverhangs} showSupports={!resultField&&showSupports}
+       field={resultField} fieldLabel={sandboxField==="stress"?"Service stress":sandboxField==="displacement"?"Displacement":sandboxField==="thermal"?"Steady temperature":undefined}
+       buildFraction={resultField?1:layer/100} sectionView={activeSection??undefined} highlightTriangles={activeOrientation||resultField?undefined:highlightTriangles} meshPicks={activePicks} snapMode={snapMode} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
      </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small>{cadLayout&&<button type="button" className="psCadEmptyImport" onClick={()=>partFileInput.current?.click()}><FileUp size={16}/> Import part</button>}</div>}
+     {serviceCurrent&&cadLayout&&<div className="psSandboxFields" role="group" aria-label="Sandbox service result fields">
+      {(["geometry","stress","displacement","thermal"] as const).map(mode=><button key={mode} type="button" aria-pressed={sandboxField===mode} disabled={mode!=="geometry"&&(rendererFailed||(mode==="thermal"?!sandboxService?.thermal:!sandboxService?.structural))} onClick={()=>{setSandboxField(mode);setOrientationDraft(null);setSectionView(null);setMeasureMode(false);setMeshPicks([]);setPlaying(false);setLayer(100);}}>{mode==="geometry"?"Geometry":mode==="stress"?"Stress":mode==="displacement"?"Displacement":"Steady temperature"}</button>)}
+      {resultField&&<small>Original part axes · research service result, not print-process prediction</small>}
+     </div>}
      {activeOrientation&&<section className="psMeshMeasure" aria-label="Orientation preview">
       <header><strong>Build orientation preview</strong><button type="button" aria-label="Close orientation preview" onClick={()=>setOrientationDraft(null)}><X size={15}/></button></header>
       {(["x","y","z"] as const).map(axis=><label key={axis}>{axis.toUpperCase()} rotation <output>{activeOrientation[axis]}°</output><input type="range" aria-label={axis.toUpperCase()+" rotation preview"} min={-360} max={360} step={1} value={activeOrientation[axis]} onChange={e=>setOrientationDraft(v=>v?{...v,[axis]:Number(e.target.value)}:null)}/></label>)}
@@ -601,7 +618,7 @@ export default function ProfessionalStudy(){
      </div>}
      <div className="psBuildAxis" aria-hidden="true"><b>+Z</b><span className="psAxisX">X</span><span className="psAxisY">Y</span></div>
      {showBuildDirection&&<div className="psBuildDirectionLabel" role="status">Build axis ↑ · visualization</div>}
-     {!activeOrientation&&highlightTriangles.length>0&&<div role="status" style={{position:"absolute",left:12,bottom:12,padding:"6px 10px",fontSize:12,borderRadius:6,background:"#152c3b",color:"#ecf6ff",pointerEvents:"none"}}>
+     {!activeOrientation&&!resultField&&highlightTriangles.length>0&&<div role="status" style={{position:"absolute",left:12,bottom:12,padding:"6px 10px",fontSize:12,borderRadius:6,background:"#152c3b",color:"#ecf6ff",pointerEvents:"none"}}>
       {highlightTriangles.length.toLocaleString()} geometric-risk triangles highlighted
      </div>}
     </div>
@@ -620,7 +637,7 @@ export default function ProfessionalStudy(){
     </div>
     <div className="psViewerStatusLine" role="status">
      <span><span className="psStatusDot"/> {a.file?"STL geometry":"No part loaded"}</span>
-     <span>{activeOrientation?"Orientation preview · results unchanged":a.file?(isConfirmed?"Units confirmed":"Units unconfirmed"):"Awaiting file"}</span>
+     <span>{resultField?"Service result · original part axes":activeOrientation?"Orientation preview · results unchanged":a.file?(isConfirmed?"Units confirmed":"Units unconfirmed"):"Awaiting file"}</span>
     </div>
     <details className="psReferenceViewSettings psEngineeringInspector">
      <summary><SlidersHorizontal size={15}/> Display & build settings <ChevronDown size={15}/></summary>
@@ -657,6 +674,12 @@ export default function ProfessionalStudy(){
     </details>
    </div>
   </aside>
+  {serviceDockMounted&&<aside className="psServiceDock cadAdvancedWorkspace" aria-label="Sandbox simulation setup" hidden={!serviceDockOpen||!cadLayout}>
+   <header className="psServiceDockHeader"><strong>Service simulation</strong><button type="button" aria-label="Close simulation setup" onClick={()=>setServiceDockOpen(false)}><X size={17}/></button></header>
+   <div className="psServiceDockScroll copilotMainPanel"><p className="psServiceScope">Shared solver and job ledger. Results use original STL axes; export the study job record here. The existing pre-build report does not include these local contour arrays.</p>
+    <UnifiedServiceStudy verified={isConfirmed&&ctx.knowledge?.partKey===partHash} partSha256={partHash??undefined} sourceIds={[...new Set(currentReviewed.map(x=>x.sourceId))]} reviewedEvidence={currentReviewed} parameterBindings={currentBindings} onResults={next=>{setSandboxService(next);if(!next)setSandboxField("geometry");}} onOpenResults={()=>{setSandboxField("stress");setServiceDockOpen(false);setOrientationDraft(null);setSectionView(null);setMeasureMode(false);setMeshPicks([]);setPlaying(false);setLayer(100);}}/>
+   </div>
+  </aside>}
   {cadLayout&&<nav className="psCadDocumentTabs" aria-label="Study document tabs">
    {stageEntries.map(({id,label,Icon})=><button type="button" key={id} aria-current={stage===id?"page":undefined}
     onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);}}>
