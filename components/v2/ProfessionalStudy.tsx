@@ -90,6 +90,8 @@ export default function ProfessionalStudy(){
  };
  const [cameraView,setCameraView]=useState("iso");
  const [previewYaw,setPreviewYaw]=useState(0);
+ const [orientationDraft,setOrientationDraft]=useState<{x:number;y:number;z:number}|null>(null);
+ useEffect(()=>{setOrientationDraft(null);},[a.file,a.settings.unitScale,a.selected,cadLayout]);
  const [viewerReset,setViewerReset]=useState(0);
  const [showBuildDirection,setShowBuildDirection]=useState(false);
  const [partHash,setPartHash]=useState<string|null>(null);
@@ -348,10 +350,14 @@ export default function ProfessionalStudy(){
  };
  const projectName=a.file?.name??"No model uploaded";
  const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
- const canSection=Boolean(cadLayout&&a.file&&!rendererFailed);
+ const canOrient=Boolean(cadLayout&&a.file&&!rendererFailed);
+ const activeOrientation=canOrient?orientationDraft:null;
+ const displayedRotation=activeOrientation??modelRotation;
+ const canSection=Boolean(cadLayout&&a.file&&!rendererFailed&&!activeOrientation);
  const activeSection=canSection?sectionView:undefined;
- const canMeasure=Boolean(cadLayout&&a.file&&isConfirmed&&layer===100&&!showSupports&&!rendererFailed&&!activeSection);
+ const canMeasure=Boolean(cadLayout&&a.file&&isConfirmed&&layer===100&&!showSupports&&!rendererFailed&&!activeSection&&!activeOrientation);
  useEffect(()=>{if(!canSection)setSectionView(null);},[canSection]);
+ useEffect(()=>{if(!canOrient)setOrientationDraft(null);},[canOrient]);
  const activePicks=canMeasure&&measureMode?meshPicks:[];
  useEffect(()=>{if(!canMeasure){setMeasureMode(false);setMeshPicks([]);}},[canMeasure]);
  return <div ref={workbenchRef}
@@ -364,6 +370,7 @@ export default function ProfessionalStudy(){
    <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
     aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
     <Icon size={17}/>{label}</button>)}</div>
+   <div className="psCadGroup"><button type="button" disabled={!canOrient} aria-pressed={Boolean(activeOrientation)} title="Preview arbitrary rotation without changing the selected analysis candidate" onClick={()=>{setOrientationDraft(v=>v?null:{...modelRotation});setSectionView(null);setMeasureMode(false);setMeshPicks([]);setHighlightTriangles([]);setPlaying(false);setLayer(100);setShowSupports(false);}}><RotateCcw size={17}/>Orient</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canSection} aria-pressed={Boolean(activeSection)} title="Clip the displayed mesh along a build axis" onClick={()=>{setSectionView(v=>v?null:{axis:"Z",percent:50,reverse:false});setMeasureMode(false);setMeshPicks([]);setPlaying(false);setLayer(100);setShowSupports(false);}}><Layers size={17}/>Section</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canMeasure} title={rendererFailed?"3D rendering is unavailable; retry 3D to measure": "Confirm units, show full geometry and turn off supports before measuring"} aria-pressed={measureMode} onClick={()=>{setMeasureMode(v=>!v);setMeshPicks([]);}}><Ruler size={17}/>Measure</button></div>
    <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={showOverhangs}
@@ -474,7 +481,7 @@ export default function ProfessionalStudy(){
       envelopeMm={riskEnvelope} overhangThresholdDeg={riskAngle}
       onEnvelopeChange={(axis,value)=>setRiskEnvelope(prev=>({...prev,[axis]:value}))}
       onAngleChange={setRiskAngle}
-      onFocus={triangles=>{setHighlightTriangles(triangles);if(triangles.length){setShowSupports(false);setShowOverhangs(false);setCameraView("iso");setLayer(100);}}}/>
+      onFocus={triangles=>{setOrientationDraft(null);setHighlightTriangles(triangles);if(triangles.length){setShowSupports(false);setShowOverhangs(false);setCameraView("iso");setLayer(100);}}}/>
      {highlightTriangles.length>0&&<div role="status" style={{fontSize:12,padding:"10px 12px",borderRadius:7,marginTop:10,border:"1px solid currentColor"}}>
       Highlighting {highlightTriangles.length.toLocaleString()} source-STL triangles in the adjacent 3D viewer. This marks geometric regions requiring review, not measured defects.
       <button type="button" style={{marginLeft:12,padding:"5px 9px"}} onClick={()=>setHighlightTriangles([])}>Clear highlighted region</button>
@@ -489,7 +496,7 @@ export default function ProfessionalStudy(){
      onExport={()=>void exportEvidence()} onGeometryExport={()=>void exportGeometry()}
      onJsonExport={()=>{if(currentRun&&a.result)downloadJSON(a.result,a.selected);}}
      onNavigate={nextStage=>{setStage(nextStage);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}
-     onInspectOverhangs={()=>{setShowOverhangs(true);setShowSupports(false);setCameraView("iso");setViewerExpanded(false);}}
+     onInspectOverhangs={()=>{setOrientationDraft(null);setShowOverhangs(true);setShowSupports(false);setCameraView("iso");setViewerExpanded(false);}}
     />}
    </div>
    <div className={"psAssistant"+(cadLayout&&!cadAssistantOpen&&!showThread?" psCadAssistantCollapsed":"")}>
@@ -558,11 +565,17 @@ export default function ProfessionalStudy(){
     </header>
     <div className="psViewerFrame psReferenceViewport">
      {a.file?<ViewerErrorBoundary onRendererFailure={setRendererFailed} fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
-      <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10} cadStyle={cadLayout}
+      <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={displayedRotation} fitPadding={1.10} cadStyle={cadLayout}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
-       buildFraction={layer/100} sectionView={activeSection??undefined} highlightTriangles={highlightTriangles} meshPicks={activePicks} snapMode={snapMode} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
+       buildFraction={layer/100} sectionView={activeSection??undefined} highlightTriangles={activeOrientation?undefined:highlightTriangles} meshPicks={activePicks} snapMode={snapMode} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
      </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small>{cadLayout&&<button type="button" className="psCadEmptyImport" onClick={()=>partFileInput.current?.click()}><FileUp size={16}/> Import part</button>}</div>}
+     {activeOrientation&&<section className="psMeshMeasure" aria-label="Orientation preview">
+      <header><strong>Build orientation preview</strong><button type="button" aria-label="Close orientation preview" onClick={()=>setOrientationDraft(null)}><X size={15}/></button></header>
+      {(["x","y","z"] as const).map(axis=><label key={axis}>{axis.toUpperCase()} rotation <output>{activeOrientation[axis]}°</output><input type="range" aria-label={axis.toUpperCase()+" rotation preview"} min={-360} max={360} step={1} value={activeOrientation[axis]} onChange={e=>setOrientationDraft(v=>v?{...v,[axis]:Number(e.target.value)}:null)}/></label>)}
+      <button type="button" onClick={()=>setOrientationDraft({x:0,y:0,z:0})}>Original axes</button> <button type="button" onClick={()=>setOrientationDraft({...modelRotation})}>Restore selected orientation</button>
+      <small>Temporary XYZ Euler rotation preview. Does not change the selected analysis candidate, run a solver, or alter report evidence. Close to return to the study orientation.</small>
+     </section>}
      {activeSection&&<section className="psMeshMeasure" aria-label="Section view">
       <header><strong>Section view</strong><button type="button" aria-label="Close section view" onClick={()=>setSectionView(null)}><X size={15}/></button></header>
       <label>Build axis <select aria-label="Section build axis" value={activeSection.axis} onChange={e=>setSectionView(v=>v?{...v,axis:e.target.value as SectionView["axis"]}:null)}><option value="X">X</option><option value="Y">Y</option><option value="Z">Z (build direction)</option></select></label>
@@ -588,7 +601,7 @@ export default function ProfessionalStudy(){
      </div>}
      <div className="psBuildAxis" aria-hidden="true"><b>+Z</b><span className="psAxisX">X</span><span className="psAxisY">Y</span></div>
      {showBuildDirection&&<div className="psBuildDirectionLabel" role="status">Build axis ↑ · visualization</div>}
-     {highlightTriangles.length>0&&<div role="status" style={{position:"absolute",left:12,bottom:12,padding:"6px 10px",fontSize:12,borderRadius:6,background:"#152c3b",color:"#ecf6ff",pointerEvents:"none"}}>
+     {!activeOrientation&&highlightTriangles.length>0&&<div role="status" style={{position:"absolute",left:12,bottom:12,padding:"6px 10px",fontSize:12,borderRadius:6,background:"#152c3b",color:"#ecf6ff",pointerEvents:"none"}}>
       {highlightTriangles.length.toLocaleString()} geometric-risk triangles highlighted
      </div>}
     </div>
@@ -601,13 +614,13 @@ export default function ProfessionalStudy(){
       <button type="button" aria-label="Fit model view" title="Fit model view" onClick={()=>{setCameraView("iso");setViewerReset(n=>n+1);}}><Maximize2 size={17}/></button>
      </div>
      <select aria-label="Geometry display mode" value={showSupports?"supports":showOverhangs?"overhangs":"solid"}
-      onChange={e=>{const v=e.target.value;setShowOverhangs(v==="overhangs");setShowSupports(v==="supports");if(v==="supports")setSectionView(null);}}>
+      onChange={e=>{const v=e.target.value;setShowOverhangs(v==="overhangs");setShowSupports(v==="supports");if(v==="supports"){setOrientationDraft(null);setSectionView(null);}}}>
       <option value="solid">Solid</option><option value="overhangs">Overhangs</option><option value="supports">Supports</option>
      </select>
     </div>
     <div className="psViewerStatusLine" role="status">
      <span><span className="psStatusDot"/> {a.file?"STL geometry":"No part loaded"}</span>
-     <span>{a.file?(isConfirmed?"Units confirmed":"Units unconfirmed"):"Awaiting file"}</span>
+     <span>{activeOrientation?"Orientation preview · results unchanged":a.file?(isConfirmed?"Units confirmed":"Units unconfirmed"):"Awaiting file"}</span>
     </div>
     <details className="psReferenceViewSettings psEngineeringInspector">
      <summary><SlidersHorizontal size={15}/> Display & build settings <ChevronDown size={15}/></summary>
@@ -615,7 +628,7 @@ export default function ProfessionalStudy(){
       <div className="psOrientationControl">
        <label htmlFor="ps-yaw-select">Visual Z rotation <Info size={14}/></label>
        <select id="ps-yaw-select" aria-label="Build orientation angle" disabled={!a.file}
-        value={previewYaw} onChange={e=>setPreviewYaw(Number(e.target.value))}>
+        value={previewYaw} onChange={e=>{setOrientationDraft(null);setPreviewYaw(Number(e.target.value));}}>
         <option value={0}>0°</option><option value={90}>90°</option>
         <option value={180}>180°</option><option value={270}>270°</option>
        </select>
@@ -633,10 +646,10 @@ export default function ProfessionalStudy(){
       <details className="psBuildDisclosure">
        <summary>Geometry buildup preview <span>{layer}% <ChevronDown size={14}/></span></summary>
        <input type="range" aria-label="Build progression percentage" min={1} max={100} value={layer}
-        onChange={e=>{setSectionView(null);setPlaying(false);setLayer(Number(e.target.value));}}/>
+        onChange={e=>{setOrientationDraft(null);setSectionView(null);setPlaying(false);setLayer(Number(e.target.value));}}/>
        <div className="psPlayback">
-        <button type="button" onClick={()=>{setSectionView(null);if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
-        <button type="button" onClick={()=>{setSectionView(null);setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
+        <button type="button" onClick={()=>{setOrientationDraft(null);setSectionView(null);if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
+        <button type="button" onClick={()=>{setOrientationDraft(null);setSectionView(null);setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
        </div>
       </details>
       <small className="psViewerMethodNote">Geometry-only visualization. Supports and build progression are conceptual, not process simulations.</small>
