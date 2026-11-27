@@ -100,3 +100,20 @@ test("M04 final partial layer is sampled within its real bounds and does not los
  assert.ok(result.layers.every(l=>l.cells.length===100));
  assert.match(result.diagnostics.join(" "),/NOT a guaranteed geometry or volume error bound/);
 });
+
+test("M04 independent section-area check detects a raster that entirely misses a small solid",async()=>{
+ const cube=await fixture("cube-10mm");
+ const fine=await slicePhysicalStl(cube,{unitScaleToMm:1,xyPitchMm:1,layerThicknessMm:1});
+ for(const l of fine.layers){
+  assert.ok(l.sectionCheck);
+  assert.ok(Math.abs(l.sectionCheck.referenceAreaMm2!-100)<1e-8);
+  assert.ok(l.sectionCheck.relativeDifference!<1e-9);
+ }
+ const coarse=await slicePhysicalStl(cube,{unitScaleToMm:.1,xyPitchMm:2,layerThicknessMm:1});
+ assert.equal(coarse.layers.length,1);
+ assert.equal(coarse.layers[0].areaMm2,0);
+ assert.ok(Math.abs(coarse.layers[0].sectionCheck!.referenceAreaMm2!-1)<1e-8);
+ assert.equal(coarse.layers[0].sectionCheck!.relativeDifference,1);
+ assert.match(coarse.diagnostics.join(" "),/layer area discrepancies exceed/);
+ assert.equal(coarse.status,"SAMPLED_GEOMETRY_REVIEW_REQUIRED");
+});
