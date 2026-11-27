@@ -29,7 +29,7 @@ export function prepareRegisteredThermalMeshHistory(result:Awaited<ReturnType<ty
  const keys=new Set(cells.map(key));
  if(keys.size!==cells.length||cells.length!==g.representedCells)throw Error("Ambiguous registered geometry.");
  function frameMap(i:number){
-  const f=frames[i],map=new Map(f.cells.map(c=>[key(c),c]));
+  const f=frames![i],map=new Map(f.cells.map(c=>[key(c),c]));
   if(map.size!==f.cells.length||map.size!==keys.size||[...map.keys()].some(k=>!keys.has(k))||
    f.cells.some(c=>!Number.isFinite(c.temperatureC)))throw Error("Incomplete or ambiguous registered thermal frame.");
   return map;
