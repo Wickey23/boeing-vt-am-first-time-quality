@@ -47,8 +47,10 @@ function assertRange(v:number,lo:number,hi:number,label:string){
  if(!Number.isFinite(v)||v<lo||v>hi)throw Error("Invalid "+label+".");
 }
 function harmonic(a:number,b:number){return 2*a*b/(a+b);}
-export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean}):PartialLayerResult{
+export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(completedCommands:number,totalCommands:number)=>void,options?:{captureFrames?:boolean;timeStepScale?:number}):PartialLayerResult{
  const {cells,scan,pitchMm:p,layerHeightMm:d,originMm:o}=input;
+ const timeStepScale=options?.timeStepScale??1;
+ assertRange(timeStepScale,.125,1,"research time-step scale");
  if(scan.version!==PHYSICAL_SCAN_VERSION||!Array.isArray(scan.commands)||!scan.commands.length||scan.commands.length>3000)
   throw Error("A nonempty, bounded physical scan chronology is required.");
  if(!/^[a-f0-9]{64}$/.test(input.partSha256)||!/^[a-f0-9]{64}$/.test(input.sourceSha256))
@@ -120,7 +122,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   const duration=c.t1Seconds-c.t0Seconds;
   const speed=Math.hypot(c.x1Mm-c.x0Mm,c.y1Mm-c.y0Mm)/duration;
   if(speed>5000+1e-6)throw Error("Excessive scan speed.");
-  const dtLimit=Math.min(stableDt,speed>0?p/(3*speed):stableDt);
+  const dtLimit=timeStepScale*Math.min(stableDt,speed>0?p/(3*speed):stableDt);
   totalSteps+=Math.ceil(duration/dtLimit);
   commanded+=c.powerW*duration;
   if(totalSteps>120000)throw Error("Partial-layer model exceeds 120,000 integration steps.");
@@ -147,7 +149,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   }
   const duration=command.t1Seconds-command.t0Seconds;
   const speed=Math.hypot(command.x1Mm-command.x0Mm,command.y1Mm-command.y0Mm)/duration;
-  const substeps=Math.ceil(duration/Math.min(stableDt,speed>0?p/(3*speed):stableDt));
+  const substeps=Math.ceil(duration/(timeStepScale*Math.min(stableDt,speed>0?p/(3*speed):stableDt)));
   const dt=duration/substeps;
   for(let s=0;s<substeps;s++){
    const f=(s+.5)/substeps,x=command.x0Mm+f*(command.x1Mm-command.x0Mm);
@@ -224,7 +226,7 @@ export function runPartialLayerResearch(input:PartialLayerInputs,onProgress?:(co
   partSha256:input.partSha256,sourceSha256:input.sourceSha256,
   grid:{cellCount:cells.length,layers:nLayers,pitchMm:p,layerHeightMm:d},
   chronology:{commands:scan.commands.length,elapsedSeconds:elapsed,timeSteps:steps,
-   maxTimeStepSeconds:stableDt},
+   maxTimeStepSeconds:stableDt*timeStepScale},
   energy:{commandedJ:commanded,absorbedJ:absorbed,plateExchangeJ:plate,
    convectionExchangeJ:conv,storedJ:stored,relativeImbalance:imbalance},
   layers:snapshots,
