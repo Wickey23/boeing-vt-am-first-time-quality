@@ -11,7 +11,14 @@ export async function runRegisteredThermalMeshHistory(args:ThermalArgs,request:M
  if(!request.acknowledgeStressFreeReset)throw Error("Explicit stress-free reset assumption required.");
  const selection={...request,material:{...request.material}};
  const result=await runRegisteredLayerExperiment({...args,captureFrames:true});
- const {geometry,thermal}=result,frames=thermal.frames!,g=geometry.grid;
+ return prepareRegisteredThermalMeshHistory(result,selection);
+}
+/** For in-memory results produced by the same registered research worker, not imported JSON. */
+export function prepareRegisteredThermalMeshHistory(result:Awaited<ReturnType<typeof runRegisteredLayerExperiment>>,request:MeshHistoryRequest){
+ if(!request.acknowledgeStressFreeReset)throw Error("Explicit stress-free reset assumption required.");
+ const selection={...request,material:{...request.material}};
+ const {geometry,thermal}=result,frames=thermal.frames,g=geometry.grid;
+ if(!frames?.length||thermal.partSha256!==geometry.partSha256||thermal.sourceSha256!==result.registration.sourceSha256||thermal.grid.cellCount!==g.representedCells||thermal.grid.layers!==g.physicalLayers||thermal.grid.pitchMm!==g.xyPitchMm||thermal.grid.layerHeightMm!==g.layerThicknessMm)throw Error("Registered thermal fields do not match geometry and scan identity.");
  const {referenceFrame,releaseFrame}=selection;
  if(!Number.isInteger(referenceFrame)||!Number.isInteger(releaseFrame)||referenceFrame<0||
  releaseFrame<=referenceFrame||releaseFrame>=frames.length)throw Error("Invalid reference or release frame.");
@@ -34,7 +41,9 @@ export async function runRegisteredThermalMeshHistory(args:ThermalArgs,request:M
   const mesh=solveThermalMeshResearch({...selection.material,pitchMm:g.xyPitchMm,layerHeightMm:g.layerThicknessMm,
    constraint:frameIndex<releaseFrame?"clamped-base":"rigid-motion-pins",
    cells:cells.map(c=>({...c,temperatureC:map.get(key(c))!.temperatureC,referenceTemperatureC:initial.get(key(c))!.temperatureC}))});
-  return {frameIndex,commandIndex:frame.commandIndex,timeSeconds:frame.timeSeconds,mesh};
+  // At the release instant solve both constraints on exactly the same field.
+  const restrainedComparison=frameIndex===releaseFrame?solveThermalMeshResearch({...selection.material,pitchMm:g.xyPitchMm,layerHeightMm:g.layerThicknessMm,constraint:"clamped-base",cells:mesh.cellResults.map(c=>({x:c.x,y:c.y,layer:c.layer,temperatureC:c.temperatureC,referenceTemperatureC:c.referenceTemperatureC}))}):undefined;
+  return {frameIndex,commandIndex:frame.commandIndex,timeSeconds:frame.timeSeconds,mesh,restrainedComparison};
  });
  return {scope:"UNVALIDATED_REGISTERED_ELASTIC_MESH_HISTORY" as const,productionActivationAuthorized:false as const,
   partSha256:thermal.partSha256,scanSha256:thermal.sourceSha256,selection,
