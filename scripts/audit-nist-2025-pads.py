@@ -13,6 +13,7 @@ import pathlib
 import re
 
 BASE="https://data.nist.gov/od/ds/ark:/88434/mds2-4103/"
+BASES=(BASE,"https://data.nist.gov/od/ds/mds2-4103/")
 FILES=("4103_ReadMe.txt","SampleIParameters.csv",
        "Cross_Sections/Tracks_Results/depths.csv",
        "Cross_Sections/Tracks_Results/widths.csv",
@@ -60,19 +61,36 @@ def main():
                            "Separate bare plate and single powder layer protocols.",
                            "No raw measurement rows are published."]}
     for name in FILES:
-        dest=a.source_dir/name
-        dest.parent.mkdir(parents=True,exist_ok=True)
-        side=dest.with_name(dest.name+".sha256")
-        fetch.download(BASE+name+".sha256",side)
-        # Download to a staging file; never replace the retained original until
-        # the publisher checksum AND basic structure have been validated.
-        staging=dest.with_name(dest.name+".staging")
+        result["files"][name]=acquire(name,a.source_dir,fetch.download)
+    result["complete"]=all(e["publisher_checksum_matched"] for e in result["files"].values())
+    a.output.parent.mkdir(parents=True,exist_ok=True)
+    a.output.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n",encoding="utf-8")
+    print(json.dumps(result,indent=2,allow_nan=False))
+    if not result["complete"]:
+        raise SystemExit("One or more original sources could not be checksum-verified; see inventory")
+
+def acquire(name,root,download,bases=BASES):
+    dest=root/name
+    dest.parent.mkdir(parents=True,exist_ok=True)
+    side=dest.with_name(dest.name+".sha256.staging")
+    staging=dest.with_name(dest.name+".staging")
+    attempts=[]
+    for base in bases:
+        attempt={"url":base+name,"checksum_url":base+name+".sha256"}
+        attempts.append(attempt)
         try:
-            fetch.download(BASE+name,staging)
+            download(attempt["checksum_url"],side)
+            sidecar=side.read_bytes()
+            match=CHECKSUM.fullmatch(sidecar.decode("ascii").strip())
+            if not match:
+                raise ValueError("Invalid publisher SHA-256 sidecar")
+            attempt["expected_sha256"]=match.group(1).lower()
+            download(attempt["url"],staging)
             raw=staging.read_bytes()
-            digest=check_bytes(raw,side.read_bytes())
-            entry={"url":BASE+name,"sha256":digest,"bytes":len(raw),
-                   "publisher_checksum_matched":True}
+            attempt.update(bytes=len(raw),observed_sha256=hashlib.sha256(raw).hexdigest())
+            digest=check_bytes(raw,sidecar)
+            entry={"url":attempt["url"],"sha256":digest,"bytes":len(raw),
+                   "publisher_checksum_matched":True,"attempts":attempts}
             if name.endswith(".csv"):
                 entry["inventory"]=inspect_csv(raw)
             else:
@@ -80,12 +98,15 @@ def main():
                 if readme.lstrip().startswith("<") or not readme.strip():
                     raise ValueError("Invalid README")
             staging.replace(dest)
-            result["files"][name]=entry
+            side.replace(dest.with_name(dest.name+".sha256"))
+            attempt["status"]="verified"
+            return entry
+        except (OSError,ValueError,csv.Error) as error:
+            attempt.update(status="rejected",error=str(error))
         finally:
             staging.unlink(missing_ok=True)
-    a.output.parent.mkdir(parents=True,exist_ok=True)
-    a.output.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n",encoding="utf-8")
-    print(json.dumps(result,indent=2,allow_nan=False))
+            side.unlink(missing_ok=True)
+    return {"publisher_checksum_matched":False,"attempts":attempts}
 
 if __name__=="__main__":
     main()
