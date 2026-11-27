@@ -52,6 +52,7 @@ export default function ProfessionalStudy(){
  const [fitScreen]=useState(true);
  const [viewerExpanded,setViewerExpanded]=useState(false);
  const [studyHidden,setStudyHidden]=useState(false);
+ const [compactPropertiesOpen,setCompactPropertiesOpen]=useState(false);
  const [viewerPercent,setViewerPercent]=useState(42);
  const [cadLayout,setCadLayout]=useState(true);
  const [cadAssistantOpen,setCadAssistantOpen]=useState(false);
@@ -168,9 +169,9 @@ export default function ProfessionalStudy(){
   }).catch(()=>{if(active)setError("Could not identify the uploaded STL.");});
   return()=>{active=false;URL.revokeObjectURL(object);};
  },[a.file]);
- useEffect(()=>{const requested=new URLSearchParams(window.location.search).get("stage");setStage(requested==="assessment"||requested==="context"?requested:"geometry");setLayer(100);setPlaying(false);setThread([]);},[a.file]);
- useEffect(()=>{try{const pending=sessionStorage.getItem("orientai-pending-message-v1");if(pending){setDraft(pending);setShowThread(true);sessionStorage.removeItem("orientai-pending-message-v1");}}catch{}},[]);
- useEffect(()=>{const open=(e:Event)=>{const requested=(e as CustomEvent<string>).detail;if(requested==="geometry"||requested==="context"||requested==="assessment"){setStage(requested);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}};window.addEventListener("orientai-open-stage",open);return()=>window.removeEventListener("orientai-open-stage",open);},[]);
+ useEffect(()=>{const requested=new URLSearchParams(window.location.search).get("stage");setStage(requested==="assessment"||requested==="context"?requested:"geometry");if(requested==="assessment"||requested==="context")setCompactPropertiesOpen(true);setLayer(100);setPlaying(false);setThread([]);},[a.file]);
+ useEffect(()=>{try{const pending=sessionStorage.getItem("orientai-pending-message-v1");if(pending){setDraft(pending);setShowThread(true);setCompactPropertiesOpen(true);sessionStorage.removeItem("orientai-pending-message-v1");}}catch{}},[]);
+ useEffect(()=>{const open=(e:Event)=>{const requested=(e as CustomEvent<string>).detail;if(requested==="geometry"||requested==="context"||requested==="assessment"){setStage(requested);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}};window.addEventListener("orientai-open-stage",open);return()=>window.removeEventListener("orientai-open-stage",open);},[]);
  useEffect(()=>{
   if(!playing)return;
   const id=setInterval(()=>setLayer(n=>Math.min(100,n+1)),95);
@@ -339,20 +340,22 @@ export default function ProfessionalStudy(){
  const projectName=a.file?.name??"No model uploaded";
  const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
  return <div ref={workbenchRef}
-   className={"psRoot psFit psReferenceRoot"+(viewerExpanded?" psViewerExpanded":"")+(studyHidden?" psStudyHidden":"")+(resizing?" psResizing":"")+(cadLayout?" psCadLayout":"")}
+   className={"psRoot psFit psReferenceRoot"+(viewerExpanded?" psViewerExpanded":"")+(studyHidden?" psStudyHidden":"")+(resizing?" psResizing":"")+(cadLayout?" psCadLayout":"")+(compactPropertiesOpen?" psCompactPropertiesOpen":"")}
    style={{"--ps-viewer-width":activeViewerPercent+"%"} as CSSProperties}
    aria-label="ORIENTAI professional engineering workbench">
   {cadLayout&&<div className="psCadRibbon" role="region" aria-label="CAD analysis commands">
    <div className="psCadGroup"><button type="button" onClick={()=>partFileInput.current?.click()}><FileUp size={17}/>Import STL</button>
     <button type="button" onClick={()=>{setCameraView("iso");setViewerReset(n=>n+1);}}><Maximize2 size={17}/>Fit model</button></div>
    <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
-    aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
+    aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
     <Icon size={17}/>{label}</button>)}</div>
    <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={showOverhangs}
     onClick={()=>{setShowOverhangs(v=>!v);setShowSupports(false);}}><Layers size={17}/>Overhangs</button></div>
+   <div className="psCadGroup"><button type="button" disabled={!a.file||!isConfirmed||a.busy} onClick={()=>{setStage("geometry");setCompactPropertiesOpen(true);setStudyHidden(false);a.retry();}}><Play size={17}/>{a.busy?"Screening…":"Run screening"}</button></div>
    <span className="psCadStudyName" title={projectName}>{projectName}</span>
   </div>}
   <div id="ps-engineering-study" className="psWorkingColumn">
+   {cadLayout&&<div className="psCompactPropertyHeader"><strong>Study properties</strong><button type="button" aria-label="Close properties" onClick={()=>setCompactPropertiesOpen(false)}><X size={18}/></button></div>}
    <header className="psWorkspaceHeader">
     <nav className="psStepper" aria-label="Assessment stages">
      {stageEntries.map(({id,label},i)=><button type="button" key={id}
@@ -519,7 +522,8 @@ export default function ProfessionalStudy(){
     <header className="psReferenceViewerHeader">
      <strong><Box size={19}/>3D Viewer <span>· {projectName}</span></strong>
      <div className="psViewerHeaderActions">
-      <button type="button" className="psCadModeToggle" aria-pressed={cadLayout} aria-label="CAD workspace layout" title="Switch between model-first and guided study layouts" onClick={()=>{setCadLayout(v=>!v);setViewerExpanded(false);}}>CAD</button>
+      {cadLayout&&<button type="button" className="psCompactPropertiesToggle" aria-label="Study properties" aria-expanded={compactPropertiesOpen} aria-controls="ps-engineering-study" onClick={()=>{setCompactPropertiesOpen(v=>!v);setStudyHidden(false);}}><SlidersHorizontal size={17}/> Properties</button>}
+      <button type="button" className="psCadModeToggle" aria-pressed={cadLayout} aria-label="CAD workspace layout" title="Switch between model-first and guided study layouts" onClick={()=>{setCadLayout(v=>!v);setViewerExpanded(false);setStudyHidden(false);}}>CAD</button>
       <button type="button" aria-controls="ps-engineering-study" aria-expanded={!studyHidden}
        aria-label={studyHidden?"Show study panel":"Hide study panel"}
        title={studyHidden?"Show analysis and engineering context":"Focus the CAD model"}
@@ -608,7 +612,7 @@ export default function ProfessionalStudy(){
   </aside>
   {cadLayout&&<nav className="psCadDocumentTabs" aria-label="Study document tabs">
    {stageEntries.map(({id,label,Icon})=><button type="button" key={id} aria-current={stage===id?"page":undefined}
-    onClick={()=>{setStage(id);setStudyHidden(false);setViewerExpanded(false);}}>
+    onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);}}>
     <Icon size={14}/>{label}</button>)}
    <Link href="/copilot/advanced"><SlidersHorizontal size={14}/>Advanced studies</Link>
    <Link href="/validation"><ShieldCheck size={14}/>Validation</Link>
