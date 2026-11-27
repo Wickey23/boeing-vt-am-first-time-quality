@@ -386,6 +386,7 @@ export default function ProfessionalStudy(){
    <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
     aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
     <Icon size={17}/>{label}</button>)}</div>
+   <div className="psCadGroup"><button type="button" disabled={!a.file} title="Inspect localized geometric risk evidence" onClick={()=>{setServiceDockOpen(false);setStage("assessment");setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);window.requestAnimationFrame(()=>document.getElementById("ps-localized-risk")?.scrollIntoView({block:"start",behavior:"smooth"}));}}><ShieldAlert size={17}/>Risks</button></div>
    <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={serviceDockOpen} onClick={()=>{setServiceDockMounted(true);setServiceDockOpen(v=>!v);setViewerExpanded(false);setCompactPropertiesOpen(false);}}><SlidersHorizontal size={17}/>Simulate</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canOrient} aria-pressed={Boolean(activeOrientation)} title="Preview arbitrary rotation without changing the selected analysis candidate" onClick={()=>{setOrientationDraft(v=>v?null:{...modelRotation});setSectionView(null);setMeasureMode(false);setMeshPicks([]);setHighlightTriangles([]);setPlaying(false);setLayer(100);setShowSupports(false);}}><RotateCcw size={17}/>Orient</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canSection} aria-pressed={Boolean(activeSection)} title="Clip the displayed mesh along a build axis" onClick={()=>{setSectionView(v=>v?null:{axis:"Z",percent:50,reverse:false});setMeasureMode(false);setMeshPicks([]);setPlaying(false);setLayer(100);setShowSupports(false);}}><Layers size={17}/>Section</button></div>
@@ -492,13 +493,13 @@ export default function ProfessionalStudy(){
       {ctx.error&&<p className="psError" role="alert">{ctx.error}</p>}
      </>}
     </section>}
-    {stage==="assessment"&&a.file&&<div className="psPanel" aria-label="Part-localized LPBF geometry screening" style={{margin:"12px 18px",padding:16}}>
+    {stage==="assessment"&&a.file&&<div id="ps-localized-risk" className="psPanel" aria-label="Part-localized LPBF geometry screening" style={{margin:"12px 18px",padding:16}}>
      <RiskPreflight file={a.file} partHash={partHash} unitScale={a.settings.unitScale}
       confirmed={isConfirmed} rotationDeg={modelRotation}
       envelopeMm={riskEnvelope} overhangThresholdDeg={riskAngle}
       onEnvelopeChange={(axis,value)=>setRiskEnvelope(prev=>({...prev,[axis]:value}))}
       onAngleChange={setRiskAngle}
-      onFocus={triangles=>{setSandboxField("geometry");setOrientationDraft(null);setHighlightTriangles(triangles);if(triangles.length){setShowSupports(false);setShowOverhangs(false);setCameraView("iso");setLayer(100);}}}/>
+      onFocus={triangles=>{setHighlightTriangles(triangles);if(triangles.length){setSandboxField("geometry");setOrientationDraft(null);setSectionView(null);setMeasureMode(false);setMeshPicks([]);setPlaying(false);setShowSupports(false);setShowOverhangs(false);setCameraView("iso");setLayer(100);setServiceDockOpen(false);setCompactPropertiesOpen(false);}}}/>
      {highlightTriangles.length>0&&<div role="status" style={{fontSize:12,padding:"10px 12px",borderRadius:7,marginTop:10,border:"1px solid currentColor"}}>
       Highlighting {highlightTriangles.length.toLocaleString()} source-STL triangles in the adjacent 3D viewer. This marks geometric regions requiring review, not measured defects.
       <button type="button" style={{marginLeft:12,padding:"5px 9px"}} onClick={()=>setHighlightTriangles([])}>Clear highlighted region</button>
@@ -624,7 +625,7 @@ export default function ProfessionalStudy(){
      <div className="psBuildAxis" aria-hidden="true"><b>+Z</b><span className="psAxisX">X</span><span className="psAxisY">Y</span></div>
      {showBuildDirection&&<div className="psBuildDirectionLabel" role="status">Build axis ↑ · visualization</div>}
      {!activeOrientation&&!resultField&&highlightTriangles.length>0&&<div role="status" style={{position:"absolute",left:12,bottom:12,padding:"6px 10px",fontSize:12,borderRadius:6,background:"#152c3b",color:"#ecf6ff",pointerEvents:"none"}}>
-      {highlightTriangles.length.toLocaleString()} geometric-risk triangles highlighted
+      {highlightTriangles.length.toLocaleString()} geometric-risk triangles highlighted <button type="button" aria-label="Clear canvas risk highlight" onClick={()=>setHighlightTriangles([])} style={{pointerEvents:"auto",marginLeft:8}}>Clear</button>
      </div>}
     </div>
     <div className="psViewerToolbar" role="toolbar" aria-label="3D model navigation">
