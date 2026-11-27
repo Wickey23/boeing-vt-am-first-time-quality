@@ -40,7 +40,7 @@ test("compatibility routes direct to current workbench without losing named stag
 test("landing and help use one consistent engineering theme and sidebar",async({page})=>{
  await page.setViewportSize({width:1600,height:900});
  await page.goto("/");
- await expect(page.getByRole("heading",{name:"What are we working on today?"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Engineering studies"})).toBeVisible();
  const landing=await page.evaluate(()=>({
   bg:getComputedStyle(document.querySelector(".oaRoot")!).backgroundColor,
   sidebar:getComputedStyle(document.querySelector(".oaSidebar")!).backgroundColor,
