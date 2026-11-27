@@ -69,3 +69,95 @@
 /* Narrow properties panel must never conceal evidence qualification. */
 .psRoot.psReferenceRoot.psCadLayout .psDecisionFinding>summary{flex-wrap:wrap}
 .psRoot.psReferenceRoot.psCadLayout .psDecisionFinding .psFindingState{display:block!important;margin-left:auto;white-space:normal}
+
+/* CAD visual system: light industrial chrome, flat docked properties, full-bleed graphics.
+   Scoped to CAD mode; the original guided layout remains an explicit fallback. */
+.psRoot.psReferenceRoot.psCadLayout{
+ --cad-chrome:#f0f3f6;--cad-paper:#ffffff;--cad-line:#c4cdd6;
+ --cad-text:#243746;--cad-muted:#526779;--cad-accent:#235f9b;
+ background:var(--cad-chrome)!important;color:var(--cad-text)!important
+}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaBody{background:#e7edf3!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaTopbar{
+ background:#f5f7f9!important;border-bottom:1px solid #b9c5d0!important;color:#263b4b!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaTopbar :is(.psTopbarIdentity strong,.psTopbarIdentity span,.psSaveState,.psTopbarIdentity svg,.oaIconButton){color:#364e60!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .psProcessLink{
+ background:#e7edf3!important;color:#304f67!important;border-color:#b1bfcd!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar{
+ background:#f2f5f7!important;color:#283e50!important;border-color:#bdc8d2!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar :is(.oaBrand,.oaBrandText,.psBrandStack>small,.oaNavItem,.oaNewChat,.oaCurrentStudy,.oaAdvanced>summary,.oaAdvancedLinks a,.psSidebarLinks>a,.oaSidebarSectionTitle,.oaSidebarFooter,.oaSidebarFooter small,.oaStudyTree button,.oaStudyTree a){color:#364e60!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar :is(.oaSidebarSection,.psSidebarLinks,.oaSidebarFooter,.oaStudyTree){border-color:#c5cfd8!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar :is(.oaNavActive,.oaNavItem:hover,.oaNewChat:hover,.oaStudyTree button:hover,.oaStudyTree a:hover){
+ background:#dceaf6!important;border-color:#acc5db!important;color:#174f81!important;box-shadow:none!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaBottomDisclaimer{background:#edf1f4!important;color:#526779!important;border-color:#c5cfd8!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psCadRibbon,.psCadDocumentTabs,.psWorkspaceHeader,.psViewerColumn,.psReferenceViewerCard,.psAssistant){
+ background:#eef2f5!important;color:#283c4d!important;border-color:#bdc8d2!important}
+.psRoot.psReferenceRoot.psCadLayout .psCadRibbon{border-bottom:1px solid #b7c4cf!important}
+.psRoot.psReferenceRoot.psCadLayout .psCadGroup{border-color:#c8d2db}
+.psRoot.psReferenceRoot.psCadLayout .psCadRibbon button{color:#2d465b!important;font-size:11px}
+.psRoot.psReferenceRoot.psCadLayout .psCadRibbon button:is(:hover,[aria-pressed=true]),.psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs :is(button[aria-current=page],button:hover,a:hover){
+ background:#dceaf6!important;border-color:#8fb2d1!important;color:#19578f!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psCadStudyName,.psCadDocumentTabs button,.psCadDocumentTabs a){color:#415a6e}
+.psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs :is(button,a){border-right-color:#c7d2dc}
+.psRoot.psReferenceRoot.psCadLayout .psWorkingColumn{background:#fff!important;border-color:#bcc8d2!important}
+.psRoot.psReferenceRoot.psCadLayout .psStep{color:#4c6477!important}
+.psRoot.psReferenceRoot.psCadLayout .psStep:is(.psActive,:hover){background:#dfebf5!important;color:#1e5688!important;border-bottom-color:#397cb1!important}
+.psRoot.psReferenceRoot.psCadLayout .psStepCount{color:#405d74!important;background:#f6f8fa!important;border-color:#a3b6c5!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll{background:#fff!important;scrollbar-color:#adbdca #eef2f5}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceHeading,.psSectionHead){padding:0 0 8px;border-bottom:1px solid #ccd5dd}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceHeading,.psSectionHead) h2{font-size:16px!important;color:#203849!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceHeading,.psSectionHead) :is(p,span){color:#51697d!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceTopGrid,.psReferenceBottomGrid){grid-template-columns:minmax(0,1fr)!important;gap:0!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psPanel,.psReferenceEmpty,.psContextPanel,.psDecisionFinding,.psFeedbackPanel,.psReportCard,.psSourceList>details,.psEvidenceItem,.psDecisionStatus,.psUnassessedStrip,.psReferenceAnalysis,.psMeshIssues,.psReferenceRecommendation,.psDecisionActions>li,.psManufacturingFlow>li,.psSummaryGrid>div,.psProcessContext){
+ background:#fff!important;color:#263c4d!important;border-color:#c6d0d9!important;border-radius:0!important;box-shadow:none!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll .psReferenceGrid>.psPanel{border:0!important;border-bottom:1px solid #c7d1d9!important;padding:8px 6px!important;min-height:0!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psReferenceCardHeading,.psPanelHeading){margin:0 0 6px!important;padding:5px 0!important;border-color:#ccd6de!important;color:#243c50!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psReferenceCardHeading,.psPanelHeading) svg{color:#517b9b!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(dt,dd,p,small,label,.psFindingState,.psDecisionFindingTitle small,.psDecisionStatus p,.psProcessOutcome span,.psDecisionCounts span,.psDecisionCounts b,.psManufacturingFlow small,.psFlowTitle small,.psDecisionFindingTitle strong,.psReferenceScreenResults strong,.psModelLoaded,.psCaveat,.psNotice){color:#405a6f!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psReferenceMesh,.psReferenceDimensions) dl>div{border-color:#dbe2e8!important;padding:5px 0!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(input:not([type=checkbox]):not([type=range]),textarea,select){
+ background:#fff!important;color:#253b4d!important;border:1px solid #aabcca!important;border-radius:3px!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psPrimary,.psConfirmUnits,.psReferenceRecommendation button,.psWorkflowBar button,.psCadEmptyImport){
+ background:#246da7!important;color:#fff!important;border:1px solid #1e6096!important;border-radius:3px!important;box-shadow:none!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psSecondary,.psModelDescription button,.psDecisionTabs button,.psDecisionFilters button,.psTextButton,.psDecisionActions button,.psCadModeToggle,.psPlayback button){
+ background:#edf3f7!important;color:#295978!important;border-color:#b2c1ce!important;border-radius:3px!important;box-shadow:none!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psDecisionTabs button.psSelected,.psDecisionFilters button[aria-pressed=true],.psCadModeToggle[aria-pressed=true]){
+ background:#dceaf7!important;border-color:#91b5d4!important;color:#19578f!important}
+.psRoot.psReferenceRoot.psCadLayout .psWorkflowBar{background:#e7f1fa!important;border-color:#b4cddd!important;color:#214f73!important}
+.psRoot.psReferenceRoot.psCadLayout .psWorkflowSummary :is(strong,span){color:#2b5474!important}
+.psRoot.psReferenceRoot.psCadLayout .psViewerFrame.psReferenceViewport{
+ background:#e7edf3!important;border:0!important;border-radius:0!important;overflow:hidden}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceViewerCard{padding:0!important}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceViewerHeader{padding:5px 8px!important;background:#f5f7f9!important;border-color:#c2ced8!important}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceViewerHeader :is(strong,span,svg,button),.psRoot.psReferenceRoot.psCadLayout .psViewerMenu>summary{color:#3c586d!important}
+.psRoot.psReferenceRoot.psCadLayout .psViewerToolbar{background:#f7f9fb!important;border-color:#c4ced7!important;padding:4px 8px}
+.psRoot.psReferenceRoot.psCadLayout .psCameraButtons button{color:#42617a!important}
+.psRoot.psReferenceRoot.psCadLayout .psCameraButtons button:is(:hover,[aria-pressed=true]){background:#dceaf5!important;border-color:#9fbcd3!important}
+.psRoot.psReferenceRoot.psCadLayout .psViewerToolbar select,.psRoot.psReferenceRoot.psCadLayout .psEngineeringInspector select{background:#fff!important;color:#304c61!important;border-color:#aabcca!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psViewerStatusLine,.psEngineeringInspector,.psEngineeringInspector label,.psEngineeringInspector summary,.psViewerMethodNote,.psViewerEmpty){color:#405d71!important;border-color:#c5d0d9!important}
+.psRoot.psReferenceRoot.psCadLayout .psEngineeringInspector{padding:4px 9px}
+.psRoot.psReferenceRoot.psCadLayout .psBuildAxis{top:auto!important;right:auto!important;bottom:18px!important;left:15px!important;background:#ffffffc9!important;border-color:#abbaca!important;color:#31556f!important}
+.psRoot.psReferenceRoot.psCadLayout .psCadViewCube{position:absolute;right:17px;top:14px;z-index:7;width:88px;height:82px;display:grid;
+ grid-template-columns:1fr 1fr;grid-template-rows:26px 30px 23px;gap:1px;filter:drop-shadow(0 2px 3px #52677b35)}
+.psCadViewCube button{background:#f5f8fa;color:#36546b;border:1px solid #9fb1c0;border-radius:1px;font-size:9px;font-weight:700;line-height:1;cursor:pointer;padding:2px}
+.psCadViewCube button:is(:hover,[aria-pressed=true]){background:#d2e5f4;border-color:#6f9fc5;color:#194f79}
+.psCadViewCube .psCubeTop{grid-column:1/-1;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);padding:4px 4px 2px}
+.psCadViewCube .psCubeFront{transform:skewY(9deg);transform-origin:top right}
+.psCadViewCube .psCubeSide{transform:skewY(-9deg);transform-origin:top left}
+.psCadViewCube .psCubeIso{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:4px;background:#fff}
+.psCadLayout .psCadEmptyImport{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;margin-top:8px}
+.psCadLayout .cadGraphicsViewport .cadGraphicsLegend{top:auto!important;bottom:45px!important;left:auto!important;right:12px!important;background:#ffffffed!important;color:#385267!important;border:1px solid #c0cdd7;border-radius:3px!important;padding:7px!important;font-size:10px!important;max-width:180px!important}
+.psCadLayout .cadGraphicsViewport .cadGraphicsLegend small{color:#526779!important}
+.psCadLayout .cadGraphicsViewport .cadGraphicsReset{top:auto!important;right:12px!important;bottom:12px!important;background:#f7fafc!important;color:#35566e!important;border:1px solid #aabcca!important;border-radius:3px!important;font-size:10px!important;padding:5px 7px!important}
+.psCadLayout .cadGraphicsViewport .cadGraphicsCameraSelect{bottom:12px!important;left:75px!important;background:#fff;color:#2f4c62;border:1px solid #adbfcd;border-radius:3px;padding:4px}
+.psCadLayout .cadGraphicsViewport .viewerHint{display:none}
+.psCadAssistantToggle{display:none}
+@media(min-width:1101px){
+ .psCadLayout .psCadAssistantToggle{display:flex;align-items:center;gap:7px;width:100%;min-height:34px;padding:5px 9px;border:0;border-top:1px solid #c5cfd8;background:#edf2f6;color:#31556f;font-size:11px;font-weight:650;cursor:pointer}
+ .psCadLayout .psCadAssistantToggle>svg:last-child{margin-left:auto}
+ .psCadLayout .psCadAssistantCollapsed .psAssistantContent{display:none}
+ .psCadLayout .psAssistantContent{padding:5px 8px;background:#f5f7f9}
+ .psCadLayout .psAssistantContent :is(.psExternalAiSwitch,.psAskBox,.psAskBox textarea,.psAskBox>div span,.psAssistantContent>small){color:#405d71!important}
+ .psCadLayout .psAskBox{background:#fff!important;border-color:#afbfcc!important}
+}
+@media(max-width:1100px){.psCadViewCube{display:none!important}}
