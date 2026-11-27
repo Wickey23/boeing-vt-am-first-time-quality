@@ -43,3 +43,5 @@
 .oaDocumentCenter .oaDocumentHeading{color:#31638b;border-color:#c3d1dd}
 .oaDocumentCenter .oaExisting{background:#fff;border-color:#c4d1dc}
 .oaDocumentCenter .oaExisting a{color:#226ca7}
+
+.oaDocumentCenter .oaOpenSandbox{display:inline-flex;align-items:center;gap:9px;align-self:flex-start;padding:10px 15px;border:1px solid #1e6096;border-radius:3px;background:#246da7;color:#fff;font-size:13px;font-weight:650;text-decoration:none}.oaDocumentCenter .oaOpenSandbox:hover{background:#195f96}.oaDocumentCenter .oaOpenSandbox:focus-visible{outline:2px solid #5084ad;outline-offset:3px}
