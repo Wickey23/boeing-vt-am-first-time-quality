@@ -55,6 +55,7 @@ export default function ChatLanding(){
  return <section className="oaHome oaDocumentCenter" aria-label="Start an engineering conversation">
   <div className="oaDocumentHeading"><FileBox size={18}/> ORIENTAI / Study manager</div>
   <h1 className="oaGreeting">Engineering studies</h1>
+  <Link className="oaOpenSandbox" href="/copilot/workbench"><FileBox size={19}/> Open engineering sandbox</Link>
   <p className="oaSubGreeting">Import a part, open your saved study, or start with a research benchmark.</p>
   <div className="oaGuidedStart" role="region" aria-label="Start a guided part review" style={{width:"min(100%,760px)",border:"1px solid var(--oa-border)",borderRadius:16,padding:"22px 24px",background:"var(--oa-card)",display:"grid",gap:12}}>
     <strong style={{fontSize:19}}>New part study</strong>
