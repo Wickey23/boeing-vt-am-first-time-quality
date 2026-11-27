@@ -23,3 +23,20 @@ test("synthetic physical thermal lab computes and plays registered frames withou
  await page.getByRole("button",{name:"Export research result JSON"}).click();
  expect((await dl).suggestedFilename()).toBe("orientai-synthetic-thermal-research.json");
 });
+
+test("synthetic mechanical contours compare restraints on the same thermal frame",async({page})=>{
+ await page.goto("/simulation/physical-layer-research");
+ await page.getByRole("checkbox",{name:/I understand this is an unvalidated synthetic research experiment/}).check();
+ await page.getByRole("checkbox",{name:/Include synthetic elastic mechanical comparison/}).check();
+ await page.getByRole("button",{name:"Run synthetic thermal experiment"}).click();
+ const view=page.getByRole("region",{name:"Research mechanical contours"});
+ await expect(view.getByRole("img",{name:"Projected 3D mechanical mesh contour"})).toBeVisible({timeout:30000});
+ await expect(view.getByRole("status")).toContainText("Command 3 · released");
+ await view.getByLabel("Mechanical constraint").selectOption("restrained");
+ await expect(view.getByRole("status")).toContainText("Command 3 · restrained");
+ await view.getByLabel("Mechanical field").selectOption("displacement");
+ await view.getByLabel("Deformation scale").selectOption("1000");
+ await expect(view.getByRole("status")).toContainText("deformation 1000×");
+ await view.getByText("Text alternative: mechanical cell results").click();
+ await expect(view.getByRole("table").locator("tbody tr")).toHaveCount(8);
+});
