@@ -27,3 +27,19 @@ The audit must inspect sheet layout and column schema before parsing measurement
 Run [45935881475](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/45935881475) on 7eab7cee14614f6457fca8f8191a4d34a2fb8ea0 acquired both supplemental files. Workbook SHA-256: 6cd32669f5c84cdb9e90890ba40ddc5548c85b0dbb95cf038f2f6fc69da67a52; README SHA-256: 8b8fc00ce62915af3e0c91c138dc4d033c031d7758161fb9da0e8702fa621c39. The Data sheet has 251 populated rows including headers, zero formulas; the Summary sheet has 71 populated rows including headers. The latter is derived evidence, not additional independent observations. Engineering and original benchmark runs on this same SHA also succeeded.
 
 The new `scripts/audit-nist-supplemental-groups.py` checks both hashes and exact Data sheet headers, requires 250 data rows, reports complete identities, duplicate image keys, distinct sample/track keys and process tuples separately for each alloy and machine. It records missing/nonfinite/invalid numeric fields, surface and scan direction categories and per-target group eligibility. Spot diameter is intentionally kept as a raw numeric value pending unit/definition review. No raw observations or sample names are uploaded. The existing supplemental workflow now executes this audit on the downloaded originals. The new tests use synthetic fixtures only. Actual group counts and updated CI are pending at the time of writing. Group counts are not proof of physical independence, and cross-source overlap remains unverified; no model has been promoted.
+
+
+## Supplemental grouping results and frozen sample-name-held-out benchmark
+
+Run [45937223239](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/45937223239) passed on commit 4d6804f20e55582bab08cbdad2acafde13bb383d, as did the engineering and original experimental workflows on that SHA. All 250 rows have complete identity fields and numeric targets/process inputs. There are 33 excess occurrences of shared folder/image keys (not necessarily duplicate measurements). Group inventory:
+
+| Alloy | Machine | Rows | Distinct sample names | Sample/track keys | Distinct process settings |
+|---|---|---:|---:|---:|---:|
+| IN625 | AMMT | 34 | 2 | 34 | 14 |
+| IN625 | EOS M270 | 144 | 5 | 72 | 60 |
+| IN718 | AMMT | 54 | 2 | 36 | 6 |
+| IN718 | EOS M290 | 18 | 1 | 1 | 1 |
+
+The new benchmark is frozen before observing its results: stratify by exact alloy, machine, surface, direction and raw spot category; conservatively exclude every row sharing a folder/image key pending clarification; average repeated observations only within the same sample/track/setting. Hold out one sample name at a time, requiring at least two training sample names and three distinct training settings. Compare a training-only sample/setting-balanced mean with weighted linear regression on power/speed. Abstain outside training power, speed and line-energy bounds or on invalid predictions. Report sample-balanced MAE and RMSE in micrometers on identical covered points, with sample and point coverage. Do not pool alloys or cross-source rows. A spot category is not a calibrated diameter; sample names are not verified independent physical builds. IN718 has at most two sample names per machine before further stratification, so it cannot meet this benchmark's minimum training-group gate; the IN625 subset is a separate research task, not a proxy validation of IN718.
+
+The supplemental workflow now executes the benchmark after the pinned grouping audit. Synthetic regression tests cover group exclusion, duplicate-image removal, protocol separation and abstention. New real-source results and CI are pending; no production integration, uncertainty calibration, or independent physical validation is claimed.
