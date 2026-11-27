@@ -36,6 +36,7 @@ import "./professional-density.css";
 import "./professional-reference.css";
 import "./professional-enterprise.css";
 import "./professional-workspace-layout.css";
+import "./professional-cad-layout.css";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
@@ -52,12 +53,19 @@ export default function ProfessionalStudy(){
  const [viewerExpanded,setViewerExpanded]=useState(false);
  const [studyHidden,setStudyHidden]=useState(false);
  const [viewerPercent,setViewerPercent]=useState(42);
+ const [cadLayout,setCadLayout]=useState(true);
+ const [cadViewerPercent,setCadViewerPercent]=useState(58);
+ const activeViewerPercent=cadLayout?cadViewerPercent:viewerPercent;
+ const setActiveViewerPercent=cadLayout?setCadViewerPercent:setViewerPercent;
  const [prefsLoaded,setPrefsLoaded]=useState(false);
  const [resizing,setResizing]=useState(false);
  const dragActive=useRef(false);
  const workbenchRef=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   try{
+   setCadLayout(window.localStorage.getItem("orientai-cad-layout-v1")!=="false");
+   const cadStored=Number(window.localStorage.getItem("orientai-cad-viewer-percent-v1"));
+   if(Number.isFinite(cadStored)&&cadStored>=35&&cadStored<=64)setCadViewerPercent(cadStored);
    const stored=Number(window.localStorage.getItem("orientai-workbench-viewer-percent-v1"));
    if(Number.isFinite(stored)&&stored>=35&&stored<=64)setViewerPercent(stored);
   }catch{}
@@ -67,10 +75,14 @@ export default function ProfessionalStudy(){
   if(!prefsLoaded)return;
   try{window.localStorage.setItem("orientai-workbench-viewer-percent-v1",String(viewerPercent));}catch{}
  },[viewerPercent,prefsLoaded]);
+ useEffect(()=>{
+  if(!prefsLoaded)return;
+  try{window.localStorage.setItem("orientai-cad-layout-v1",String(cadLayout));window.localStorage.setItem("orientai-cad-viewer-percent-v1",String(cadViewerPercent));}catch{}
+ },[cadLayout,cadViewerPercent,prefsLoaded]);
  const setWidthFromPointer=(clientX:number)=>{
   const rect=workbenchRef.current?.getBoundingClientRect();
   if(!rect||rect.width<1)return;
-  setViewerPercent(Math.round(Math.max(35,Math.min(64,(rect.right-clientX)/rect.width*100))));
+  setActiveViewerPercent(Math.round(Math.max(35,Math.min(64,(cadLayout?clientX-rect.left:rect.right-clientX)/rect.width*100))));
  };
  const [cameraView,setCameraView]=useState("iso");
  const [previewYaw,setPreviewYaw]=useState(0);
@@ -326,9 +338,19 @@ export default function ProfessionalStudy(){
  const projectName=a.file?.name??"No model uploaded";
  const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
  return <div ref={workbenchRef}
-   className={"psRoot psFit psReferenceRoot"+(viewerExpanded?" psViewerExpanded":"")+(studyHidden?" psStudyHidden":"")+(resizing?" psResizing":"")}
-   style={{"--ps-viewer-width":viewerPercent+"%"} as CSSProperties}
+   className={"psRoot psFit psReferenceRoot"+(viewerExpanded?" psViewerExpanded":"")+(studyHidden?" psStudyHidden":"")+(resizing?" psResizing":"")+(cadLayout?" psCadLayout":"")}
+   style={{"--ps-viewer-width":activeViewerPercent+"%"} as CSSProperties}
    aria-label="ORIENTAI professional engineering workbench">
+  {cadLayout&&<div className="psCadRibbon" role="region" aria-label="CAD analysis commands">
+   <div className="psCadGroup"><button type="button" onClick={()=>partFileInput.current?.click()}><FileUp size={17}/>Import STL</button>
+    <button type="button" onClick={()=>{setCameraView("iso");setViewerReset(n=>n+1);}}><Maximize2 size={17}/>Fit model</button></div>
+   <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
+    aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
+    <Icon size={17}/>{label}</button>)}</div>
+   <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={showOverhangs}
+    onClick={()=>{setShowOverhangs(v=>!v);setShowSupports(false);}}><Layers size={17}/>Overhangs</button></div>
+   <span className="psCadStudyName" title={projectName}>{projectName}</span>
+  </div>}
   <div id="ps-engineering-study" className="psWorkingColumn">
    <header className="psWorkspaceHeader">
     <nav className="psStepper" aria-label="Assessment stages">
@@ -473,18 +495,18 @@ export default function ProfessionalStudy(){
   </div>
   {!studyHidden&&!viewerExpanded&&<div className="psPaneResizeHandle" role="separator"
    aria-label="Resize study and 3D viewer panels" aria-orientation="vertical"
-   aria-valuemin={35} aria-valuemax={64} aria-valuenow={viewerPercent}
-   aria-valuetext={"Viewer "+viewerPercent+" percent of workbench"} tabIndex={0}
+   aria-valuemin={35} aria-valuemax={64} aria-valuenow={activeViewerPercent}
+   aria-valuetext={"Viewer "+activeViewerPercent+" percent of workbench"} tabIndex={0}
    title="Drag to resize the panels, or use left and right arrow keys"
    onPointerDown={e=>{e.preventDefault();dragActive.current=true;setResizing(true);e.currentTarget.setPointerCapture(e.pointerId);}}
    onPointerMove={e=>{if(dragActive.current)setWidthFromPointer(e.clientX);}}
    onPointerUp={()=>{dragActive.current=false;setResizing(false);}}
    onPointerCancel={()=>{dragActive.current=false;setResizing(false);}}
    onKeyDown={e=>{
-    if(e.key==="ArrowLeft"){e.preventDefault();setViewerPercent(v=>Math.min(64,v+2));}
-    if(e.key==="ArrowRight"){e.preventDefault();setViewerPercent(v=>Math.max(35,v-2));}
-    if(e.key==="Home"){e.preventDefault();setViewerPercent(35);}
-    if(e.key==="End"){e.preventDefault();setViewerPercent(64);}
+    if(e.key==="ArrowLeft"){e.preventDefault();setActiveViewerPercent(v=>cadLayout?Math.max(35,v-2):Math.min(64,v+2));}
+    if(e.key==="ArrowRight"){e.preventDefault();setActiveViewerPercent(v=>cadLayout?Math.min(64,v+2):Math.max(35,v-2));}
+    if(e.key==="Home"){e.preventDefault();setActiveViewerPercent(35);}
+    if(e.key==="End"){e.preventDefault();setActiveViewerPercent(64);}
    }}>
    <GripVertical size={15} aria-hidden="true"/>
   </div>}
@@ -493,6 +515,7 @@ export default function ProfessionalStudy(){
     <header className="psReferenceViewerHeader">
      <strong><Box size={19}/>3D Viewer <span>· {projectName}</span></strong>
      <div className="psViewerHeaderActions">
+      <button type="button" className="psCadModeToggle" aria-pressed={cadLayout} aria-label="CAD workspace layout" title="Switch between model-first and guided study layouts" onClick={()=>{setCadLayout(v=>!v);setViewerExpanded(false);}}>CAD</button>
       <button type="button" aria-controls="ps-engineering-study" aria-expanded={!studyHidden}
        aria-label={studyHidden?"Show study panel":"Hide study panel"}
        title={studyHidden?"Show analysis and engineering context":"Focus the CAD model"}
