@@ -38,6 +38,7 @@ import "./professional-enterprise.css";
 import "./professional-workspace-layout.css";
 import "./professional-cad-layout.css";
 import {appendMeasurement,distanceMm,type MeshPick} from "@/lib/cad-mesh-measurement";
+import type {SectionView} from "@/lib/cad-section-plane";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
@@ -96,6 +97,8 @@ export default function ProfessionalStudy(){
  const [showOverhangs,setShowOverhangs]=useState(false);
  const [measureMode,setMeasureMode]=useState(false);
  const [rendererFailed,setRendererFailed]=useState(false);
+ const [sectionView,setSectionView]=useState<SectionView|null>(null);
+ useEffect(()=>{setSectionView(null);},[a.file,a.settings.unitScale]);
  const [meshPicks,setMeshPicks]=useState<MeshPick[]>([]);
  useEffect(()=>{setMeasureMode(false);setMeshPicks([]);},[a.file,a.settings.unitScale]);
  const [showSupports,setShowSupports]=useState(false);
@@ -344,7 +347,10 @@ export default function ProfessionalStudy(){
  };
  const projectName=a.file?.name??"No model uploaded";
  const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
- const canMeasure=Boolean(cadLayout&&a.file&&isConfirmed&&layer===100&&!showSupports&&!rendererFailed);
+ const canSection=Boolean(cadLayout&&a.file&&!rendererFailed);
+ const activeSection=canSection?sectionView:undefined;
+ const canMeasure=Boolean(cadLayout&&a.file&&isConfirmed&&layer===100&&!showSupports&&!rendererFailed&&!activeSection);
+ useEffect(()=>{if(!canSection)setSectionView(null);},[canSection]);
  const activePicks=canMeasure&&measureMode?meshPicks:[];
  useEffect(()=>{if(!canMeasure){setMeasureMode(false);setMeshPicks([]);}},[canMeasure]);
  return <div ref={workbenchRef}
@@ -357,6 +363,7 @@ export default function ProfessionalStudy(){
    <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
     aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
     <Icon size={17}/>{label}</button>)}</div>
+   <div className="psCadGroup"><button type="button" disabled={!canSection} aria-pressed={Boolean(activeSection)} title="Clip the displayed mesh along a build axis" onClick={()=>{setSectionView(v=>v?null:{axis:"Z",percent:50,reverse:false});setMeasureMode(false);setMeshPicks([]);setPlaying(false);setLayer(100);setShowSupports(false);}}><Layers size={17}/>Section</button></div>
    <div className="psCadGroup"><button type="button" disabled={!canMeasure} title={rendererFailed?"3D rendering is unavailable; retry 3D to measure": "Confirm units, show full geometry and turn off supports before measuring"} aria-pressed={measureMode} onClick={()=>{setMeasureMode(v=>!v);setMeshPicks([]);}}><Ruler size={17}/>Measure</button></div>
    <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={showOverhangs}
     onClick={()=>{setShowOverhangs(v=>!v);setShowSupports(false);}}><Layers size={17}/>Overhangs</button></div>
@@ -553,8 +560,16 @@ export default function ProfessionalStudy(){
       <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10} cadStyle={cadLayout}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
-       buildFraction={layer/100} highlightTriangles={highlightTriangles} meshPicks={activePicks} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
+       buildFraction={layer/100} sectionView={activeSection??undefined} highlightTriangles={highlightTriangles} meshPicks={activePicks} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
      </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small>{cadLayout&&<button type="button" className="psCadEmptyImport" onClick={()=>partFileInput.current?.click()}><FileUp size={16}/> Import part</button>}</div>}
+     {activeSection&&<section className="psMeshMeasure" aria-label="Section view">
+      <header><strong>Section view</strong><button type="button" aria-label="Close section view" onClick={()=>setSectionView(null)}><X size={15}/></button></header>
+      <label>Build axis <select aria-label="Section build axis" value={activeSection.axis} onChange={e=>setSectionView(v=>v?{...v,axis:e.target.value as SectionView["axis"]}:null)}><option value="X">X</option><option value="Y">Y</option><option value="Z">Z (build direction)</option></select></label>
+      <label>Plane position <output>{activeSection.percent}%</output><input type="range" aria-label="Section plane position" min={0} max={100} value={activeSection.percent} onChange={e=>setSectionView(v=>v?{...v,percent:Number(e.target.value)}:null)}/></label>
+      <label><input type="checkbox" checked={activeSection.reverse} onChange={e=>setSectionView(v=>v?{...v,reverse:e.target.checked}:null)}/> Reverse retained side</label>
+      <button type="button" onClick={()=>setSectionView(v=>v?{...v,percent:50}:null)}>Center plane</button>
+      <small>Visual clipping only, relative to oriented mesh bounds. No section cap, physical slice, contour area or print-process simulation is calculated.</small>
+     </section>}
      {cadLayout&&measureMode&&canMeasure&&<section className="psMeshMeasure" aria-label="Mesh measurement">
       <header><strong>Measure mesh</strong><button type="button" aria-label="Close measurement" onClick={()=>{setMeasureMode(false);setMeshPicks([]);}}><X size={15}/></button></header>
       <p>{activePicks.length===0?"Click a point on the STL surface.":activePicks.length===1?"Click a second surface point.":"Click again to start a new measurement."}</p>
@@ -584,7 +599,7 @@ export default function ProfessionalStudy(){
       <button type="button" aria-label="Fit model view" title="Fit model view" onClick={()=>{setCameraView("iso");setViewerReset(n=>n+1);}}><Maximize2 size={17}/></button>
      </div>
      <select aria-label="Geometry display mode" value={showSupports?"supports":showOverhangs?"overhangs":"solid"}
-      onChange={e=>{const v=e.target.value;setShowOverhangs(v==="overhangs");setShowSupports(v==="supports");}}>
+      onChange={e=>{const v=e.target.value;setShowOverhangs(v==="overhangs");setShowSupports(v==="supports");if(v==="supports")setSectionView(null);}}>
       <option value="solid">Solid</option><option value="overhangs">Overhangs</option><option value="supports">Supports</option>
      </select>
     </div>
@@ -616,10 +631,10 @@ export default function ProfessionalStudy(){
       <details className="psBuildDisclosure">
        <summary>Geometry buildup preview <span>{layer}% <ChevronDown size={14}/></span></summary>
        <input type="range" aria-label="Build progression percentage" min={1} max={100} value={layer}
-        onChange={e=>{setPlaying(false);setLayer(Number(e.target.value));}}/>
+        onChange={e=>{setSectionView(null);setPlaying(false);setLayer(Number(e.target.value));}}/>
        <div className="psPlayback">
-        <button type="button" onClick={()=>{if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
-        <button type="button" onClick={()=>{setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
+        <button type="button" onClick={()=>{setSectionView(null);if(layer>=100)setLayer(1);setPlaying(p=>!p);}}>{playing?<Pause size={14}/>:<Play size={14}/>} {playing?"Pause build":"Play build"}</button>
+        <button type="button" onClick={()=>{setSectionView(null);setPlaying(false);setLayer(1);}}><RotateCcw size={14}/> Restart</button>
        </div>
       </details>
       <small className="psViewerMethodNote">Geometry-only visualization. Supports and build progression are conceptual, not process simulations.</small>
