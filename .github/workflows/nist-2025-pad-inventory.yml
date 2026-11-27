@@ -4,6 +4,8 @@ on:
     paths:
       - 'scripts/audit-nist-2025-pads.py'
       - 'tests/test_nist_2025_pads.py'
+      - 'scripts/audit-nist-2025-pad-joins.py'
+      - 'tests/test_nist_2025_pad_joins.py'
       - '.github/workflows/nist-2025-pad-inventory.yml'
   workflow_dispatch:
 permissions:
@@ -17,14 +19,21 @@ jobs:
         with:
           persist-credentials: false
       - name: Verify offline safeguards
-        run: python3 -m unittest discover -s tests -p 'test_nist_2025_pads.py' -v
+        run: |
+          python3 -m unittest discover -s tests -p 'test_nist_2025_pads.py' -v
+          python3 -m unittest discover -s tests -p 'test_nist_2025_pad_joins.py' -v
       - name: Acquire and verify publisher-checksummed measurements
         run: python3 scripts/audit-nist-2025-pads.py --source-dir data/nist-lpbf/amb2025-pads --output data/nist-lpbf/amb2025-pad-inventory.json
+      - name: Audit candidate joins on accepted measurement bytes only
+        if: ${{ !cancelled() && hashFiles('data/nist-lpbf/amb2025-pad-inventory.json') != '' }}
+        run: python3 scripts/audit-nist-2025-pad-joins.py --source-dir data/nist-lpbf/amb2025-pads --inventory data/nist-lpbf/amb2025-pad-inventory.json --output data/nist-lpbf/amb2025-pad-join-audit.json
       - name: Retain inventory and rejected-source diagnostics only
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: nist-2025-pad-inventory
-          path: data/nist-lpbf/amb2025-pad-inventory.json
+          path: |
+            data/nist-lpbf/amb2025-pad-inventory.json
+            data/nist-lpbf/amb2025-pad-join-audit.json
           if-no-files-found: warn
           retention-days: 7
