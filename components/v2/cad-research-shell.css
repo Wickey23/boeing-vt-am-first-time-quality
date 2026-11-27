@@ -1,0 +1,23 @@
+/* Legacy research navigation shares CAD chrome; individual solver visuals retain their own evidence colors. */
+.studioRoot.cadResearchShell{background:#f1f5f8;color:#253c50}
+.cadResearchShell .studioSidebar{width:224px;flex-basis:224px;background:#edf2f5;color:#2f4b61;
+ border-right:1px solid #c2ced8;padding:15px 10px;gap:7px;box-shadow:none}
+.cadResearchShell .studioBrand{color:#29495e}
+.cadResearchShell .studioBrandMark{border-radius:3px;background:#246fa7;color:white}
+.cadResearchShell .studioBrand small,.cadResearchShell .studioNavTitle,.cadResearchShell .studioSidebarFoot small{color:#526c80}
+.cadResearchShell .studioNavLink{color:#35536a;border-radius:3px;min-height:34px;padding:7px 9px;font-size:12px}
+.cadResearchShell .studioNavLink:is(.current,:hover){background:#d8e8f4;color:#1d5585;box-shadow:none}
+.cadResearchShell .researchNavigation{border-top:1px solid #c3ced7}
+.cadResearchShell .researchNavigation summary{color:#35536a}
+.cadResearchShell .studioSidebarFoot{border-color:#c2ced8;color:#456276}
+.cadResearchShell .studioContent{background:#f1f5f8;min-width:0}
+.cadResearchShell .studioTopbar{height:46px!important;min-height:46px!important;background:#f8fafb!important;border-color:#c4d0d9!important;padding:0 16px!important}
+.cadResearchShell .studioCrumb,.cadResearchShell .studioCrumb strong{color:#3d5b71}
+.cadResearchShell .studioMain{padding:18px!important;max-width:none}
+.cadResearchShell .studioHeading{margin-bottom:14px}
+.cadResearchShell .studioHeading h1{font-size:23px!important;letter-spacing:0;color:#28465c}
+.cadResearchShell .studioEyebrow{font-size:10px;color:#3b678a}
+.cadResearchShell .studioMain :is(.studioCard,.lightPanel,.studioTile){border-radius:3px;box-shadow:none;border-color:#c2ced8}
+.cadResearchShell .studioAction{border-radius:3px;box-shadow:none}
+.cadResearchShell .validationTable input{accent-color:#246fa7}
+@media(max-width:780px){.cadResearchShell .studioSidebar{max-width:85vw}.cadResearchShell .studioMain{padding:12px!important}}

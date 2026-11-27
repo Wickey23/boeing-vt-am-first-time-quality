@@ -24,6 +24,7 @@ import EngineeringParameterReview from "@/components/EngineeringParameterReview"
 import {activeParameterBindings,type ApprovedParameterBinding} from "@/lib/engineering-parameter-binding";
 import {createCopilotReviewPDF} from "@/lib/copilot-review-pdf";
 import "./copilot.css";
+import "./v2/cad-advanced-workspace.css";
 const Viewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 const Structural=dynamic(()=>import("@/components/PartStructuralPanel"),{ssr:false});
 const Thermal=dynamic(()=>import("@/components/PartThermalPanel"),{ssr:false});
@@ -344,7 +345,7 @@ export default function EngineeringCopilot(){
  const verifiedStructural=Boolean(a.result?.structural&&isLPBF);
  const verifiedThermal=Boolean(a.result?.thermal&&isLPBF);
  if(!a.ready||!knowledge)return <div className="copilotLoading" role="status">Restoring the part and engineering context…</div>;
-  return <div className="copilotGrid copilotFocused">
+  return <div className="copilotGrid copilotFocused cadAdvancedWorkspace">
 <div className="copilotJourney" aria-label="Engineering workflow progress"><div><span className="copilotJourneyEyebrow">ACTIVE ENGINEERING STUDY</span><strong>{a.projectName}</strong><small>{verified?"Geometry reviewed":"Geometry review required"} · {sourceList.length} references · {validEvidence.length} reviewed passages</small></div>
 <nav className="copilotJourneyNav" aria-label="Engineering workflow">{([
  ["part","1","Part"],["documents","2","Documents"],["requirements","3","Requirements"],["run","4","Simulate"],["results","5","Results"]
@@ -354,7 +355,7 @@ export default function EngineeringCopilot(){
 <section className="copilotLeft" aria-label="Persistent 3D part viewer">
     <header className="copilotHeading"><h2>Part workspace</h2><p>The uploaded geometry stays linked to its requirements and study results.</p></header>
     <div className="copilotFrame">
-      {url&&a.file?<ViewerErrorBoundary><Viewer url={url} unitScale={a.settings.unitScale}
+      {url&&a.file?<ViewerErrorBoundary><Viewer cadStyle url={url} unitScale={a.settings.unitScale}
         rotation={studyCurrent?undefined:orientationReady?currentCandidate?.rotation:undefined} overhangDeg={a.settings.overhangDeg}
         showOverhangs={orientationReady&&!studyCurrent} field={
         studyCurrent&&showFields==="stress"?serviceStudy?.structural?.stress:

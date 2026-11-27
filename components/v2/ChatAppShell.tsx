@@ -6,6 +6,7 @@ import {useAnalysis} from "@/components/AnalysisProvider";
 import {PanelLeft,SquarePen,MessageSquare,FileText,FlaskConical,BookOpen,Box,ChevronDown,X,ShieldCheck,LayoutDashboard,Cloud,Layers,HelpCircle,Settings2,PanelLeftClose,PanelLeftOpen} from "lucide-react";
 import "./chat-shell.css";
 import "./orientai-unified.css";
+import "./cad-application-shell.css";
 import EngineeringBuildTicker from "./EngineeringBuildTicker";
 
 /** The chat-first shell is intentionally isolated from the legacy engineering dashboard.
@@ -37,6 +38,11 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
   if(typeof window!=="undefined"&&window.matchMedia("(max-width: 780px)").matches)setMobileOpen(v=>!v);
   else setCollapsed(v=>!v);
  };
+ const openStudyStage=(stage:"geometry"|"context"|"assessment")=>{
+  setMobileOpen(false);
+  if(professional)window.dispatchEvent(new CustomEvent("orientai-open-stage",{detail:stage}));
+  else router.push("/copilot/workbench?stage="+stage);
+ };
  const nav=(href:string,label:string,Icon:typeof MessageSquare)=>(
   <Link href={href} onClick={()=>setMobileOpen(false)} aria-label={label}
    className={"oaNavItem"+(path===href?" oaNavActive":"")}
@@ -44,7 +50,7 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
    <Icon size={18} strokeWidth={1.85}/><span className="oaNavText">{label}</span>
   </Link>
  );
- return <div className={"oaRoot"+(collapsed?" oaIsCollapsed":"")+(professional?" oaProfessionalShell":"")}>
+ return <div className={"oaRoot oaCadApplication"+(collapsed?" oaIsCollapsed":"")+(professional?" oaProfessionalShell":"")}>
   {mobileOpen&&<button className="oaScrim" aria-label="Close sidebar" onClick={()=>setMobileOpen(false)}/>}
   <aside id="oa-workbench-navigation" className={"oaSidebar"+(mobileOpen?" oaMobileOpen":"")} aria-label="Workspace sidebar">
    <div className="oaSidebarTop">
@@ -57,14 +63,22 @@ export default function ChatAppShell({children,title="ORIENTAI"}:{children:React
     <SquarePen size={19}/><span className="oaNavText">New study</span>
    </button>
    <nav className="oaNavigation" aria-label="Primary navigation">
-    {nav("/copilot/workbench","Current study",MessageSquare)}
+    {nav("/","Study manager",LayoutDashboard)}
+    {nav("/copilot/workbench","Current study",Box)}
     
     {nav("/report","Engineering reports",FileText)}
    </nav>
    <div className="oaSidebarSection">
-    <div className="oaSidebarSectionTitle">WORKSPACE</div>
+    <div className="oaSidebarSectionTitle">STUDY TREE</div>
     <div className="oaCurrentStudy" title={analysis.projectName}>
      <Box size={17}/><span className="oaNavText">{analysis.file?analysis.projectName:"No part uploaded"}</span>
+    </div>
+    <div className="oaStudyTree" role="group" aria-label="Study tree">
+     <button type="button" onClick={()=>openStudyStage("geometry")}><Box size={15}/><span>Geometry &amp; orientation</span></button>
+     <button type="button" onClick={()=>openStudyStage("context")}><Layers size={15}/><span>Context &amp; process</span></button>
+     <button type="button" onClick={()=>openStudyStage("assessment")}><ShieldCheck size={15}/><span>Risk assessment</span></button>
+     <Link href="/copilot/advanced" onClick={()=>setMobileOpen(false)}><FlaskConical size={15}/><span>Advanced studies</span></Link>
+     <Link href="/report" onClick={()=>setMobileOpen(false)}><FileText size={15}/><span>Evidence report</span></Link>
     </div>
    </div>
    <details className="oaAdvanced">

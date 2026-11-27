@@ -1,0 +1,113 @@
+import {expect,test} from "@playwright/test";
+
+test("CAD layout presents the model first and retains independent pane preference",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/workbench");
+ const toggle=page.getByRole("button",{name:"CAD workspace layout"});
+ await expect(toggle).toBeVisible();
+ await expect(toggle).toHaveAttribute("aria-pressed","true");
+ const ribbon=page.getByRole("region",{name:"CAD analysis commands"});
+ await expect(ribbon).toBeVisible();
+ const model=page.getByRole("complementary",{name:"Persistent engineering model viewer"});
+ const properties=page.locator("#ps-engineering-study");
+ const modelBox=await model.boundingBox(),propertiesBox=await properties.boundingBox();
+ expect(modelBox).not.toBeNull();
+ expect(propertiesBox).not.toBeNull();
+ expect(modelBox!.x).toBeLessThan(propertiesBox!.x);
+ expect(modelBox!.width).toBeGreaterThan(propertiesBox!.width);
+ await ribbon.getByRole("button",{name:"Engineering Context",exact:true}).click();
+ await expect(page.getByRole("region",{name:"Active assessment stage"}).getByRole("heading",{name:"What must this part do?"})).toBeVisible();
+ const handle=page.getByRole("separator",{name:"Resize study and 3D viewer panels"});
+ await expect(handle).toHaveAttribute("aria-valuenow","58");
+ await handle.focus();
+ await handle.press("ArrowRight");
+ await expect(handle).toHaveAttribute("aria-valuenow","60");
+ await page.reload();
+ await expect(toggle).toHaveAttribute("aria-pressed","true");
+ await expect(handle).toHaveAttribute("aria-valuenow","60");
+ await toggle.click();
+ await expect(handle).toHaveAttribute("aria-valuenow","42");
+ await expect(ribbon).toHaveCount(0);
+});
+
+test("CAD mode leaves mobile study controls accessible",async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","true"));
+ await page.goto("/copilot/workbench");
+ const viewport=page.locator(".psReferenceViewport");
+ await expect(viewport).toBeVisible();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await expect(page.getByRole("region",{name:"CAD analysis commands"})).toBeVisible();
+ await page.getByRole("button",{name:"Study properties",exact:true}).click();
+ await expect(page.getByRole("navigation",{name:"Assessment stages"})).toBeVisible();
+ await page.getByRole("button",{name:"Close properties"}).click();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await expect(viewport).toBeVisible();
+});
+
+test("study manager, study tree and document tabs navigate the same engineering workspace",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/");
+ await expect(page.getByRole("heading",{name:"Engineering studies"})).toBeVisible();
+ await page.getByRole("group",{name:"Study tree"}).getByRole("button",{name:"Context & process"}).click();
+ await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
+ const tabs=page.getByRole("navigation",{name:"Study document tabs"});
+ await expect(tabs.getByRole("button",{name:"Engineering Context"})).toHaveAttribute("aria-current","page");
+ await tabs.getByRole("button",{name:"Part Geometry"}).click();
+ await expect(tabs.getByRole("button",{name:"Part Geometry"})).toHaveAttribute("aria-current","page");
+ await page.getByRole("group",{name:"Study tree"}).getByRole("button",{name:"Risk assessment"}).click();
+ await expect(tabs.getByRole("button",{name:"Failure Assessment"})).toHaveAttribute("aria-current","page");
+});
+
+test("CAD graphics uses light chrome and a functional view cube with secondary assistant",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/workbench");
+ const viewport=page.locator(".psReferenceViewport");
+ await expect(viewport).toHaveCSS("background-color","rgb(231, 237, 243)");
+ const cube=page.getByRole("group",{name:"Model view cube"});
+ await expect(cube).toBeVisible();
+ await cube.getByRole("button",{name:"Cube top view"}).click();
+ await expect(cube.getByRole("button",{name:"Cube top view"})).toHaveAttribute("aria-pressed","true");
+ await expect(page.getByRole("toolbar",{name:"3D model navigation"}).getByRole("button",{name:"Top view",exact:true})).toHaveAttribute("aria-pressed","true");
+ const assistant=page.getByRole("button",{name:"Engineering assistant",exact:true});
+ await expect(assistant).toHaveAttribute("aria-expanded","false");
+ await expect(page.getByRole("textbox",{name:"Ask ORIENTAI"})).toBeHidden();
+ await assistant.click();
+ await expect(page.getByRole("textbox",{name:"Ask ORIENTAI"})).toBeVisible();
+ await assistant.click();
+ await expect(page.getByRole("textbox",{name:"Ask ORIENTAI"})).toBeHidden();
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ await expect(page.locator(".cadGraphicsViewport canvas")).toBeVisible();
+});
+
+test("advanced studies and research routes share CAD presentation",async({page})=>{
+ await page.setViewportSize({width:1600,height:950});
+ await page.goto("/copilot/advanced");
+ await expect(page.locator(".cadAdvancedWorkspace")).toBeVisible();
+ await expect(page.locator(".copilotFrame")).toHaveCSS("background-color","rgb(231, 237, 243)");
+ await page.getByRole("button",{name:"Open Simulate stage"}).click();
+ await expect(page.getByRole("region",{name:"run workspace"})).toBeVisible();
+ await page.goto("/validation");
+ await expect(page.locator(".cadResearchShell")).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Validation Plan"})).toBeVisible();
+ await page.goto("/simulation/benchmarks");
+ await expect(page.locator(".cadResearchShell")).toBeVisible();
+ await expect(page.getByRole("button",{name:"1D thermal benchmark"})).toBeVisible();
+});
+
+test("tablet desktop-mode sandbox keeps the imported part visible without scrolling through a wizard",async({page})=>{
+ await page.setViewportSize({width:980,height:1150});
+ await page.goto("/copilot/workbench");
+ await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const viewport=page.locator(".psReferenceViewport");
+ await expect(viewport.locator("canvas")).toBeVisible();
+ const bounds=await viewport.boundingBox();
+ expect(bounds!.y).toBeLessThan(200);
+ expect(bounds!.height).toBeGreaterThan(500);
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+ await page.getByRole("region",{name:"CAD analysis commands"}).getByRole("button",{name:"Engineering Context",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"What must this part do?"})).toBeVisible();
+ await page.getByRole("button",{name:"Close properties"}).click();
+ await expect(viewport.locator("canvas")).toBeVisible();
+ await expect(page.getByRole("region",{name:"Active assessment stage"})).toBeHidden();
+});

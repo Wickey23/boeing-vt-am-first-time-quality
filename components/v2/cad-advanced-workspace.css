@@ -1,0 +1,39 @@
+/* Shared CAD palette for advanced part studies. All solver inputs and results remain unchanged. */
+.copilotGrid.cadAdvancedWorkspace{max-width:none;gap:0;margin:0;background:#eef2f5;color:#253c4f;align-items:start}
+.cadAdvancedWorkspace .copilotJourney{background:#f2f5f8!important;border:1px solid #c2ced7!important;border-radius:0!important;box-shadow:none!important;padding:10px 14px!important}
+.cadAdvancedWorkspace .copilotJourney :is(strong,small,.copilotJourneyEyebrow){color:#39586e!important}
+.cadAdvancedWorkspace .copilotJourneyNav{gap:3px}
+.cadAdvancedWorkspace .copilotStageTab{background:transparent!important;border:1px solid #c4cfd8!important;color:#36566d!important;border-radius:3px!important;min-height:34px}
+.cadAdvancedWorkspace .copilotStageTab span{border-radius:3px;color:#36566d!important;border-color:#9fb3c3!important}
+.cadAdvancedWorkspace .copilotStageTab:is(.selected,:hover){background:#dceaf6!important;color:#205987!important;border-color:#94b4ce!important}
+.cadAdvancedWorkspace :is(.copilotLeft,.copilotMainPanel){background:#fff!important;border:1px solid #c2ced7!important;border-radius:0!important;box-shadow:none!important;min-width:0;color:#253c4f!important;padding:12px!important}
+.cadAdvancedWorkspace .copilotHeading{padding:6px 0 8px;margin:0 0 8px;border-color:#c5d1da!important}
+.cadAdvancedWorkspace .copilotHeading h2,.cadAdvancedWorkspace .copilotStageTitle h2{font-size:17px!important;color:#253e53!important;line-height:1.3}
+.cadAdvancedWorkspace .copilotHeading p,.cadAdvancedWorkspace .copilotStageTitle p,.cadAdvancedWorkspace .copilotStageTitle small{color:#4b657b!important}
+.cadAdvancedWorkspace .copilotFrame{border:1px solid #b9c8d4!important;border-radius:0!important;background:#e7edf3!important}
+.cadAdvancedWorkspace .copilotEmpty,.cadAdvancedWorkspace .copilotEmpty span{color:#49657a!important}
+.cadAdvancedWorkspace :is(.copilotSummary,.copilotViewerCompact,.copilotStageStatus,.copilotBundleCard,.copilotFold,.copilotDocItem,.copilotConversation,.copilotPrompt,.copilotEvidence,.copilotResult,.copilotServiceResults,.copilotResultMetrics>div,.copilotReadiness,.copilotReviewExport,.copilotParameterReview,.copilotPrivacy,.copilotTimeline,.copilotBubble,.copilotConfirm,.copilotAdvanced,.unifiedStudy,.unifiedStudyCards>div,.unifiedStudyApproval,.parameterCandidate,.parameterApproval,.parameterPreview,.copilotStages>div){
+ background:#f5f8fa!important;border-color:#c1ced8!important;color:#283f51!important;border-radius:3px!important;box-shadow:none!important}
+.cadAdvancedWorkspace :is(.copilotSummary,.copilotViewerCompact,.copilotStageStatus,.copilotBundleCard,.copilotFold,.copilotDocItem,.copilotConversation,.copilotPrompt,.copilotEvidence,.copilotResult,.copilotServiceResults,.copilotResultMetrics,.copilotReadiness,.copilotReviewExport,.copilotParameterReview,.copilotPrivacy,.copilotTimeline,.copilotBubble,.copilotConfirm,.copilotAdvanced,.unifiedStudy,.parameterCandidate,.parameterApproval,.parameterPreview,.copilotStages) :is(h2,h3,h4,p,b,strong,small,label,summary,span){
+ color:#345167!important}
+.cadAdvancedWorkspace :is(.copilotLeft,.copilotMainPanel) :is(input:not([type=checkbox]):not([type=range]),textarea,select){
+ background:#fff!important;color:#253c4f!important;border:1px solid #a9bdcc!important;border-radius:3px!important}
+.cadAdvancedWorkspace :is(.copilotLeft,.copilotMainPanel) label{color:#345167!important}
+.cadAdvancedWorkspace :is(.copilotNextAction,.copilotPrimary,.copilotConfirm button){
+ background:#246da7!important;color:#fff!important;border:1px solid #1e6096!important;border-radius:3px!important;box-shadow:none!important}
+.cadAdvancedWorkspace :is(.copilotSmall,.copilotGhostAction,.copilotFieldTabs button,.copilotChatActions button,.copilotActions button,.copilotViewerCompact button){
+ background:#e6eef5!important;color:#285d85!important;border-color:#afc2d1!important;border-radius:3px!important}
+.cadAdvancedWorkspace .copilotFieldTabs button[aria-pressed=true]{background:#d1e5f5!important;border-color:#79a7ca!important}
+.cadAdvancedWorkspace :is(.copilotWarning,.copilotUnsupported,.copilotUnitNotice,.runbookBlocker){background:#fff4dd!important;border-color:#d2b17a!important;color:#704d19!important}
+.cadAdvancedWorkspace .copilotNotice{background:#e8f4ec!important;border-color:#a4c4ae!important;color:#285b3a!important}
+.cadAdvancedWorkspace a{color:#22669d}
+.cadAdvancedWorkspace .cadGraphicsViewport .cadGraphicsLegend{background:#ffffffed!important;color:#385267!important;border:1px solid #c0cdd7;border-radius:3px!important;padding:7px!important;font-size:10px!important;max-width:180px!important}
+.cadAdvancedWorkspace .cadGraphicsViewport .cadGraphicsLegend small{color:#526779!important}
+.cadAdvancedWorkspace .cadGraphicsViewport .cadGraphicsReset{background:#f7fafc!important;color:#35566e!important;border:1px solid #aabcca!important;border-radius:3px!important;font-size:10px!important}
+.cadAdvancedWorkspace .cadGraphicsViewport .viewerHint{display:none}
+@media(min-width:1161px){
+ .copilotGrid.cadAdvancedWorkspace{grid-template-columns:minmax(0,1.35fr) minmax(360px,1fr)}
+ .cadAdvancedWorkspace .copilotFrame{height:min(62vh,650px)!important;min-height:360px}
+ .cadAdvancedWorkspace .copilotLeft{top:0!important}
+}
+@media(max-width:1160px){.copilotGrid.cadAdvancedWorkspace{grid-template-columns:minmax(0,1fr)}}

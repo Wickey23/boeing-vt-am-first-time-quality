@@ -1,0 +1,246 @@
+/* Optional CAD workspace. Keep existing analysis components and legacy layout intact.
+   No CAD authoring tools are implied: these controls navigate analysis stages. */
+.psCadRibbon{display:none}
+.psCadModeToggle{display:inline-flex!important;align-items:center;justify-content:center;
+ gap:5px;padding:4px 7px!important;width:auto!important;min-width:52px!important;
+ font-size:11px!important;white-space:nowrap;border:1px solid #53697d!important;
+ color:#dbe7f1!important;background:#273644!important;border-radius:4px!important}
+.psCadModeToggle[aria-pressed=true]{background:#365a78!important;border-color:#8bb7d9!important}
+.psCadRibbon button:focus-visible,.psCadModeToggle:focus-visible{outline:2px solid #b8d7ed;outline-offset:2px}
+@media(min-width:1101px){
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout{
+  grid-template-columns:minmax(0,var(--ps-viewer-width,58%)) minmax(0,1fr)!important;
+  grid-template-rows:44px minmax(0,1fr);gap:0
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon{
+  display:flex;grid-column:1/-1;grid-row:1;align-items:center;gap:5px;
+  padding:5px 10px;border-bottom:1px solid #46596b;background:#25313c;
+  min-width:0;overflow-x:auto;white-space:nowrap
+ }
+ .psCadRibbon .psCadGroup{display:flex;align-items:center;gap:4px;padding:0 8px;border-right:1px solid #4d6071}
+ .psCadRibbon button{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;
+  min-height:32px;border:1px solid transparent;background:transparent;color:#e1e9ef;
+  font-size:11px;font-weight:600;border-radius:3px;cursor:pointer}
+ .psCadRibbon button:hover:not(:disabled){background:#34495b;border-color:#5b748a}
+ .psCadRibbon button[aria-pressed=true]{background:#395970;border-color:#8eafca}
+ .psCadRibbon button:disabled{opacity:.45;cursor:not-allowed}
+ .psCadRibbon .psCadStudyName{margin-left:auto;min-width:70px;max-width:25%;overflow:hidden;
+  text-overflow:ellipsis;font-size:11px;color:#bbcad6}
+ .psCadLayout .psWorkingColumn{grid-column:2;grid-row:2;border-right:0!important;border-left:1px solid #46596b}
+ .psCadLayout .psViewerColumn{grid-column:1;grid-row:2;padding:0!important;min-width:0;min-height:0}
+ .psCadLayout .psReferenceViewerCard{border:0;border-radius:0;padding:8px!important;margin:0!important}
+ .psCadLayout .psViewerFrame.psReferenceViewport{border-radius:0;min-height:0}
+ .psCadLayout .psWorkspaceHeader{padding:0 8px!important}
+ .psCadLayout .psStageScroll{padding:12px!important}
+ .psCadLayout .psPaneResizeHandle{left:calc(var(--ps-viewer-width,58%) - 6px);right:auto!important;top:44px!important}
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout.psStudyHidden{grid-template-columns:minmax(0,1fr)!important}
+ .psCadLayout.psStudyHidden .psViewerColumn{grid-column:1/-1}
+ .psCadLayout.psViewerExpanded .psViewerColumn{grid-column:auto;grid-row:auto}
+}
+@media(max-width:1100px){
+ .psCadModeToggle{display:none!important}
+}
+
+/* Match the existing high-specificity header rule on mobile. */
+@media(max-width:1100px){
+ .psRoot.psReferenceRoot .psViewerHeaderActions>button.psCadModeToggle{display:none!important}
+}
+/* Document tabs sit below the graphics and property panels, not inside either. */
+.psCadDocumentTabs{display:none}
+@media(min-width:1101px){
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout{
+  grid-template-rows:44px minmax(0,1fr) 34px
+ }
+ .psCadLayout .psCadDocumentTabs{display:flex;grid-column:1/-1;grid-row:3;align-items:stretch;
+  background:#202a34;border-top:1px solid #536476;overflow-x:auto;min-width:0}
+ .psCadDocumentTabs button,.psCadDocumentTabs a{display:flex;align-items:center;gap:6px;white-space:nowrap;
+  border:0;border-right:1px solid #465767;border-top:2px solid transparent;background:transparent;
+  color:#bdcbd8;padding:5px 13px;font-size:11px;text-decoration:none;cursor:pointer}
+ .psCadDocumentTabs button[aria-current=page]{background:#35495b;color:#f2f6fa;border-top-color:#93c3e7}
+ .psCadDocumentTabs :is(button,a):hover{background:#364656;color:white}
+ .psCadDocumentTabs :is(button,a):focus-visible{outline:2px solid #b8d7ed;outline-offset:-3px}
+ .psCadLayout .psPaneResizeHandle{bottom:34px}
+ .psCadLayout .psReferenceViewerCard{display:flex;flex-direction:column;min-height:0;height:100%}
+ /* A CAD ribbon belongs above the canvas, including the existing view controls. */
+ .psCadLayout .psViewerToolbar{order:-1;flex:0 0 auto;border-bottom:1px solid #46596b}
+ .psCadLayout .psReferenceViewerHeader{flex:0 0 auto}
+}
+
+/* Narrow properties panel must never conceal evidence qualification. */
+.psRoot.psReferenceRoot.psCadLayout .psDecisionFinding>summary{flex-wrap:wrap}
+.psRoot.psReferenceRoot.psCadLayout .psDecisionFinding .psFindingState{display:block!important;margin-left:auto;white-space:normal}
+
+/* CAD visual system: light industrial chrome, flat docked properties, full-bleed graphics.
+   Scoped to CAD mode; the original guided layout remains an explicit fallback. */
+.psRoot.psReferenceRoot.psCadLayout{
+ --cad-chrome:#f0f3f6;--cad-paper:#ffffff;--cad-line:#c4cdd6;
+ --cad-text:#243746;--cad-muted:#526779;--cad-accent:#235f9b;
+ background:var(--cad-chrome)!important;color:var(--cad-text)!important
+}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaBody{background:#e7edf3!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaTopbar{
+ background:#f5f7f9!important;border-bottom:1px solid #b9c5d0!important;color:#263b4b!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaTopbar :is(.psTopbarIdentity strong,.psTopbarIdentity span,.psSaveState,.psTopbarIdentity svg,.oaIconButton){color:#364e60!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .psProcessLink{
+ background:#e7edf3!important;color:#304f67!important;border-color:#b1bfcd!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar{
+ background:#f2f5f7!important;color:#283e50!important;border-color:#bdc8d2!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar :is(.oaBrand,.oaBrandText,.psBrandStack>small,.oaNavItem,.oaNewChat,.oaCurrentStudy,.oaAdvanced>summary,.oaAdvancedLinks a,.psSidebarLinks>a,.oaSidebarSectionTitle,.oaSidebarFooter,.oaSidebarFooter small,.oaStudyTree button,.oaStudyTree a){color:#364e60!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar :is(.oaSidebarSection,.psSidebarLinks,.oaSidebarFooter,.oaStudyTree){border-color:#c5cfd8!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaSidebar :is(.oaNavActive,.oaNavItem:hover,.oaNewChat:hover,.oaStudyTree button:hover,.oaStudyTree a:hover){
+ background:#dceaf6!important;border-color:#acc5db!important;color:#174f81!important;box-shadow:none!important}
+.oaCadApplication.oaProfessionalShell:has(.psCadLayout) .oaBottomDisclaimer{background:#edf1f4!important;color:#526779!important;border-color:#c5cfd8!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psCadRibbon,.psCadDocumentTabs,.psWorkspaceHeader,.psViewerColumn,.psReferenceViewerCard,.psAssistant){
+ background:#eef2f5!important;color:#283c4d!important;border-color:#bdc8d2!important}
+.psRoot.psReferenceRoot.psCadLayout .psCadRibbon{border-bottom:1px solid #b7c4cf!important}
+.psRoot.psReferenceRoot.psCadLayout .psCadGroup{border-color:#c8d2db}
+.psRoot.psReferenceRoot.psCadLayout .psCadRibbon button{color:#2d465b!important;font-size:11px}
+.psRoot.psReferenceRoot.psCadLayout .psCadRibbon button:is(:hover,[aria-pressed=true]),.psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs :is(button[aria-current=page],button:hover,a:hover){
+ background:#dceaf6!important;border-color:#8fb2d1!important;color:#19578f!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psCadStudyName,.psCadDocumentTabs button,.psCadDocumentTabs a){color:#415a6e}
+.psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs :is(button,a){border-right-color:#c7d2dc}
+.psRoot.psReferenceRoot.psCadLayout .psWorkingColumn{background:#fff!important;border-color:#bcc8d2!important}
+.psRoot.psReferenceRoot.psCadLayout .psStep{color:#4c6477!important}
+.psRoot.psReferenceRoot.psCadLayout .psStep:is(.psActive,:hover){background:#dfebf5!important;color:#1e5688!important;border-bottom-color:#397cb1!important}
+.psRoot.psReferenceRoot.psCadLayout .psStepCount{color:#405d74!important;background:#f6f8fa!important;border-color:#a3b6c5!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll{background:#fff!important;scrollbar-color:#adbdca #eef2f5}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceHeading,.psSectionHead){padding:0 0 8px;border-bottom:1px solid #ccd5dd}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceHeading,.psSectionHead) h2{font-size:16px!important;color:#203849!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceHeading,.psSectionHead) :is(p,span){color:#51697d!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psReferenceTopGrid,.psReferenceBottomGrid){grid-template-columns:minmax(0,1fr)!important;gap:0!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psPanel,.psReferenceEmpty,.psContextPanel,.psDecisionFinding,.psFeedbackPanel,.psReportCard,.psSourceList>details,.psEvidenceItem,.psDecisionStatus,.psUnassessedStrip,.psReferenceAnalysis,.psMeshIssues,.psReferenceRecommendation,.psDecisionActions>li,.psManufacturingFlow>li,.psSummaryGrid>div,.psProcessContext){
+ background:#fff!important;color:#263c4d!important;border-color:#c6d0d9!important;border-radius:0!important;box-shadow:none!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll .psReferenceGrid>.psPanel{border:0!important;border-bottom:1px solid #c7d1d9!important;padding:8px 6px!important;min-height:0!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psReferenceCardHeading,.psPanelHeading){margin:0 0 6px!important;padding:5px 0!important;border-color:#ccd6de!important;color:#243c50!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psReferenceCardHeading,.psPanelHeading) svg{color:#517b9b!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(dt,dd,p,small,label,.psFindingState,.psDecisionFindingTitle small,.psDecisionStatus p,.psProcessOutcome span,.psDecisionCounts span,.psDecisionCounts b,.psManufacturingFlow small,.psFlowTitle small,.psDecisionFindingTitle strong,.psReferenceScreenResults strong,.psModelLoaded,.psCaveat,.psNotice){color:#405a6f!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(.psReferenceMesh,.psReferenceDimensions) dl>div{border-color:#dbe2e8!important;padding:5px 0!important}
+.psRoot.psReferenceRoot.psCadLayout .psStageScroll :is(input:not([type=checkbox]):not([type=range]),textarea,select){
+ background:#fff!important;color:#253b4d!important;border:1px solid #aabcca!important;border-radius:3px!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psPrimary,.psConfirmUnits,.psReferenceRecommendation button,.psWorkflowBar button,.psCadEmptyImport){
+ background:#246da7!important;color:#fff!important;border:1px solid #1e6096!important;border-radius:3px!important;box-shadow:none!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psSecondary,.psModelDescription button,.psDecisionTabs button,.psDecisionFilters button,.psTextButton,.psDecisionActions button,.psCadModeToggle,.psPlayback button){
+ background:#edf3f7!important;color:#295978!important;border-color:#b2c1ce!important;border-radius:3px!important;box-shadow:none!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psDecisionTabs button.psSelected,.psDecisionFilters button[aria-pressed=true],.psCadModeToggle[aria-pressed=true]){
+ background:#dceaf7!important;border-color:#91b5d4!important;color:#19578f!important}
+.psRoot.psReferenceRoot.psCadLayout .psWorkflowBar{background:#e7f1fa!important;border-color:#b4cddd!important;color:#214f73!important}
+.psRoot.psReferenceRoot.psCadLayout .psWorkflowSummary :is(strong,span){color:#2b5474!important}
+.psRoot.psReferenceRoot.psCadLayout .psViewerFrame.psReferenceViewport{
+ background:#e7edf3!important;border:0!important;border-radius:0!important;overflow:hidden}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceViewerCard{padding:0!important}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceViewerHeader{padding:5px 8px!important;background:#f5f7f9!important;border-color:#c2ced8!important}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceViewerHeader :is(strong,span,svg,button),.psRoot.psReferenceRoot.psCadLayout .psViewerMenu>summary{color:#3c586d!important}
+.psRoot.psReferenceRoot.psCadLayout .psViewerToolbar{background:#f7f9fb!important;border-color:#c4ced7!important;padding:4px 8px}
+.psRoot.psReferenceRoot.psCadLayout .psCameraButtons button{color:#42617a!important}
+.psRoot.psReferenceRoot.psCadLayout .psCameraButtons button:is(:hover,[aria-pressed=true]){background:#dceaf5!important;border-color:#9fbcd3!important}
+.psRoot.psReferenceRoot.psCadLayout .psViewerToolbar select,.psRoot.psReferenceRoot.psCadLayout .psEngineeringInspector select{background:#fff!important;color:#304c61!important;border-color:#aabcca!important}
+.psRoot.psReferenceRoot.psCadLayout :is(.psViewerStatusLine,.psEngineeringInspector,.psEngineeringInspector label,.psEngineeringInspector summary,.psViewerMethodNote,.psViewerEmpty){color:#405d71!important;border-color:#c5d0d9!important}
+.psRoot.psReferenceRoot.psCadLayout .psEngineeringInspector{padding:4px 9px}
+.psRoot.psReferenceRoot.psCadLayout .psBuildAxis{top:auto!important;right:auto!important;bottom:18px!important;left:15px!important;background:#ffffffc9!important;border-color:#abbaca!important;color:#31556f!important}
+.psRoot.psReferenceRoot.psCadLayout .psCadViewCube{position:absolute;right:17px;top:14px;z-index:7;width:88px;height:82px;display:grid;
+ grid-template-columns:1fr 1fr;grid-template-rows:26px 30px 23px;gap:1px;filter:drop-shadow(0 2px 3px #52677b35)}
+.psCadViewCube button{background:#f5f8fa;color:#36546b;border:1px solid #9fb1c0;border-radius:1px;font-size:9px;font-weight:700;line-height:1;cursor:pointer;padding:2px}
+.psCadViewCube button:is(:hover,[aria-pressed=true]){background:#d2e5f4;border-color:#6f9fc5;color:#194f79}
+.psCadViewCube .psCubeTop{grid-column:1/-1;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);padding:4px 4px 2px}
+.psCadViewCube .psCubeFront{transform:skewY(9deg);transform-origin:top right}
+.psCadViewCube .psCubeSide{transform:skewY(-9deg);transform-origin:top left}
+.psCadViewCube .psCubeIso{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:4px;background:#fff}
+.psCadLayout .psCadEmptyImport{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;margin-top:8px}
+.psCadLayout .cadGraphicsViewport .cadGraphicsLegend{top:auto!important;bottom:45px!important;left:auto!important;right:12px!important;background:#ffffffed!important;color:#385267!important;border:1px solid #c0cdd7;border-radius:3px!important;padding:7px!important;font-size:10px!important;max-width:180px!important}
+.psCadLayout .cadGraphicsViewport .cadGraphicsLegend small{color:#526779!important}
+.psCadLayout .cadGraphicsViewport .cadGraphicsReset{top:auto!important;right:12px!important;bottom:12px!important;background:#f7fafc!important;color:#35566e!important;border:1px solid #aabcca!important;border-radius:3px!important;font-size:10px!important;padding:5px 7px!important}
+.psCadLayout .cadGraphicsViewport .cadGraphicsCameraSelect{bottom:12px!important;left:75px!important;background:#fff;color:#2f4c62;border:1px solid #adbfcd;border-radius:3px;padding:4px}
+.psCadLayout .cadGraphicsViewport .viewerHint{display:none}
+.psCadAssistantToggle{display:none}
+@media(min-width:1101px){
+ .psCadLayout .psCadAssistantToggle{display:flex;align-items:center;gap:7px;width:100%;min-height:34px;padding:5px 9px;border:0;border-top:1px solid #c5cfd8;background:#edf2f6;color:#31556f;font-size:11px;font-weight:650;cursor:pointer}
+ .psCadLayout .psCadAssistantToggle>svg:last-child{margin-left:auto}
+ .psCadLayout .psCadAssistantCollapsed .psAssistantContent{display:none}
+ .psCadLayout .psAssistantContent{padding:5px 8px;background:#f5f7f9}
+ .psCadLayout .psAssistantContent :is(.psExternalAiSwitch,.psAskBox,.psAskBox textarea,.psAskBox>div span,.psAssistantContent>small){color:#405d71!important}
+ .psCadLayout .psAskBox{background:#fff!important;border-color:#afbfcc!important}
+}
+@media(max-width:1100px){.psCadViewCube{display:none!important}}
+
+
+/* Sandbox: keep the graphics area on-screen even in tablet and mobile browsers.
+   Never stack a full-height properties wizard above the model. */
+.psCompactPropertyHeader,.psCompactPropertiesToggle{display:none!important}
+.psRoot.psReferenceRoot.psCadLayout .psModelThumbnail{display:none!important}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceModel .psModelDescription{flex:1 1 auto}
+@media(max-width:1100px){
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout,
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout.psStudyHidden{
+  position:relative;display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:43px minmax(0,1fr) 34px!important;
+  height:100%!important;min-height:0!important;overflow:hidden!important;gap:0
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon{
+  display:flex!important;grid-column:1;grid-row:1;align-items:center;gap:4px;
+  min-width:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;padding:4px 6px
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadGroup{display:flex;align-items:center;gap:3px;flex-shrink:0;padding:0 4px;border-right:1px solid #c3cfd9}
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon button{
+  display:flex;align-items:center;gap:5px;min-height:33px;padding:4px 7px;white-space:nowrap;
+  border:1px solid #bac9d5;background:#f7f9fa;border-radius:3px;font-size:11px;cursor:pointer
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon button:disabled{opacity:.5;cursor:not-allowed}
+ .psRoot.psReferenceRoot.psCadLayout .psCadStudyName{display:none}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerColumn,
+ .psRoot.psReferenceRoot.psCadLayout.psStudyHidden .psViewerColumn{
+  grid-column:1;grid-row:2;display:flex!important;flex-direction:column;min-height:0!important;
+  height:100%!important;width:100%!important;overflow:hidden!important;padding:0!important
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psReferenceViewerCard{height:100%;min-height:0;flex:1 1 auto}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerFrame.psReferenceViewport,
+ .psRoot.psReferenceRoot.psCadLayout.psStudyHidden .psViewerFrame.psReferenceViewport{
+  min-height:0!important;height:auto!important;flex:1 1 0!important
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psViewerToolbar{order:-1;flex:0 0 auto}
+ .psRoot.psReferenceRoot.psCadLayout .psEngineeringInspector{max-height:35%;overflow:auto}
+ .psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs{
+  display:flex!important;grid-column:1;grid-row:3;min-width:0;overflow-x:auto;
+  align-items:stretch;border-top:1px solid #bccad5
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs :is(button,a){
+  display:flex;align-items:center;gap:5px;white-space:nowrap;flex:0 0 auto;
+  padding:5px 9px;font-size:11px;text-decoration:none;border:0;border-right:1px solid #c4cfd8;
+  border-top:2px solid transparent;background:transparent;cursor:pointer
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs button[aria-current=page]{border-top-color:#2d76ad!important}
+ .psRoot.psReferenceRoot.psCadLayout .psWorkingColumn{
+  display:none!important;position:absolute;z-index:12;top:43px;bottom:34px;right:0;
+  width:min(390px,80%);height:auto!important;min-height:0!important;
+  border-left:1px solid #aebfcd!important;box-shadow:-6px 0 15px #29445b20;overflow:hidden
+ }
+ .psRoot.psReferenceRoot.psCadLayout.psCompactPropertiesOpen .psWorkingColumn{display:flex!important}
+ .psRoot.psReferenceRoot.psCadLayout .psCompactPropertyHeader{
+  display:flex!important;align-items:center;justify-content:space-between;flex:0 0 auto;
+  background:#e8eef3;border-bottom:1px solid #c2ced8;padding:5px 9px;font-size:12px;color:#294a63
+ }
+ .psCompactPropertyHeader button{display:grid;place-items:center;width:28px;height:28px;background:transparent;border:1px solid #b7c7d3;color:#36566e;border-radius:3px}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCompactPropertiesToggle{
+  display:flex!important;align-items:center;gap:4px;width:auto!important;min-width:76px;font-size:11px;
+  background:#e1edf6!important;border-color:#9db8ce!important;color:#2b5677!important
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button[aria-controls="ps-engineering-study"]:not(.psCompactPropertiesToggle){display:none!important}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCadModeToggle{display:inline-flex!important}
+ .psRoot.psReferenceRoot.psCadLayout .psCadViewCube{display:grid!important;right:12px;top:12px}
+ .psRoot.psReferenceRoot.psCadLayout .psAssistantContent{padding:5px 8px;background:#f5f7f9}
+ .psRoot.psReferenceRoot.psCadLayout .psCadAssistantToggle{display:flex!important;align-items:center;gap:6px;width:100%;min-height:32px;border:0;background:#edf2f6;color:#31556f;padding:5px 8px}
+ .psRoot.psReferenceRoot.psCadLayout .psCadAssistantCollapsed .psAssistantContent{display:none!important}
+ .psRoot.psReferenceRoot.psCadLayout .psAskBox{background:#fff!important;border-color:#afbfcc!important}
+ .psRoot.psReferenceRoot.psCadLayout .psAskBox textarea{color:#304b61!important}
+ .psRoot.psReferenceRoot.psCadLayout.psViewerExpanded .psViewerColumn{position:fixed!important;inset:0!important;z-index:100;height:100dvh!important}
+}
+@media(max-width:780px){
+ .psRoot.psReferenceRoot.psCadLayout .psWorkingColumn{
+  top:auto;bottom:34px;left:0;right:0;width:100%;max-height:68%;height:68%!important;
+  border-top:1px solid #aebfcd!important;box-shadow:0 -6px 18px #29445b30
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadViewCube{transform:scale(.85);transform-origin:top right}
+ .psRoot.psReferenceRoot.psCadLayout .psReferenceViewerHeader>strong{font-size:10px}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions{gap:2px}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCompactPropertiesToggle{min-width:33px;font-size:0}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCadModeToggle{min-width:34px;font-size:10px}
+}

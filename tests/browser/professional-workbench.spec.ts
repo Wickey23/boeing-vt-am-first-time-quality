@@ -89,6 +89,7 @@ test("fit-screen mode uses the desktop viewport for engineering work instead of 
 
 
 test("reference geometry layout uses two card rows, recommendation and persistent right CAD panel",async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","false"));
  await page.setViewportSize({width:1672,height:941});
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
@@ -170,6 +171,7 @@ test("desktop navigation collapses into accessible icon rail and persists after 
 });
 
 test("study pane can be hidden and restored while CAD pane keeps its controls",async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","false"));
  await page.setViewportSize({width:1707,height:855});
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
@@ -232,6 +234,8 @@ test("pre-build PDF export is available directly after dimensional confirmation"
 test("workbench answers failure questions with actual screening status and missing physics",async({page})=>{
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const assistantToggle=page.getByRole("button",{name:"Engineering assistant",exact:true});
+ if(await assistantToggle.isVisible())await assistantToggle.click();
  await page.getByRole("textbox",{name:"Ask ORIENTAI"}).fill("How can this part fail during metal printing?");
  await page.getByRole("button",{name:"Send message"}).click();
  const answer=page.getByRole("log",{name:"Engineering assistant messages"});
@@ -242,6 +246,7 @@ test("workbench answers failure questions with actual screening status and missi
 });
 
 test("geometry action and first-row mesh values fit without duplicate preview and vertical scrolling",async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("orientai-cad-layout-v1","false"));
  await page.setViewportSize({width:1728,height:950});
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
@@ -269,6 +274,7 @@ test("external AI consent checkbox stays compact and label text remains readable
   else await route.continue();
  });
  await page.goto("/copilot/workbench");
+ await page.getByRole("button",{name:"Engineering assistant",exact:true}).click();
  const label=page.locator(".psExternalAiSwitch label");
  const checkbox=label.locator('input[type="checkbox"]');
  await expect(checkbox).toBeVisible();

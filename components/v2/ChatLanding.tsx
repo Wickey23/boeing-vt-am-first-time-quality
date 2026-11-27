@@ -52,11 +52,13 @@ export default function ChatLanding(){
   catch{setError("This browser cannot save the initial message. You can still continue in the study.");}
   router.push("/copilot/workbench");
  };
- return <section className="oaHome" aria-label="Start an engineering conversation">
-  <h1 className="oaGreeting">What are we working on today?</h1>
-  <p className="oaSubGreeting">Ask about a metal-AM component, or upload an STL to begin.</p>
+ return <section className="oaHome oaDocumentCenter" aria-label="Start an engineering conversation">
+  <div className="oaDocumentHeading"><FileBox size={18}/> ORIENTAI / Study manager</div>
+  <h1 className="oaGreeting">Engineering studies</h1>
+  <Link className="oaOpenSandbox" href="/copilot/workbench"><FileBox size={19}/> Open engineering sandbox</Link>
+  <p className="oaSubGreeting">Import a part, open your saved study, or start with a research benchmark.</p>
   <div className="oaGuidedStart" role="region" aria-label="Start a guided part review" style={{width:"min(100%,760px)",border:"1px solid var(--oa-border)",borderRadius:16,padding:"22px 24px",background:"var(--oa-card)",display:"grid",gap:12}}>
-    <strong style={{fontSize:19}}>New to ORIENTAI? Start with a part.</strong>
+    <strong style={{fontSize:19}}>New part study</strong>
     <p style={{fontSize:14,lineHeight:1.6,color:"var(--oa-muted)",margin:0}}>You do not need to know which analysis to run. Upload a metal 3D-printing STL, confirm its dimensions, tell us what the part does, and review the manufacturing concerns.</p>
     <div style={{display:"flex",flexWrap:"wrap",gap:8,fontSize:12,color:"var(--oa-muted)"}}><span>1. Upload STL</span><span>→</span><span>2. Confirm size</span><span>→</span><span>3. Describe use</span><span>→</span><span>4. Review risks</span></div>
     <button type="button" disabled={!analysis.ready} onClick={()=>fileInput.current?.click()} style={{justifySelf:"start",padding:"12px 18px",border:0,borderRadius:9,fontWeight:700,fontSize:14,background:"var(--oa-strong)",color:"var(--oa-bg)",cursor:"pointer",maxWidth:"100%"}}><FileUp size={16} style={{verticalAlign:"middle",marginRight:7}}/>Upload STL to start guided review</button>
@@ -67,9 +69,10 @@ export default function ChatLanding(){
        style={{border:"1px solid var(--oa-border)",borderRadius:8,padding:"8px 10px",fontSize:12,background:"var(--oa-card)",color:"inherit",cursor:"pointer"}}>{item.name}</button>)}
     </div>
     <small style={{fontSize:12,color:"var(--oa-muted)"}}>Four deterministic STL teaching fixtures (mm), including the three research study parts. Engineer must confirm dimensions. No machine-validated claims.</small>
-    {part&&<p role="status" style={{fontSize:13,margin:0}}>Selected {part.name}. Use the arrow below to enter your study.</p>}
+    {part&&<p role="status" style={{fontSize:13,margin:0}}>Selected {part.name}. Use Start conversation below to open the engineering study.</p>}
    </div>
   <div className="oaComposerArea">
+   <div className="oaDocumentHeading"><ShieldCheck size={16}/> Optional engineering question</div>
    <div className="oaComposer">
     {part&&<div className="oaAttachment">
      <FileBox size={19}/><span className="oaAttachmentName" title={part.name}>{part.name}</span>
