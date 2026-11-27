@@ -2,6 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
+import {runRegisteredThermalMeshHistory} from "../lib/lpbf-registered-thermal-mesh-history";
 import {runRegisteredThermalSectionHistory} from "../lib/lpbf-registered-thermal-section-history";
 import {runRegisteredLayerExperiment} from "../lib/lpbf-registered-layer-experiment";
 import {studyRegisteredSpatialRefinement} from "../lib/lpbf-spatial-refinement";
@@ -157,4 +158,38 @@ test("M11 registered thermal section history transfers matched cell temperatures
  await assert.rejects(runRegisteredThermalSectionHistory(input,{...request,acknowledgeStressFreeReset:false}),/reset assumption/);
  await assert.rejects(runRegisteredThermalSectionHistory(input,{...request,referenceFrame:0}),/activation/);
  await assert.rejects(runRegisteredThermalSectionHistory(input,{...request,x:99}),/selection/);
+});
+
+test("M11 registered 3D thermal mesh transfers all cells and preserves coordinate identity",async()=>{
+ const input=await setup();
+ const request={referenceFrame:1,releaseFrame:2,acknowledgeStressFreeReset:true,
+  material:{youngsModulusMPa:200000,poissonRatio:.3,yieldStressMPa:400,thermalExpansionPerK:1e-5,sourceLabel:"Synthetic mesh benchmark"}};
+ const report=await runRegisteredThermalMeshHistory(input,request);
+ const replay=await runRegisteredLayerExperiment({...input,captureFrames:true});
+ assert.equal(report.scope,"UNVALIDATED_REGISTERED_ELASTIC_MESH_HISTORY");
+ assert.equal(report.productionActivationAuthorized,false);
+ assert.equal(report.partSha256,replay.thermal.partSha256);
+ assert.equal(report.scanSha256,replay.thermal.sourceSha256);
+ assert.deepEqual(report.coordinateFrame.originMm,replay.geometry.grid.originMm);
+ assert.deepEqual(report.steps.map(s=>s.frameIndex),[1,2]);
+ assert.deepEqual(report.steps.map(s=>s.mesh.constraint),["clamped-base","rigid-motion-pins"]);
+ const initial=report.steps[0].mesh,end=report.steps[1].mesh;
+ assert.equal(initial.maxVonMisesMPa,0);
+ assert.equal(initial.maxDisplacementMm,0);
+ assert.equal(end.cellResults.length,8);
+ assert.equal(end.tetrahedra,48);
+ assert.equal(end.nodes.length,27);
+ assert.deepEqual(end.nodes,initial.nodes);
+ for(const c of end.cellResults){
+  const find=(i:number)=>replay.thermal.frames![i].cells.find(v=>v.x===c.x&&v.y===c.y&&v.layer===c.layer)!;
+  assert.equal(c.temperatureC,find(2).temperatureC);
+  assert.equal(c.referenceTemperatureC,find(1).temperatureC);
+ }
+ assert.ok(end.maxDisplacementMm>0);
+ assert.ok(end.equilibrium.relativeResidual<=1e-10);
+ assert.ok(Math.hypot(...end.equilibrium.reactionForceN)<1e-6);
+ assert.ok(Math.hypot(...end.equilibrium.reactionMomentNmm)<1e-6);
+ await assert.rejects(runRegisteredThermalMeshHistory(input,{...request,referenceFrame:0}),/activation/);
+ await assert.rejects(runRegisteredThermalMeshHistory(input,{...request,acknowledgeStressFreeReset:false}),/reset assumption/);
+ await assert.rejects(runRegisteredThermalMeshHistory(input,{...request,releaseFrame:1}),/Invalid reference/);
 });
