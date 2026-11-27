@@ -161,3 +161,86 @@
  .psCadLayout .psAskBox{background:#fff!important;border-color:#afbfcc!important}
 }
 @media(max-width:1100px){.psCadViewCube{display:none!important}}
+
+
+/* Sandbox: keep the graphics area on-screen even in tablet and mobile browsers.
+   Never stack a full-height properties wizard above the model. */
+.psCompactPropertyHeader,.psCompactPropertiesToggle{display:none!important}
+.psRoot.psReferenceRoot.psCadLayout .psModelThumbnail{display:none!important}
+.psRoot.psReferenceRoot.psCadLayout .psReferenceModel .psModelDescription{flex:1 1 auto}
+@media(max-width:1100px){
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout,
+ .oaRoot.oaProfessionalShell .psRoot.psReferenceRoot.psFit.psCadLayout.psStudyHidden{
+  position:relative;display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:43px minmax(0,1fr) 34px!important;
+  height:100%!important;min-height:0!important;overflow:hidden!important;gap:0
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon{
+  display:flex!important;grid-column:1;grid-row:1;align-items:center;gap:4px;
+  min-width:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;padding:4px 6px
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadGroup{display:flex;align-items:center;gap:3px;flex-shrink:0;padding:0 4px;border-right:1px solid #c3cfd9}
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon button{
+  display:flex;align-items:center;gap:5px;min-height:33px;padding:4px 7px;white-space:nowrap;
+  border:1px solid #bac9d5;background:#f7f9fa;border-radius:3px;font-size:11px;cursor:pointer
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadRibbon button:disabled{opacity:.5;cursor:not-allowed}
+ .psRoot.psReferenceRoot.psCadLayout .psCadStudyName{display:none}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerColumn,
+ .psRoot.psReferenceRoot.psCadLayout.psStudyHidden .psViewerColumn{
+  grid-column:1;grid-row:2;display:flex!important;flex-direction:column;min-height:0!important;
+  height:100%!important;width:100%!important;overflow:hidden!important;padding:0!important
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psReferenceViewerCard{height:100%;min-height:0;flex:1 1 auto}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerFrame.psReferenceViewport,
+ .psRoot.psReferenceRoot.psCadLayout.psStudyHidden .psViewerFrame.psReferenceViewport{
+  min-height:0!important;height:auto!important;flex:1 1 0!important
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psViewerToolbar{order:-1;flex:0 0 auto}
+ .psRoot.psReferenceRoot.psCadLayout .psEngineeringInspector{max-height:35%;overflow:auto}
+ .psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs{
+  display:flex!important;grid-column:1;grid-row:3;min-width:0;overflow-x:auto;
+  align-items:stretch;border-top:1px solid #bccad5
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs :is(button,a){
+  display:flex;align-items:center;gap:5px;white-space:nowrap;flex:0 0 auto;
+  padding:5px 9px;font-size:11px;text-decoration:none;border:0;border-right:1px solid #c4cfd8;
+  border-top:2px solid transparent;background:transparent;cursor:pointer
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadDocumentTabs button[aria-current=page]{border-top-color:#2d76ad!important}
+ .psRoot.psReferenceRoot.psCadLayout .psWorkingColumn{
+  display:none!important;position:absolute;z-index:12;top:43px;bottom:34px;right:0;
+  width:min(390px,80%);height:auto!important;min-height:0!important;
+  border-left:1px solid #aebfcd!important;box-shadow:-6px 0 15px #29445b20;overflow:hidden
+ }
+ .psRoot.psReferenceRoot.psCadLayout.psCompactPropertiesOpen .psWorkingColumn{display:flex!important}
+ .psRoot.psReferenceRoot.psCadLayout .psCompactPropertyHeader{
+  display:flex!important;align-items:center;justify-content:space-between;flex:0 0 auto;
+  background:#e8eef3;border-bottom:1px solid #c2ced8;padding:5px 9px;font-size:12px;color:#294a63
+ }
+ .psCompactPropertyHeader button{display:grid;place-items:center;width:28px;height:28px;background:transparent;border:1px solid #b7c7d3;color:#36566e;border-radius:3px}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCompactPropertiesToggle{
+  display:flex!important;align-items:center;gap:4px;width:auto!important;min-width:76px;font-size:11px;
+  background:#e1edf6!important;border-color:#9db8ce!important;color:#2b5677!important
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button[aria-controls="ps-engineering-study"]:not(.psCompactPropertiesToggle){display:none!important}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCadModeToggle{display:inline-flex!important}
+ .psRoot.psReferenceRoot.psCadLayout .psCadViewCube{display:grid!important;right:12px;top:12px}
+ .psRoot.psReferenceRoot.psCadLayout .psAssistantContent{padding:5px 8px;background:#f5f7f9}
+ .psRoot.psReferenceRoot.psCadLayout .psCadAssistantToggle{display:flex!important;align-items:center;gap:6px;width:100%;min-height:32px;border:0;background:#edf2f6;color:#31556f;padding:5px 8px}
+ .psRoot.psReferenceRoot.psCadLayout .psCadAssistantCollapsed .psAssistantContent{display:none!important}
+ .psRoot.psReferenceRoot.psCadLayout .psAskBox{background:#fff!important;border-color:#afbfcc!important}
+ .psRoot.psReferenceRoot.psCadLayout .psAskBox textarea{color:#304b61!important}
+ .psRoot.psReferenceRoot.psCadLayout.psViewerExpanded .psViewerColumn{position:fixed!important;inset:0!important;z-index:100;height:100dvh!important}
+}
+@media(max-width:780px){
+ .psRoot.psReferenceRoot.psCadLayout .psWorkingColumn{
+  top:auto;bottom:34px;left:0;right:0;width:100%;max-height:68%;height:68%!important;
+  border-top:1px solid #aebfcd!important;box-shadow:0 -6px 18px #29445b30
+ }
+ .psRoot.psReferenceRoot.psCadLayout .psCadViewCube{transform:scale(.85);transform-origin:top right}
+ .psRoot.psReferenceRoot.psCadLayout .psReferenceViewerHeader>strong{font-size:10px}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions{gap:2px}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCompactPropertiesToggle{min-width:33px;font-size:0}
+ .psRoot.psReferenceRoot.psCadLayout .psViewerHeaderActions>button.psCadModeToggle{min-width:34px;font-size:10px}
+}
