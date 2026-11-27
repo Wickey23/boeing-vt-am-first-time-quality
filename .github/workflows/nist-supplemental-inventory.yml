@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'scripts/audit-nist-supplemental-source.py'
+      - 'scripts/audit-nist-supplemental-groups.py'
+      - 'tests/test_nist_supplemental_groups.py'
       - '.github/workflows/nist-supplemental-inventory.yml'
   workflow_dispatch:
 permissions:
@@ -17,9 +19,13 @@ jobs:
           persist-credentials: false
       - name: Acquire original workbook and inspect schema
         run: python3 scripts/audit-nist-supplemental-source.py --output data/nist-lpbf/supplemental-inventory.json
+      - name: Audit measurement groups and missing values
+        run: python3 scripts/audit-nist-supplemental-groups.py --source-dir data/nist-lpbf/supplemental --output data/nist-lpbf/supplemental-group-audit.json
       - name: Preserve schema and provenance evidence only
         uses: actions/upload-artifact@v4
         with:
           name: supplemental-source-inventory
-          path: data/nist-lpbf/supplemental-inventory.json
+          path: |
+            data/nist-lpbf/supplemental-inventory.json
+            data/nist-lpbf/supplemental-group-audit.json
           retention-days: 7
