@@ -6,7 +6,7 @@ import {
  ArrowRight,ArrowUp,Box,Check,CheckCircle2,ChevronDown,ClipboardCheck,Maximize2,MoreHorizontal,Compass,Hand,Eye,PanelLeftClose,PanelLeftOpen,GripVertical,
  Download,FileText,FileUp,Info,Layers,MessageSquare,Pause,Play,RotateCcw,Minimize2,
  Search,ShieldAlert,ShieldCheck,SlidersHorizontal,SquareArrowOutUpRight,X
-} from "lucide-react";
+,Ruler} from "lucide-react";
 import {useAnalysis} from "@/components/AnalysisProvider";
 import {usePartInspection} from "@/components/PartInspection";
 import {completedPart} from "@/lib/engineering-journey";
@@ -37,6 +37,7 @@ import "./professional-reference.css";
 import "./professional-enterprise.css";
 import "./professional-workspace-layout.css";
 import "./professional-cad-layout.css";
+import {appendMeasurement,distanceMm,type MeshPick} from "@/lib/cad-mesh-measurement";
 const ModelViewer=dynamic(()=>import("@/components/ModelViewer"),{ssr:false});
 type Stage="geometry"|"context"|"assessment";
 type ChatItem={role:"user"|"assistant";text:string};
@@ -93,6 +94,9 @@ export default function ProfessionalStudy(){
  const [partHash,setPartHash]=useState<string|null>(null);
  const [url,setUrl]=useState<string|undefined>();
  const [showOverhangs,setShowOverhangs]=useState(false);
+ const [measureMode,setMeasureMode]=useState(false);
+ const [meshPicks,setMeshPicks]=useState<MeshPick[]>([]);
+ useEffect(()=>{setMeasureMode(false);setMeshPicks([]);},[a.file,a.settings.unitScale]);
  const [showSupports,setShowSupports]=useState(false);
  const [highlightTriangles,setHighlightTriangles]=useState<number[]>([]);
  const [riskEnvelope,setRiskEnvelope]=useState({x:250,y:250,z:300});
@@ -339,6 +343,9 @@ export default function ProfessionalStudy(){
  };
  const projectName=a.file?.name??"No model uploaded";
  const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
+ const canMeasure=Boolean(a.file&&isConfirmed&&layer===100&&!showSupports);
+ const activePicks=canMeasure&&measureMode?meshPicks:[];
+ useEffect(()=>{if(!canMeasure){setMeasureMode(false);setMeshPicks([]);}},[canMeasure]);
  return <div ref={workbenchRef}
    className={"psRoot psFit psReferenceRoot"+(viewerExpanded?" psViewerExpanded":"")+(studyHidden?" psStudyHidden":"")+(resizing?" psResizing":"")+(cadLayout?" psCadLayout":"")+(compactPropertiesOpen?" psCompactPropertiesOpen":"")}
    style={{"--ps-viewer-width":activeViewerPercent+"%"} as CSSProperties}
@@ -349,6 +356,7 @@ export default function ProfessionalStudy(){
    <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
     aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
     <Icon size={17}/>{label}</button>)}</div>
+   <div className="psCadGroup"><button type="button" disabled={!canMeasure} title="Confirm units, show full geometry and turn off supports before measuring" aria-pressed={measureMode} onClick={()=>{setMeasureMode(v=>!v);setMeshPicks([]);}}><Ruler size={17}/>Measure</button></div>
    <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={showOverhangs}
     onClick={()=>{setShowOverhangs(v=>!v);setShowSupports(false);}}><Layers size={17}/>Overhangs</button></div>
    <div className="psCadGroup"><button type="button" disabled={!a.file||!isConfirmed||a.busy} onClick={()=>{setStage("geometry");setCompactPropertiesOpen(true);setStudyHidden(false);a.retry();}}><Play size={17}/>{a.busy?"Screening…":"Run screening"}</button></div>
@@ -544,8 +552,16 @@ export default function ProfessionalStudy(){
       <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10} cadStyle={cadLayout}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
-       buildFraction={layer/100} highlightTriangles={highlightTriangles}/>
+       buildFraction={layer/100} highlightTriangles={highlightTriangles} meshPicks={activePicks} onMeshPick={canMeasure&&measureMode?pick=>setMeshPicks(points=>appendMeasurement(points,pick)):undefined}/>
      </ViewerErrorBoundary>:<div className="psViewerEmpty"><Box size={33}/><strong>No model loaded</strong><small>Upload an STL to inspect its actual geometry here.</small>{cadLayout&&<button type="button" className="psCadEmptyImport" onClick={()=>partFileInput.current?.click()}><FileUp size={16}/> Import part</button>}</div>}
+     {cadLayout&&measureMode&&canMeasure&&<section className="psMeshMeasure" aria-label="Mesh measurement">
+      <header><strong>Measure mesh</strong><button type="button" aria-label="Close measurement" onClick={()=>{setMeasureMode(false);setMeshPicks([]);}}><X size={15}/></button></header>
+      <p>{activePicks.length===0?"Click a point on the STL surface.":activePicks.length===1?"Click a second surface point.":"Click again to start a new measurement."}</p>
+      {activePicks.map((pick,i)=><div key={i}><b>Point {i+1} · Triangle {pick.triangle}</b><div>X {pick.point.x.toFixed(3)} · Y {pick.point.y.toFixed(3)} · Z {pick.point.z.toFixed(3)} mm</div><div>Triangle area {pick.areaMm2.toFixed(3)} mm²</div></div>)}
+      {activePicks.length===2&&<output aria-label="Point distance">Distance: {distanceMm(activePicks[0].point,activePicks[1].point).toFixed(3)} mm</output>}
+      <button type="button" onClick={()=>setMeshPicks([])} disabled={!activePicks.length}>Clear points</button>
+      <small>Approximate surface picks in original STL coordinates. Not vertex snapping, CAD feature dimensions, or metrology.</small>
+     </section>}
      {cadLayout&&<div className="psCadViewCube" role="group" aria-label="Model view cube">
       <button type="button" className="psCubeTop" aria-label="Cube top view" aria-pressed={cameraView==="top"} onClick={()=>setCameraView("top")}>TOP</button>
       <button type="button" className="psCubeFront" aria-label="Cube front view" aria-pressed={cameraView==="front"} onClick={()=>setCameraView("front")}>FRONT</button>
