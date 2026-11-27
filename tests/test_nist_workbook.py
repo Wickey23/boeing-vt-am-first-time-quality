@@ -39,4 +39,18 @@ class Measurements(unittest.TestCase):
                       'powder_present','protocol_doi','build_id','defect_label'):
             self.assertIsNone(row[field])
 
+    def test_verified_full_source_ids_map_to_canonical_plate_without_losing_raw_value(self):
+        for plate in ('BP1','BP2','BP3'):
+            source_id = 'AMB2022-718-SH1-' + plate
+            row = audit.normalize({'A':source_id,'B':'P1','D':'1'},2,'hash')
+            self.assertEqual(row['source_sample_id'],source_id)
+            self.assertEqual(row['raw_cells']['A'],source_id)
+            self.assertEqual(row['sample_id'],plate)
+            self.assertEqual(row['bare_plate_id'],plate)
+            self.assertIs(row['powder_present'],False)
+            self.assertIsNone(row['build_id'])
+        foreign = audit.normalize({'A':'OTHER-BP1','B':'P1','D':'1'},2,'hash')
+        self.assertIsNone(foreign['bare_plate_id'])
+        self.assertEqual(foreign['sample_id'],'OTHER-BP1')
+
 if __name__=='__main__': unittest.main()

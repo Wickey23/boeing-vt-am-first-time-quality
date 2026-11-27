@@ -44,6 +44,18 @@ class SourceReconciliationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     gate.reconcile(a, "readme-hash")
 
+    def test_count_failure_exposes_expected_and_observed_without_raw_rows(self):
+        a = self.fixture()
+        a["measurements"][0]["sample_id"] = "BP2"
+        with self.assertRaises(ValueError) as caught:
+            gate.reconcile(a, "readme-hash")
+        msg = str(caught.exception)
+        self.assertIn('"expected_plate_counts": {"BP1": 42, "BP2": 94, "BP3": 92}', msg)
+        self.assertIn('"observed_plate_counts": {"BP1": 41, "BP2": 95, "BP3": 92}', msg)
+        self.assertIn('"observed_total": 228', msg)
+        self.assertNotIn("P1", msg.replace("BP1", ""))
+        self.assertNotIn("source_row", msg)
+
     def test_readme_identity(self):
         readme = ("NIST " + gate.DOI + " " + gate.WORKBOOK + " BP1 BP2 BP3").encode()
         self.assertEqual(len(gate.check_readme(readme)), 64)

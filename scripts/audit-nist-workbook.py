@@ -26,6 +26,13 @@ PLATE_PROTOCOLS = {
     "BP3": ("y_pad", "remelted_pad_partial_width"),
 }
 
+# Exact aliases observed in the SHA-256 pinned workbook in CI run 45935493715.
+# No generic suffix matching: an unrecognized source remains unrecognized.
+SOURCE_SAMPLE_ALIASES = {"AMB2022-718-SH1-" + plate: plate for plate in PLATE_PROTOCOLS}
+
+def canonical_sample_id(source_sample_id):
+    return SOURCE_SAMPLE_ALIASES.get(source_sample_id, source_sample_id)
+
 def measurement_protocol(sample_id):
     experiment, width_definition = PLATE_PROTOCOLS.get(sample_id, (None, None))
     return {
@@ -40,7 +47,8 @@ def normalize(cells, row, digest):
     if any(not cells.get(c) for c in ("A", "B", "D")):
         raise ValueError(f"Missing measurement identity at row {row}")
     record = {"source_sha256": digest, "source_doi": "10.18434/mds2-2718",
-              "sheet": "Sheet1", "source_row": row, "sample_id": cells["A"],
+              "sheet": "Sheet1", "source_row": row,
+              "source_sample_id": cells["A"], "sample_id": canonical_sample_id(cells["A"]),
               "part_id": cells["B"], "case_line_id": cells["D"],
               "build_id": None, "machine": None, "defect_label": None,
               "material": "IN718", "raw_cells": cells}

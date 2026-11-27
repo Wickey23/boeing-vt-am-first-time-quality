@@ -1,0 +1,36 @@
+name: NIST supplemental source inventory (research only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-nist-supplemental-source.py'
+      - 'scripts/audit-nist-supplemental-groups.py'
+      - 'tests/test_nist_supplemental_groups.py'
+      - 'scripts/benchmark-nist-supplemental.py'
+      - 'tests/test_nist_supplemental_benchmark.py'
+      - '.github/workflows/nist-supplemental-inventory.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Acquire original workbook and inspect schema
+        run: python3 scripts/audit-nist-supplemental-source.py --output data/nist-lpbf/supplemental-inventory.json
+      - name: Audit measurement groups and missing values
+        run: python3 scripts/audit-nist-supplemental-groups.py --source-dir data/nist-lpbf/supplemental --output data/nist-lpbf/supplemental-group-audit.json
+      - name: Execute frozen sample-name-held-out benchmark
+        run: python3 scripts/benchmark-nist-supplemental.py --source-dir data/nist-lpbf/supplemental --output data/nist-lpbf/supplemental-benchmark.json
+      - name: Preserve schema and provenance evidence only
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplemental-source-inventory
+          path: |
+            data/nist-lpbf/supplemental-inventory.json
+            data/nist-lpbf/supplemental-group-audit.json
+            data/nist-lpbf/supplemental-benchmark.json
+          retention-days: 7

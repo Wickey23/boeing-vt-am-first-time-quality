@@ -29,7 +29,17 @@ def reconcile(audit, readme_sha256):
     rows = audit["measurements"]
     counts = dict(collections.Counter(row["sample_id"] for row in rows))
     if counts != EXPECTED_COUNTS or audit.get("measurement_count") != len(rows):
-        raise ValueError("Measurement counts differ from source audit")
+        # Emit aggregate counts for investigation, not rows or specimen IDs.
+        # Keep the pinned expectation until the original workbook is reviewed.
+        details = {
+            "expected_plate_counts": EXPECTED_COUNTS,
+            "observed_plate_counts": counts,
+            "expected_total": sum(EXPECTED_COUNTS.values()),
+            "observed_total": len(rows),
+            "parser_reported_total": audit.get("measurement_count"),
+        }
+        raise ValueError("Measurement counts differ from source audit: " +
+                         json.dumps(details, sort_keys=True, ensure_ascii=True))
     if len({row["source_row"] for row in rows}) != len(rows):
         raise ValueError("Repeated source row identity")
     if any(row.get("source_sha256") != PINNED_SHA256 or row.get("source_doi") != DOI
