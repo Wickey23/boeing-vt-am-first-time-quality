@@ -107,14 +107,25 @@ def protocol_audit(params,tables):
     sample_ids={r["Sample ID"].strip() for r in params}
     plate_sections=collections.defaultdict(set)
     matched=0
+    mismatches=collections.Counter()
     for r in params:
         m=re.fullmatch(r"(20241010|20241015)_AMB_T([1-9]|1[0-2])2_P([123])",r["Sample ID"].strip())
         if not m:
+            mismatches["sample_name_pattern"]+=1
             continue
         day,plate,section=m.group(1),int(m.group(2)),int(m.group(3))
         # Date and plate identity checked against published Table 8.
         expected_day="20241010" if plate in (1,4,7,10,11,12) else "20241015"
-        if day!=expected_day or key(r)!=(*CONDITIONS[(plate-1)//3],*SECTIONS[section]):
+        expected_key=(*CONDITIONS[(plate-1)//3],*SECTIONS[section])
+        observed_key=key(r)
+        if day!=expected_day:
+            mismatches["sample_date"]+=1
+        if observed_key!=expected_key:
+            mismatches["condition_or_location"]+=1
+            for field,actual,expected in zip(KEYS,observed_key or (None,)*4,expected_key):
+                if actual!=expected:
+                    mismatches[field]+=1
+        if day!=expected_day or observed_key!=expected_key:
             continue
         matched+=1
         plate_sections[plate].add(section)
@@ -157,6 +168,10 @@ def protocol_audit(params,tables):
     return {"protocol_reference":PROTOCOL_URL,"parameter_sample_ids_match_published_table":matched,
             "parameter_plate_section_design_verified":protocol_complete,
             "matched_parameter_plate_groups":len(plate_sections),
+            "parameter_protocol_mismatches":dict(mismatches),
+            "observed_condition_keys":[{"fields":[str(x) for x in k],"rows":len(p[k])} for k in sorted(p)],
+            "keys_not_in_published_table":[[str(x) for x in k] for k in sorted(set(p)-EXPECTED_KEYS)],
+            "published_keys_not_in_csv":[[str(x) for x in k] for k in sorted(EXPECTED_KEYS-set(p))],
             "parameter_condition_layout_matches":condition_layout,
             "target_protocol_audit":outputs,
             "specimen_join_authorized":False,"physical_validation":False,
