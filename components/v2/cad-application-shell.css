@@ -28,3 +28,18 @@
 .oaDocumentCenter .oaExisting a{color:#b4d9f4}
 .oaDocumentCenter .oaHomeHelp{text-align:left;color:#b7c7d3}
 @media(max-width:780px){.oaCadApplication .oaHome.oaDocumentCenter{padding:18px 12px}.oaCadApplication.oaIsCollapsed .oaSidebar.oaMobileOpen .oaStudyTree{display:grid}}
+
+/* Study manager and shared navigation use the same light CAD chrome as the workbench. */
+.oaRoot.oaCadApplication:not(.oaProfessionalShell){--oa-bg:#f4f7f9;--oa-sidebar:#eaf0f4;--oa-card:#fff;
+ --oa-hover:#dbe8f2;--oa-text:#253e50;--oa-muted:#506b80;--oa-border:#bfccd6;--oa-strong:#226ca7;
+ background:#f4f7f9;color:#253e50}
+.oaRoot.oaCadApplication:not(.oaProfessionalShell) :is(.oaBody,.oaMain,.oaTopbar){background:#f4f7f9!important;color:#253e50!important}
+.oaRoot.oaCadApplication:not(.oaProfessionalShell) .oaSidebar{background:#eaf0f4!important;color:#253e50!important;border-color:#bdcbd5}
+.oaRoot.oaCadApplication:not(.oaProfessionalShell) .oaStudyTree :is(button,a){color:#36566e}
+.oaRoot.oaCadApplication:not(.oaProfessionalShell) .oaStudyTree :is(button,a):hover{background:#d8e8f4;color:#1c5585;border-color:#a8c3d8}
+.oaRoot.oaCadApplication:not(.oaProfessionalShell) .oaBottomDisclaimer{background:#edf2f6;color:#4a6276;border-color:#c2cfd9}
+.oaDocumentCenter .oaGreeting{color:#233e53}
+.oaDocumentCenter .oaSubGreeting,.oaDocumentCenter .oaHomeHelp{color:#526c80}
+.oaDocumentCenter .oaDocumentHeading{color:#31638b;border-color:#c3d1dd}
+.oaDocumentCenter .oaExisting{background:#fff;border-color:#c4d1dc}
+.oaDocumentCenter .oaExisting a{color:#226ca7}
