@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {runRegisteredLayerExperiment} from "../lib/lpbf-registered-layer-experiment";
+import {studyRegisteredSpatialRefinement} from "../lib/lpbf-spatial-refinement";
 import {studyRegisteredTimeRefinement} from "../lib/lpbf-time-refinement";
 import {prepareLayerTemperatureView} from "../lib/lpbf-layer-temperature-view";
 import {PHYSICAL_SCAN_HEADER} from "../lib/lpbf-physical-schedule";
@@ -104,4 +105,27 @@ test("M07 fixed time refinements preserve commanded energy and report numerical 
   assert.ok(Number.isInteger(pair.stateChanges));
  }
  await assert.rejects(runRegisteredLayerExperiment({...input,timeStepScale:2}),/research time-step scale/);
+});
+
+test("M07 nested XY refinement compares matched cell means on identical integration time grids",async()=>{
+ const input=await setup();
+ // Keep the path inside the same physical domain but away from every nested grid boundary.
+ input.csv=bytes(PHYSICAL_SCAN_HEADER+"\n0,0.5,0,0.01,0.27,0.27,0.73,0.27,0.1\n1,1,0.01,0.02,0.73,0.27,0.73,0.27,0\n1,1,0.02,0.03,0.73,0.27,0.27,0.27,0.1");
+ const report=await studyRegisteredSpatialRefinement(input,1e-5);
+ assert.equal(report.scope,"UNVALIDATED_XY_REFINEMENT_DIAGNOSTIC");
+ assert.equal(report.productionActivationAuthorized,false);
+ assert.deepEqual(report.runs.map(r=>r.xyPitchMm),[.5,.25,.125]);
+ assert.deepEqual(report.runs.map(r=>r.cells),[8,32,128]);
+ for(const r of report.runs){
+  assert.equal(r.layerHeightMm,.5);
+  assert.deepEqual(r.commandStepCounts,report.runs[0].commandStepCounts);
+  assert.ok(r.actualMaxTimeStepSeconds!<=1e-5+1e-12);
+  assert.ok(Math.abs(r.energy.commandedJ-.002)<1e-10);
+  assert.ok(Math.abs(r.energy.absorbedJ-.001)<1e-10);
+  assert.ok(r.energy.relativeImbalance<1e-9);
+ }
+ for(const pair of [report.coarseToMedium,report.mediumToFine]){
+  assert.ok(Number.isFinite(pair.coarseCellMeanRmseC)&&pair.coarseCellMeanRmseC>=0);
+  assert.ok(Number.isFinite(pair.maximumCellMeanDifferenceC)&&pair.maximumCellMeanDifferenceC>=pair.coarseCellMeanRmseC-1e-12);
+ }
 });
