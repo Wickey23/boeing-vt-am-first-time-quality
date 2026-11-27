@@ -20,3 +20,10 @@ Acquire only the master workbook and README initially:
 - https://data.nist.gov/od/ds/mds2-2923/2923_README.txt
 
 The audit must inspect sheet layout and column schema before parsing measurements. Retain original file digests, don't download hundreds of microscopy images unless needed, and keep raw sources out of the repository. Predeclare a new evaluation protocol with physical plate and machine grouping, an independent holdout, no leakage across repeat measurements, and uncertainty treatment before fitting. Neither this source nor the previous bare-plate benchmark proves multilayer powder-bed performance.
+
+
+## Supplemental workbook acquisition and grouping audit
+
+Run [45935881475](https://github.com/Wickey23/boeing-vt-am-first-time-quality/actions/runs/45935881475) on 7eab7cee14614f6457fca8f8191a4d34a2fb8ea0 acquired both supplemental files. Workbook SHA-256: 6cd32669f5c84cdb9e90890ba40ddc5548c85b0dbb95cf038f2f6fc69da67a52; README SHA-256: 8b8fc00ce62915af3e0c91c138dc4d033c031d7758161fb9da0e8702fa621c39. The Data sheet has 251 populated rows including headers, zero formulas; the Summary sheet has 71 populated rows including headers. The latter is derived evidence, not additional independent observations. Engineering and original benchmark runs on this same SHA also succeeded.
+
+The new `scripts/audit-nist-supplemental-groups.py` checks both hashes and exact Data sheet headers, requires 250 data rows, reports complete identities, duplicate image keys, distinct sample/track keys and process tuples separately for each alloy and machine. It records missing/nonfinite/invalid numeric fields, surface and scan direction categories and per-target group eligibility. Spot diameter is intentionally kept as a raw numeric value pending unit/definition review. No raw observations or sample names are uploaded. The existing supplemental workflow now executes this audit on the downloaded originals. The new tests use synthetic fixtures only. Actual group counts and updated CI are pending at the time of writing. Group counts are not proof of physical independence, and cross-source overlap remains unverified; no model has been promoted.
