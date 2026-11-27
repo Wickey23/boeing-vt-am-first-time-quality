@@ -234,6 +234,8 @@ test("pre-build PDF export is available directly after dimensional confirmation"
 test("workbench answers failure questions with actual screening status and missing physics",async({page})=>{
  await page.goto("/copilot/workbench");
  await page.getByLabel("Select STL part").setInputFiles("public/verification/cube-10mm.stl");
+ const assistantToggle=page.getByRole("button",{name:"Engineering assistant",exact:true});
+ if(await assistantToggle.isVisible())await assistantToggle.click();
  await page.getByRole("textbox",{name:"Ask ORIENTAI"}).fill("How can this part fail during metal printing?");
  await page.getByRole("button",{name:"Send message"}).click();
  const answer=page.getByRole("log",{name:"Engineering assistant messages"});
@@ -272,6 +274,7 @@ test("external AI consent checkbox stays compact and label text remains readable
   else await route.continue();
  });
  await page.goto("/copilot/workbench");
+ await page.getByRole("button",{name:"Engineering assistant",exact:true}).click();
  const label=page.locator(".psExternalAiSwitch label");
  const checkbox=label.locator('input[type="checkbox"]');
  await expect(checkbox).toBeVisible();
