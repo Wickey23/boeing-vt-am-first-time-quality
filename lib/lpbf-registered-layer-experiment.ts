@@ -10,7 +10,7 @@ export type ResearchThermalConditions=Pick<PartialLayerInputs,
  "powerCouplingFraction"|"beamRadiusMm"|"densityKgM3"|"specificHeatJKgK"|"powderConductivityWmK"|"solidConductivityWmK"|"convectionWm2K"|"ambientTemperatureC"|"plateTemperatureC">;
 export async function runRegisteredLayerExperiment(args:{
  stl:ArrayBuffer;csv:ArrayBuffer;expectedPartSha256:string;sliceOptions:SliceOptions;
- conditions:ResearchThermalConditions;acknowledgeUnvalidatedResearch:boolean;sourceName?:string;captureFrames?:boolean;timeStepScale?:number;
+ conditions:ResearchThermalConditions;acknowledgeUnvalidatedResearch:boolean;sourceName?:string;captureFrames?:boolean;timeStepScale?:number;absoluteTimeStepCeilingSeconds?:number;
 }){
  if(!args.acknowledgeUnvalidatedResearch)throw Error("Explicit unvalidated research acknowledgment required.");
  // Snapshot inputs before any asynchronous hashing/processing.
@@ -36,7 +36,7 @@ export async function runRegisteredLayerExperiment(args:{
  const thermal=runPartialLayerResearch({...conditions,
   pitchMm:slice.grid.xyPitchMm,layerHeightMm:slice.grid.layerThicknessMm,
   originMm:{...slice.grid.originMm},cells,partSha256:slice.partSha256,
-  sourceSha256:registration.sourceSha256,scan:plan},undefined,{captureFrames:args.captureFrames??false,timeStepScale:args.timeStepScale});
+  sourceSha256:registration.sourceSha256,scan:plan},undefined,{captureFrames:args.captureFrames??false,timeStepScale:args.timeStepScale,absoluteTimeStepCeilingSeconds:args.absoluteTimeStepCeilingSeconds});
  return {scope:"OFFLINE_UNVALIDATED_INTEGRATION_EXPERIMENT" as const,
   productionActivationAuthorized:false as const,geometry:slice,registration,conditions,thermal,
   limitations:["Uniform full-sampled cells only; four-ray occupancy and midpoint area checks do not prove cell-level fidelity.",
