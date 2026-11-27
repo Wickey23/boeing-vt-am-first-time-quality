@@ -50,6 +50,17 @@ test("sandbox executes approved cube service study, switches contours and invali
  await expect(fields.getByRole("button",{name:"Displacement",exact:true})).toHaveAttribute("aria-pressed","true");
  await fields.getByRole("button",{name:"Steady temperature",exact:true}).click();
  await expect(fields.getByRole("button",{name:"Steady temperature",exact:true})).toHaveAttribute("aria-pressed","true");
+ await ribbon.getByRole("button",{name:"Risks",exact:true}).click();
+ const risk=page.getByRole("region",{name:"Automatic LPBF failure-risk preflight"});
+ await expect(risk).toBeVisible();
+ await expect(risk.getByText(/Current orientation: X/)).toBeVisible({timeout:30000});
+ await risk.getByRole("button",{name:"Clear 3D highlight"}).click();
+ await expect(fields.getByRole("button",{name:"Steady temperature",exact:true})).toHaveAttribute("aria-pressed","true");
+ await expect(page.getByText("Service result · original part axes")).toBeVisible();
+ await page.locator("details.psDecisionExport > summary").click();
+ const pdfPromise=page.waitForEvent("download");
+ await page.locator("details.psDecisionExport").getByRole("button",{name:"Export assessment PDF"}).click();
+ expect((await pdfPromise).suggestedFilename()).toMatch(/^orientai-engineering-evidence-[a-f0-9]{8}\.pdf$/);
  await ribbon.getByRole("button",{name:"Simulate",exact:true}).click();
  const record=page.waitForEvent("download");
  await dock.getByRole("button",{name:"Export current study job record"}).click();
