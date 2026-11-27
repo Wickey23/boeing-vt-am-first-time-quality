@@ -95,6 +95,7 @@ export default function ProfessionalStudy(){
  const [url,setUrl]=useState<string|undefined>();
  const [showOverhangs,setShowOverhangs]=useState(false);
  const [measureMode,setMeasureMode]=useState(false);
+ const [rendererFailed,setRendererFailed]=useState(false);
  const [meshPicks,setMeshPicks]=useState<MeshPick[]>([]);
  useEffect(()=>{setMeasureMode(false);setMeshPicks([]);},[a.file,a.settings.unitScale]);
  const [showSupports,setShowSupports]=useState(false);
@@ -343,7 +344,7 @@ export default function ProfessionalStudy(){
  };
  const projectName=a.file?.name??"No model uploaded";
  const modelRotation={x:selected?.rotation.x??0,y:selected?.rotation.y??0,z:(selected?.rotation.z??0)+previewYaw};
- const canMeasure=Boolean(a.file&&isConfirmed&&layer===100&&!showSupports);
+ const canMeasure=Boolean(cadLayout&&a.file&&isConfirmed&&layer===100&&!showSupports&&!rendererFailed);
  const activePicks=canMeasure&&measureMode?meshPicks:[];
  useEffect(()=>{if(!canMeasure){setMeasureMode(false);setMeshPicks([]);}},[canMeasure]);
  return <div ref={workbenchRef}
@@ -356,7 +357,7 @@ export default function ProfessionalStudy(){
    <div className="psCadGroup">{stageEntries.map(({id,label,Icon})=><button type="button" key={id}
     aria-pressed={stage===id&&!studyHidden} onClick={()=>{setStage(id);setCompactPropertiesOpen(true);setStudyHidden(false);setViewerExpanded(false);stageScroll.current?.scrollTo({top:0,behavior:"instant"});}}>
     <Icon size={17}/>{label}</button>)}</div>
-   <div className="psCadGroup"><button type="button" disabled={!canMeasure} title="Confirm units, show full geometry and turn off supports before measuring" aria-pressed={measureMode} onClick={()=>{setMeasureMode(v=>!v);setMeshPicks([]);}}><Ruler size={17}/>Measure</button></div>
+   <div className="psCadGroup"><button type="button" disabled={!canMeasure} title={rendererFailed?"3D rendering is unavailable; retry 3D to measure": "Confirm units, show full geometry and turn off supports before measuring"} aria-pressed={measureMode} onClick={()=>{setMeasureMode(v=>!v);setMeshPicks([]);}}><Ruler size={17}/>Measure</button></div>
    <div className="psCadGroup"><button type="button" disabled={!a.file} aria-pressed={showOverhangs}
     onClick={()=>{setShowOverhangs(v=>!v);setShowSupports(false);}}><Layers size={17}/>Overhangs</button></div>
    <div className="psCadGroup"><button type="button" disabled={!a.file||!isConfirmed||a.busy} onClick={()=>{setStage("geometry");setCompactPropertiesOpen(true);setStudyHidden(false);a.retry();}}><Play size={17}/>{a.busy?"Screening…":"Run screening"}</button></div>
@@ -548,7 +549,7 @@ export default function ProfessionalStudy(){
      </div>
     </header>
     <div className="psViewerFrame psReferenceViewport">
-     {a.file?<ViewerErrorBoundary fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
+     {a.file?<ViewerErrorBoundary onRendererFailure={setRendererFailed} fallback={<StudioCanvasFallback url={url} buildFraction={layer/100}/>}>
       <ModelViewer key={viewerReset} url={url} unitScale={a.settings.unitScale} rotation={modelRotation} fitPadding={1.10} cadStyle={cadLayout}
        cameraView={cameraView} onCameraViewChange={setCameraView}
        overhangDeg={a.settings.overhangDeg} showOverhangs={showOverhangs} showSupports={showSupports}
